@@ -1,7 +1,15 @@
 [package]
-name = "ironcode-glob"
+name = "ironcode-tool"
 version = "0.1.0"
 edition = "2021"
+
+[lib]
+name = "ironcode_tool"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "ironcode-tool"
+path = "src/main.rs"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
@@ -9,3 +17,4 @@ serde_json = "1.0"
 walkdir = "2.3"
 globset = "0.4"
 ignore = "0.4"
+regex = "1.10"

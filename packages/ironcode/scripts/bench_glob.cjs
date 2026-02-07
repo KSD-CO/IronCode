@@ -7,8 +7,8 @@ const pattern = process.argv[2] || '**/*.ts'
 const search = process.argv[4] || '.'
 
 const repoRoot = process.cwd()
-const manifest = path.join(repoRoot, 'packages/ironcode/native/glob/Cargo.toml')
-const bin = path.join(repoRoot, 'packages/ironcode/native/glob/target/release/ironcode-glob')
+const manifest = path.join(repoRoot, 'packages/ironcode/native/tool/Cargo.toml')
+const bin = path.join(repoRoot, 'packages/ironcode/native/tool/target/release/ironcode-tool')
 
 function ensureBinary() {
   const build = spawnSync('cargo', ['build', '--release', '--manifest-path', manifest], { encoding: 'utf8', stdio: 'inherit' })
@@ -29,8 +29,7 @@ function benchRust(iter) {
   ensureBinary()
   const results = []
   for (let i=0;i<iter;i++) {
-    const args = [bin, pattern, search]
-    const r = runTimed('bash', ['-lc', `${bin} ${escapeArg(pattern)} ${escapeArg(search)}`])
+    const r = runTimed('bash', ['-lc', `${bin} glob ${escapeArg(pattern)} ${escapeArg(search)}`])
     results.push(r)
   }
   return results

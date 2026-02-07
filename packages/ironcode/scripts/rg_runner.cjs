@@ -7,11 +7,11 @@ const pattern = process.argv[2] || '**/*.ts'
 const search = process.argv[3] || '.'
 
 function runRg(pattern, search) {
-  let filesOut
+  let filesOut = ''
   try {
     const r = spawnSync('rg', ['--files', '--glob', pattern], { cwd: search, encoding: 'utf8' })
     if (r.status !== 0 && r.stderr) throw new Error(r.stderr)
-    filesOut = r.stdout
+    filesOut = r.stdout || ''
   } catch (e) {
     filesOut = ''
   }

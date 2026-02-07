@@ -2,9 +2,9 @@ import z from "zod"
 import path from "path"
 import { Tool } from "./tool"
 import DESCRIPTION from "./glob.txt"
-import { Ripgrep } from "../file/ripgrep"
 import { Instance } from "../project/instance"
 import { assertExternalDirectory } from "./external-directory"
+import { globFFI } from "./ffi"
 
 export const GlobTool = Tool.define("glob", {
   description: DESCRIPTION,
@@ -32,24 +32,6 @@ export const GlobTool = Tool.define("glob", {
     search = path.isAbsolute(search) ? search : path.resolve(Instance.directory, search)
     await assertExternalDirectory(ctx, search, { kind: "directory" })
 
-    // Prefer the built native binary; fall back to `cargo run` if binary missing.
-    const manifest = path.join(Instance.worktree, "packages/ironcode/native/glob/Cargo.toml")
-    const bin = path.join(Instance.worktree, "packages/ironcode/native/glob/target/release/ironcode-glob")
-    let stdout: string
-    const exec = require("child_process").execFileSync
-    const fs = require("fs")
-    if (fs.existsSync(bin)) {
-      stdout = exec(bin, [params.pattern, search], { encoding: "utf8" })
-    } else {
-      try {
-        const args = ["run", "--quiet", "--manifest-path", manifest, "--", params.pattern, search]
-        stdout = exec("cargo", args, { encoding: "utf8" })
-      } catch (err) {
-        throw err
-      }
-    }
-
-    const parsed = JSON.parse(stdout)
-    return parsed
+    return globFFI(params.pattern, search)
   },
 })

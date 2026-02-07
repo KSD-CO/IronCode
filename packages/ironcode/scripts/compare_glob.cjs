@@ -4,14 +4,14 @@ const fs = require('fs')
 const path = require('path')
 
 function runRust(pattern, search) {
-  const manifest = path.join(process.cwd(), 'packages/ironcode/native/glob/Cargo.toml')
-  const bin = path.join(process.cwd(), 'packages/ironcode/native/glob/target/release/ironcode-glob')
+  const manifest = path.join(process.cwd(), 'packages/ironcode/native/tool/Cargo.toml')
+  const bin = path.join(process.cwd(), 'packages/ironcode/native/tool/target/release/ironcode-tool')
   try {
-    const out = execFileSync('cargo', ['run', '--quiet', '--manifest-path', manifest, '--', pattern, search], { encoding: 'utf8' })
+    const out = execFileSync('cargo', ['run', '--quiet', '--manifest-path', manifest, '--', 'glob', pattern, search], { encoding: 'utf8' })
     return JSON.parse(out)
   } catch (e) {
     // fallback to built binary
-    const out = execFileSync(bin, [pattern, search], { encoding: 'utf8' })
+    const out = execFileSync(bin, ['glob', pattern, search], { encoding: 'utf8' })
     return JSON.parse(out)
   }
 }
