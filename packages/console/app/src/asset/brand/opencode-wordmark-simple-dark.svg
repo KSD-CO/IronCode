@@ -1,7 +1,5 @@
 <svg width="641" height="115" viewBox="0 0 641 115" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g clip-path="url(#clip0_1401_86315)">
-<mask id="mask0_1401_86315" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="0" y="0" width="641" height="115">
-<path d="M640.714 0H0V115H640.714V0Z" fill="white"/>
+<text x="0" y="80" font-family="monospace" font-weight="bold" font-size="86" fill="white">IRONCODE</text>
 </mask>
 <g mask="url(#mask0_1401_86315)">
 <path d="M49.2857 32.8573H16.4286V82.143H49.2857V32.8573ZM65.7143 98.5716H0V16.4287H65.7143V98.5716Z" fill="white"/>
