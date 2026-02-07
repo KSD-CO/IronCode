@@ -25,6 +25,10 @@ const lib = dlopen(libPath, {
     args: [FFIType.cstring, FFIType.i32, FFIType.i32],
     returns: FFIType.ptr,
   },
+  write_ffi: {
+    args: [FFIType.cstring, FFIType.cstring],
+    returns: FFIType.ptr,
+  },
   free_string: {
     args: [FFIType.ptr],
     returns: FFIType.void,
@@ -77,6 +81,19 @@ export function readFFI(filepath: string, offset: number = 0, limit: number = 20
     limit
   )
   if (!ptr) throw new Error("read_ffi returned null")
+  
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+  
+  return JSON.parse(jsonStr)
+}
+
+export function writeFFI(filepath: string, content: string) {
+  const ptr = lib.symbols.write_ffi(
+    Buffer.from(filepath + "\0"),
+    Buffer.from(content + "\0")
+  )
+  if (!ptr) throw new Error("write_ffi returned null")
   
   const jsonStr = new CString(ptr).toString()
   lib.symbols.free_string(ptr)

@@ -5,6 +5,7 @@ pub mod glob;
 pub mod grep;
 pub mod ls;
 pub mod read;
+pub mod write;
 pub mod types;
 
 #[no_mangle]
@@ -111,6 +112,33 @@ pub extern "C" fn grep_ffi(pattern: *const c_char, search: *const c_char, includ
     };
     
     match grep::execute(pattern_str, search_str, include_glob_opt) {
+        Ok(output) => {
+            match serde_json::to_string(&output) {
+                Ok(json) => CString::new(json).unwrap().into_raw(),
+                Err(_) => std::ptr::null_mut(),
+            }
+        }
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn write_ffi(filepath: *const c_char, content: *const c_char) -> *mut c_char {
+    let filepath_str = unsafe {
+        if filepath.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(filepath).to_str().unwrap_or("")
+    };
+    
+    let content_str = unsafe {
+        if content.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(content).to_str().unwrap_or("")
+    };
+    
+    match write::execute(filepath_str, content_str) {
         Ok(output) => {
             match serde_json::to_string(&output) {
                 Ok(json) => CString::new(json).unwrap().into_raw(),
