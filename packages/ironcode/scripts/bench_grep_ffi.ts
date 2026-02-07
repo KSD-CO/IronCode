@@ -76,5 +76,5 @@ try {
   const ffiResult = grepFFI(pattern, searchPath, includeGlob)
   console.log('FFI test passed, found', ffiResult.metadata.count, 'matches')
 } catch (e) {
-  console.log('FFI test failed:', e.message)
+  console.log('FFI test failed:', e instanceof Error ? e.message : String(e))
 }

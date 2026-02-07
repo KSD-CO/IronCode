@@ -1,5 +1,5 @@
 import { Prompt, type PromptRef } from "@tui/component/prompt"
-import { createMemo, Match, onMount, Show, Switch } from "solid-js"
+import { createMemo, createSignal, Match, onMount, onCleanup, Show, Switch } from "solid-js"
 import { useTheme } from "@tui/context/theme"
 import { useKeybind } from "@tui/context/keybind"
 import { Logo } from "../component/logo"
@@ -14,6 +14,7 @@ import { usePromptRef } from "../context/prompt"
 import { Installation } from "@/installation"
 import { useKV } from "../context/kv"
 import { useCommandDialog } from "../component/dialog-command"
+import { getSystemStatsFFI, type SystemStats } from "@/tool/ffi"
 
 // TODO: what is the best way to do this?
 let once = false
@@ -28,6 +29,27 @@ export function Home() {
   const mcp = createMemo(() => Object.keys(sync.data.mcp).length > 0)
   const mcpError = createMemo(() => {
     return Object.values(sync.data.mcp).some((x) => x.status === "failed")
+  })
+
+  const [stats, setStats] = createSignal<SystemStats>({
+    cpu_usage: 0,
+    memory_used_mb: 0,
+    memory_total_mb: 0,
+    memory_percent: 0,
+  })
+
+  // Update stats every 2 seconds
+  onMount(() => {
+    const updateStats = () => {
+      try {
+        setStats(getSystemStatsFFI())
+      } catch (e) {
+        // Ignore errors
+      }
+    }
+    updateStats()
+    const interval = setInterval(updateStats, 2000)
+    onCleanup(() => clearInterval(interval))
   })
 
   const connectedMcpCount = createMemo(() => {
@@ -131,7 +153,16 @@ export function Home() {
           </Show>
         </box>
         <box flexGrow={1} />
-        <box flexShrink={0}>
+        <box flexShrink={0} gap={2} flexDirection="row">
+          <text fg={theme.textMuted}>
+            CPU {stats().cpu_usage.toFixed(0)}% {(() => {
+              const bars = Math.round(stats().cpu_usage / 20)
+              return '▓'.repeat(bars) + '░'.repeat(5 - bars)
+            })()} Mem {(stats().memory_used_mb / 1024).toFixed(1)}/{(stats().memory_total_mb / 1024).toFixed(0)}G {(() => {
+              const bars = Math.round((stats().memory_used_mb / stats().memory_total_mb) * 5)
+              return '▓'.repeat(bars) + '░'.repeat(5 - bars)
+            })()}
+          </text>
           <text fg={theme.textMuted}>{Installation.VERSION}</text>
         </box>
       </box>

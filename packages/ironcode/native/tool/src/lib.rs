@@ -6,6 +6,7 @@ pub mod grep;
 pub mod ls;
 pub mod read;
 pub mod write;
+pub mod stats;
 pub mod types;
 
 #[no_mangle]
@@ -141,6 +142,19 @@ pub extern "C" fn write_ffi(filepath: *const c_char, content: *const c_char) -> 
     match write::execute(filepath_str, content_str) {
         Ok(output) => {
             match serde_json::to_string(&output) {
+                Ok(json) => CString::new(json).unwrap().into_raw(),
+                Err(_) => std::ptr::null_mut(),
+            }
+        }
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn stats_ffi() -> *mut c_char {
+    match stats::get_stats() {
+        Ok(stats) => {
+            match serde_json::to_string(&stats) {
                 Ok(json) => CString::new(json).unwrap().into_raw(),
                 Err(_) => std::ptr::null_mut(),
             }

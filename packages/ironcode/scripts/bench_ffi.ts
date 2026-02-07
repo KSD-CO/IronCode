@@ -84,5 +84,5 @@ try {
   const ffiResult = readFFI(filepath, 0, 10)
   console.log('FFI test passed, read', ffiResult.metadata.count, 'lines')
 } catch (e) {
-  console.log('FFI test failed:', e.message)
+  console.log('FFI test failed:', e instanceof Error ? e.message : String(e))
 }

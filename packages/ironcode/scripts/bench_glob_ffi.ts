@@ -63,5 +63,5 @@ try {
     console.log('First file:', firstFile)
   }
 } catch (e) {
-  console.log('FFI test failed:', e.message)
+  console.log('FFI test failed:', e instanceof Error ? e.message : String(e))
 }

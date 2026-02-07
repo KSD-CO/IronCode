@@ -1,11 +1,11 @@
 import { dlopen, FFIType, suffix, CString } from "bun:ffi"
 import path from "path"
 
-// Resolve from workspace root
-const workspaceRoot = process.cwd()
+// Resolve from package root (packages/ironcode)
+const packageRoot = import.meta.dir ? path.resolve(import.meta.dir, "../..") : process.cwd()
 const libPath = path.join(
-  workspaceRoot,
-  `packages/ironcode/native/tool/target/release/libironcode_tool.${suffix}`
+  packageRoot,
+  `native/tool/target/release/libironcode_tool.${suffix}`
 )
 
 const lib = dlopen(libPath, {
@@ -27,6 +27,10 @@ const lib = dlopen(libPath, {
   },
   write_ffi: {
     args: [FFIType.cstring, FFIType.cstring],
+    returns: FFIType.ptr,
+  },
+  stats_ffi: {
+    args: [],
     returns: FFIType.ptr,
   },
   free_string: {
@@ -94,6 +98,23 @@ export function writeFFI(filepath: string, content: string) {
     Buffer.from(content + "\0")
   )
   if (!ptr) throw new Error("write_ffi returned null")
+  
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+  
+  return JSON.parse(jsonStr)
+}
+
+export interface SystemStats {
+  cpu_usage: number
+  memory_used_mb: number
+  memory_total_mb: number
+  memory_percent: number
+}
+
+export function getSystemStatsFFI(): SystemStats {
+  const ptr = lib.symbols.stats_ffi()
+  if (!ptr) throw new Error("stats_ffi returned null")
   
   const jsonStr = new CString(ptr).toString()
   lib.symbols.free_string(ptr)

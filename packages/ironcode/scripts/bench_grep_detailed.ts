@@ -91,5 +91,5 @@ try {
   const ffiTest = grepFFI(pattern, searchPath, includeGlob)
   console.log('FFI test passed, found', ffiTest.metadata.count, 'matches')
 } catch (e) {
-  console.log('FFI test failed:', e.message)
+  console.log('FFI test failed:', e instanceof Error ? e.message : String(e))
 }
