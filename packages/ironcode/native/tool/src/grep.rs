@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use regex::Regex;
+use rexile::ReXile;
 use ignore::WalkBuilder;
 use std::fs;
 use std::time::SystemTime;
@@ -21,7 +21,7 @@ pub fn execute(pattern: &str, search_path: &str, include_glob: Option<&str>) -> 
 }
 
 fn grep(pattern: &str, search_path: &str, include_glob: Option<&str>) -> Result<Output, Box<dyn std::error::Error>> {
-    let regex = Regex::new(pattern)?;
+    let regex = ReXile::new(pattern)?;
     let mut matches = Vec::new();
     
     let mut builder = WalkBuilder::new(search_path);
