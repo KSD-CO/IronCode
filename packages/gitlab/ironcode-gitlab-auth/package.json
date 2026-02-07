@@ -6,5 +6,8 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@ironcode-ai/plugin": "workspace:*"
+  }
 }

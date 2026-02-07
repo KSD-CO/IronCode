@@ -1,12 +1,8 @@
-export function gitlabAuthPlugin(opts?: any) {
-  return {
-    name: "gitlab-auth-plugin-stub",
-    async setup() {
-      // stub no-op implementation for local development
-      return {}
-    },
-    options: opts,
-  }
+import type { PluginInput } from "@ironcode-ai/plugin"
+
+export async function gitlabAuthPlugin(input: PluginInput) {
+  // stub no-op implementation for local development
+  return {}
 }
 
 export default gitlabAuthPlugin
