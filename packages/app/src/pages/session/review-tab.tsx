@@ -1,6 +1,6 @@
 import { createEffect, on, onCleanup, createSignal, type JSX } from "solid-js"
-import type { FileDiff } from "@opencode-ai/sdk/v2"
-import { SessionReview } from "@opencode-ai/ui/session-review"
+import type { FileDiff } from "@ironcode-ai/sdk/v2"
+import { SessionReview } from "@ironcode-ai/ui/session-review"
 import type { SelectedLineRange } from "@/context/file"
 import { useSDK } from "@/context/sdk"
 import { useLayout } from "@/context/layout"

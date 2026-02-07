@@ -74,9 +74,9 @@ async function seedStorage(page: Page, input: { directory: string; extra?: strin
   await seedProjects(page, input)
   await page.addInitScript(() => {
     localStorage.setItem(
-      "opencode.global.dat:model",
+      "ironcode.global.dat:model",
       JSON.stringify({
-        recent: [{ providerID: "opencode", modelID: "big-pickle" }],
+        recent: [{ providerID: "ironcode", modelID: "big-pickle" }],
         user: [],
         variant: {},
       }),

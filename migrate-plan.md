@@ -1,4 +1,4 @@
-kế hoạch thực tế để làm hybrid Rust + TypeScript cho kiểu project như OpenCode (AI code tool) — theo hướng:
+kế hoạch thực tế để làm hybrid Rust + TypeScript cho kiểu project như IronCode (AI code tool) — theo hướng:
 
 🚀 Nhanh triển khai – có lợi ích ngay – không rewrite điên rồ
 

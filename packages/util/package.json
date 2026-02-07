@@ -1,11 +1,12 @@
 {
-  "name": "@opencode-ai/util",
+  "name": "@ironcode-ai/util",
   "version": "1.1.53",
   "private": true,
   "type": "module",
   "license": "MIT",
   "exports": {
-    "./*": "./src/*.ts"
+    "./*": "./src/*.ts",
+    "./error": "./src/error.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

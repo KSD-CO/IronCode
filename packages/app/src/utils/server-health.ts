@@ -1,4 +1,4 @@
-import { createOpencodeClient } from "@opencode-ai/sdk/v2/client"
+import { createOpencodeClient } from "@ironcode-ai/sdk/v2/client"
 
 export type ServerHealth = { healthy: boolean; version?: string }
 

@@ -1,5 +1,5 @@
-import { Select } from "@opencode-ai/ui/select"
-import { showToast } from "@opencode-ai/ui/toast"
+import { Select } from "@ironcode-ai/ui/select"
+import { showToast } from "@ironcode-ai/ui/toast"
 import { Component, For, createMemo, type JSX } from "solid-js"
 import { useGlobalSync } from "@/context/global-sync"
 import { useLanguage } from "@/context/language"

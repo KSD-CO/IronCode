@@ -1,6 +1,6 @@
-# OpenCode Desktop
+# IronCode Desktop
 
-Native OpenCode desktop app, built with Tauri v2.
+Native IronCode desktop app, built with Tauri v2.
 
 ## Development
 

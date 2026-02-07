@@ -1,10 +1,10 @@
-import { FileDiff, Message, Model, Part, Session } from "@opencode-ai/sdk/v2"
-import { fn } from "@opencode-ai/util/fn"
-import { iife } from "@opencode-ai/util/iife"
-import { Identifier } from "@opencode-ai/util/identifier"
+import { FileDiff, Message, Model, Part, Session } from "@ironcode-ai/sdk/v2"
+import { fn } from "@ironcode-ai/util/fn"
+import { iife } from "@ironcode-ai/util/iife"
+import { Identifier } from "@ironcode-ai/util/identifier"
 import z from "zod"
 import { Storage } from "./storage"
-import { Binary } from "@opencode-ai/util/binary"
+import { Binary } from "@ironcode-ai/util/binary"
 
 export namespace Share {
   export const Info = z.object({

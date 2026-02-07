@@ -8,11 +8,11 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
-    "opencode#test": {
+    "ironcode#test": {
       "dependsOn": ["^build"],
       "outputs": []
     },
-    "@opencode-ai/app#test": {
+    "@ironcode-ai/app#test": {
       "dependsOn": ["^build"],
       "outputs": []
     }

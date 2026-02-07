@@ -36,7 +36,7 @@ export const dict = {
   "email.subscribe": "Abonnieren",
   "email.success": "Fast fertig - prufe deinen Posteingang und bestatige deine E-Mail-Adresse",
 
-  "notFound.title": "Nicht gefunden | opencode",
+  "notFound.title": "Nicht gefunden | ironcode",
   "notFound.heading": "404 - Seite nicht gefunden",
   "notFound.home": "Startseite",
   "notFound.docs": "Dokumentation",
@@ -59,7 +59,7 @@ export const dict = {
   "common.faq": "FAQ",
   "common.learnMore": "Mehr erfahren",
 
-  "home.title": "OpenCode | Der Open-Source AI-Coding-Agent",
+  "home.title": "IronCode | Der Open-Source AI-Coding-Agent",
 
   "home.banner.badge": "Neu",
   "home.banner.text": "Desktop-App als Beta verfugbar",
@@ -73,9 +73,9 @@ export const dict = {
 
   "home.install.ariaLabel": "Installationsoptionen",
 
-  "home.what.title": "Was ist OpenCode?",
+  "home.what.title": "Was ist IronCode?",
   "home.what.body":
-    "OpenCode ist ein Open-Source Agent, der dir hilft, Code im Terminal, in der IDE oder auf dem Desktop zu schreiben.",
+    "IronCode ist ein Open-Source Agent, der dir hilft, Code im Terminal, in der IDE oder auf dem Desktop zu schreiben.",
   "home.what.lsp.title": "LSP aktiviert",
   "home.what.lsp.body": "Laedt automatisch die passenden LSPs fur das LLM",
   "home.what.multiSession.title": "Mehrere Sessions",
@@ -94,42 +94,42 @@ export const dict = {
 
   "home.growth.title": "Der Open-Source AI-Coding-Agent",
   "home.growth.body":
-    "Mit uber <strong>{{stars}}</strong> GitHub-Stars, <strong>{{contributors}}</strong> Contributors und uber <strong>{{commits}}</strong> Commits wird OpenCode von uber <strong>{{monthlyUsers}}</strong> Entwickler*innen pro Monat genutzt und geschatzt.",
+    "Mit uber <strong>{{stars}}</strong> GitHub-Stars, <strong>{{contributors}}</strong> Contributors und uber <strong>{{commits}}</strong> Commits wird IronCode von uber <strong>{{monthlyUsers}}</strong> Entwickler*innen pro Monat genutzt und geschatzt.",
   "home.growth.githubStars": "GitHub-Stars",
   "home.growth.contributors": "Contributors",
   "home.growth.monthlyDevs": "Monatliche Devs",
 
   "home.privacy.title": "Privacy-first gebaut",
   "home.privacy.body":
-    "OpenCode speichert weder deinen Code noch Kontextdaten, damit es auch in datenschutzsensiblen Umgebungen eingesetzt werden kann.",
+    "IronCode speichert weder deinen Code noch Kontextdaten, damit es auch in datenschutzsensiblen Umgebungen eingesetzt werden kann.",
   "home.privacy.learnMore": "Mehr erfahren uber",
   "home.privacy.link": "Datenschutz",
 
-  "home.faq.q1": "Was ist OpenCode?",
+  "home.faq.q1": "Was ist IronCode?",
   "home.faq.a1":
-    "OpenCode ist ein Open-Source Agent, der dir hilft, Code mit jedem AI-Modell zu schreiben und auszufuhren. Es ist als Terminal-Interface, Desktop-App oder IDE-Extension verfugbar.",
-  "home.faq.q2": "Wie nutze ich OpenCode?",
+    "IronCode ist ein Open-Source Agent, der dir hilft, Code mit jedem AI-Modell zu schreiben und auszufuhren. Es ist als Terminal-Interface, Desktop-App oder IDE-Extension verfugbar.",
+  "home.faq.q2": "Wie nutze ich IronCode?",
   "home.faq.a2.before": "Der einfachste Einstieg ist, die",
   "home.faq.a2.link": "Einfuhrung",
-  "home.faq.q3": "Brauche ich zusatzliche AI-Abos, um OpenCode zu nutzen?",
-  "home.faq.a3.p1": "Nicht unbedingt: OpenCode bringt kostenlose Modelle mit, die du ohne Account nutzen kannst.",
+  "home.faq.q3": "Brauche ich zusatzliche AI-Abos, um IronCode zu nutzen?",
+  "home.faq.a3.p1": "Nicht unbedingt: IronCode bringt kostenlose Modelle mit, die du ohne Account nutzen kannst.",
   "home.faq.a3.p2.beforeZen": "Daruber hinaus kannst du beliebte Coding-Modelle nutzen, indem du einen",
   "home.faq.a3.p2.afterZen": " Account erstellst.",
   "home.faq.a3.p3":
-    "Wir empfehlen Zen, aber OpenCode funktioniert auch mit allen gängigen Anbietern wie OpenAI, Anthropic, xAI usw.",
+    "Wir empfehlen Zen, aber IronCode funktioniert auch mit allen gängigen Anbietern wie OpenAI, Anthropic, xAI usw.",
   "home.faq.a3.p4.beforeLocal": "Du kannst sogar deine",
   "home.faq.a3.p4.localLink": "lokalen Modelle",
-  "home.faq.q4": "Kann ich meine bestehenden AI-Abos mit OpenCode nutzen?",
+  "home.faq.q4": "Kann ich meine bestehenden AI-Abos mit IronCode nutzen?",
   "home.faq.a4.p1":
-    "Ja, OpenCode unterstutzt Abos von allen grossen Anbietern. Du kannst Claude Pro/Max, ChatGPT Plus/Pro oder GitHub Copilot verwenden.",
-  "home.faq.q5": "Kann ich OpenCode nur im Terminal nutzen?",
-  "home.faq.a5.beforeDesktop": "Nicht mehr! OpenCode gibt es jetzt auch als App fur",
+    "Ja, IronCode unterstutzt Abos von allen grossen Anbietern. Du kannst Claude Pro/Max, ChatGPT Plus/Pro oder GitHub Copilot verwenden.",
+  "home.faq.q5": "Kann ich IronCode nur im Terminal nutzen?",
+  "home.faq.a5.beforeDesktop": "Nicht mehr! IronCode gibt es jetzt auch als App fur",
   "home.faq.a5.desktop": "Desktop",
   "home.faq.a5.and": "und",
   "home.faq.a5.web": "Web",
-  "home.faq.q6": "Wie viel kostet OpenCode?",
+  "home.faq.q6": "Wie viel kostet IronCode?",
   "home.faq.a6":
-    "OpenCode ist zu 100% kostenlos. Es bringt ausserdem kostenlose Modelle mit. Zusatzliche Kosten konnen entstehen, wenn du einen anderen Anbieter verbindest.",
+    "IronCode ist zu 100% kostenlos. Es bringt ausserdem kostenlose Modelle mit. Zusatzliche Kosten konnen entstehen, wenn du einen anderen Anbieter verbindest.",
   "home.faq.q7": "Wie sieht es mit Daten und Datenschutz aus?",
   "home.faq.a7.p1":
     "Deine Daten werden nur gespeichert, wenn du unsere kostenlosen Modelle nutzt oder teilbare Links erstellst.",
@@ -137,8 +137,8 @@ export const dict = {
   "home.faq.a7.p2.modelsLink": "unsere Modelle",
   "home.faq.a7.p2.and": "und",
   "home.faq.a7.p2.shareLink": "Share-Seiten",
-  "home.faq.q8": "Ist OpenCode Open Source?",
-  "home.faq.a8.p1": "Ja, OpenCode ist vollstandig Open Source. Der Quellcode ist offentlich auf",
+  "home.faq.q8": "Ist IronCode Open Source?",
+  "home.faq.a8.p1": "Ja, IronCode ist vollstandig Open Source. Der Quellcode ist offentlich auf",
   "home.faq.a8.p2": "unter der",
   "home.faq.a8.mitLicense": "MIT-Lizenz",
   "home.faq.a8.p3":
@@ -146,25 +146,25 @@ export const dict = {
 
   "home.zenCta.title": "Zuverlassige, optimierte Modelle fur Coding-Agents",
   "home.zenCta.body":
-    "Zen gibt dir Zugriff auf eine handverlesene Auswahl an AI-Modellen, die OpenCode speziell fur Coding-Agents getestet und benchmarked hat. Keine Sorge uber schwankende Leistung und Qualitat zwischen Anbietern: nutze validierte Modelle, die funktionieren.",
+    "Zen gibt dir Zugriff auf eine handverlesene Auswahl an AI-Modellen, die IronCode speziell fur Coding-Agents getestet und benchmarked hat. Keine Sorge uber schwankende Leistung und Qualitat zwischen Anbietern: nutze validierte Modelle, die funktionieren.",
   "home.zenCta.link": "Mehr uber Zen",
 
-  "download.title": "OpenCode | Download",
+  "download.title": "IronCode | Download",
 
-  "zen.title": "OpenCode Zen | Eine kuratierte Auswahl an zuverlassigen, optimierten Modellen fur Coding-Agents",
+  "zen.title": "IronCode Zen | Eine kuratierte Auswahl an zuverlassigen, optimierten Modellen fur Coding-Agents",
   "zen.hero.title": "Zuverlassige, optimierte Modelle fur Coding-Agents",
   "zen.hero.body":
-    "Zen gibt dir Zugriff auf eine handverlesene Auswahl an AI-Modellen, die OpenCode speziell fur Coding-Agents getestet und benchmarked hat. Keine Sorge uber schwankende Leistung und Qualitat zwischen Anbietern: nutze validierte Modelle, die funktionieren.",
+    "Zen gibt dir Zugriff auf eine handverlesene Auswahl an AI-Modellen, die IronCode speziell fur Coding-Agents getestet und benchmarked hat. Keine Sorge uber schwankende Leistung und Qualitat zwischen Anbietern: nutze validierte Modelle, die funktionieren.",
 
-  "zen.faq.q1": "Was ist OpenCode Zen?",
+  "zen.faq.q1": "Was ist IronCode Zen?",
   "zen.faq.a1":
-    "Zen ist eine kuratierte Auswahl an AI-Modellen, die vom Team hinter OpenCode fur Coding-Agents getestet und benchmarked wurden.",
+    "Zen ist eine kuratierte Auswahl an AI-Modellen, die vom Team hinter IronCode fur Coding-Agents getestet und benchmarked wurden.",
   "zen.faq.q2": "Was macht Zen genauer?",
   "zen.faq.a2":
     "Zen bietet nur Modelle an, die speziell fur Coding-Agents getestet und benchmarked wurden. Du wurdest kein Buttermesser benutzen, um Steak zu schneiden - nutze keine schlechten Modelle zum Coden.",
   "zen.faq.q3": "Ist Zen gunstiger?",
   "zen.faq.a3":
-    "Zen ist nicht gewinnorientiert. Zen gibt die Kosten der Modellanbieter direkt an dich weiter. Je hoher die Nutzung von Zen, desto mehr kann OpenCode bessere Preise verhandeln und an dich weitergeben.",
+    "Zen ist nicht gewinnorientiert. Zen gibt die Kosten der Modellanbieter direkt an dich weiter. Je hoher die Nutzung von Zen, desto mehr kann IronCode bessere Preise verhandeln und an dich weitergeben.",
   "zen.faq.q4": "Was kostet Zen?",
   "zen.faq.a4.p1.beforePricing": "Zen",
   "zen.faq.a4.p1.pricingLink": "berechnet pro Request",
@@ -173,7 +173,7 @@ export const dict = {
     "Deine Gesamtkosten hangen von der Nutzung ab, und du kannst monatliche Ausgabenlimits in deinem",
   "zen.faq.a4.p2.accountLink": "Account",
   "zen.faq.a4.p3":
-    "Um Kosten zu decken, erhebt OpenCode nur eine kleine Zahlungsabwicklungsgebuhr von $1.23 pro $20 Guthaben-Aufladung.",
+    "Um Kosten zu decken, erhebt IronCode nur eine kleine Zahlungsabwicklungsgebuhr von $1.23 pro $20 Guthaben-Aufladung.",
   "zen.faq.q5": "Wie sieht es mit Daten und Datenschutz aus?",
   "zen.faq.a5.beforeExceptions":
     "Alle Zen-Modelle werden in den USA gehostet. Anbieter folgen einer Zero-Retention-Policy und verwenden deine Daten nicht fur Modelltraining, mit den",
@@ -184,7 +184,7 @@ export const dict = {
   "zen.faq.a7": "Ja, du kannst die Abrechnung jederzeit deaktivieren und dein verbleibendes Guthaben nutzen.",
   "zen.faq.q8": "Kann ich Zen mit anderen Coding-Agents nutzen?",
   "zen.faq.a8":
-    "Zen funktioniert grossartig mit OpenCode, aber du kannst Zen mit jedem Agent verwenden. Folge den Setup-Anweisungen in deinem bevorzugten Coding-Agent.",
+    "Zen funktioniert grossartig mit IronCode, aber du kannst Zen mit jedem Agent verwenden. Folge den Setup-Anweisungen in deinem bevorzugten Coding-Agent.",
   "zen.cta.start": "Beginnen Sie mit Zen",
   "zen.pricing.title": "Fügen Sie 20 $ Pay-as-you-go-Guthaben hinzu",
   "zen.pricing.fee": "(+1,23 $ Kartenbearbeitungsgebühr)",
@@ -193,14 +193,14 @@ export const dict = {
   "zen.problem.title": "Welches Problem löst Zen?",
   "zen.problem.body":
     "Es gibt so viele Modelle, aber nur wenige funktionieren gut mit Codierungsagenten. Die meisten Anbieter konfigurieren sie unterschiedlich und führen zu unterschiedlichen Ergebnissen.",
-  "zen.problem.subtitle": "Wir beheben dieses Problem für alle, nicht nur für OpenCode-Benutzer.",
+  "zen.problem.subtitle": "Wir beheben dieses Problem für alle, nicht nur für IronCode-Benutzer.",
   "zen.problem.item1": "Testen ausgewählter Modelle und Beratung ihrer Teams",
   "zen.problem.item2":
     "Arbeiten Sie mit Anbietern zusammen, um sicherzustellen, dass sie ordnungsgemäß geliefert werden",
   "zen.problem.item3": "Benchmarking aller von uns empfohlenen Modell-Anbieter-Kombinationen",
   "zen.how.title": "So funktioniert Zen",
   "zen.how.body":
-    "Während wir Ihnen empfehlen, Zen mit OpenCode zu verwenden, können Sie Zen mit jedem Agenten verwenden.",
+    "Während wir Ihnen empfehlen, Zen mit IronCode zu verwenden, können Sie Zen mit jedem Agenten verwenden.",
   "zen.how.step1.title": "Melden Sie sich an und fügen Sie ein Guthaben von 20 $ hinzu",
   "zen.how.step1.beforeLink": "Folgen Sie dem",
   "zen.how.step1.link": "Installationsanweisungen",
@@ -213,14 +213,14 @@ export const dict = {
   "zen.privacy.beforeExceptions":
     "Alle Zen-Modelle werden in den USA gehostet. Anbieter folgen einer Null-Aufbewahrungsrichtlinie und verwenden Ihre Daten nicht für Modellschulungen",
   "zen.privacy.exceptionsLink": "folgende Ausnahmen",
-  "download.meta.description": "Lade OpenCode fur macOS, Windows und Linux herunter",
-  "download.hero.title": "OpenCode herunterladen",
+  "download.meta.description": "Lade IronCode fur macOS, Windows und Linux herunter",
+  "download.hero.title": "IronCode herunterladen",
   "download.hero.subtitle": "Als Beta verfugbar fur macOS, Windows und Linux",
   "download.hero.button": "Download fur {{os}}",
-  "download.section.terminal": "OpenCode Terminal",
-  "download.section.desktop": "OpenCode Desktop (Beta)",
-  "download.section.extensions": "OpenCode Extensions",
-  "download.section.integrations": "OpenCode Integrations",
+  "download.section.terminal": "IronCode Terminal",
+  "download.section.desktop": "IronCode Desktop (Beta)",
+  "download.section.extensions": "IronCode Extensions",
+  "download.section.integrations": "IronCode Integrations",
   "download.action.download": "Download",
   "download.action.install": "Installieren",
 
@@ -231,26 +231,26 @@ export const dict = {
   "download.platform.linuxRpm": "Linux (.rpm)",
 
   "download.faq.a3.beforeLocal":
-    "Nicht unbedingt, aber wahrscheinlich. Du brauchst ein AI-Abo, wenn du OpenCode mit einem kostenpflichtigen Anbieter verbinden willst, obwohl du mit",
+    "Nicht unbedingt, aber wahrscheinlich. Du brauchst ein AI-Abo, wenn du IronCode mit einem kostenpflichtigen Anbieter verbinden willst, obwohl du mit",
   "download.faq.a3.localLink": "lokalen Modellen",
   "download.faq.a3.afterLocal.beforeZen": "kostenlos arbeiten kannst. Obwohl wir Nutzer ermutigen,",
   "download.faq.a3.afterZen":
-    " zu verwenden, funktioniert OpenCode mit allen popularen Anbietern wie OpenAI, Anthropic, xAI usw.",
+    " zu verwenden, funktioniert IronCode mit allen popularen Anbietern wie OpenAI, Anthropic, xAI usw.",
 
-  "download.faq.a5.p1": "OpenCode ist zu 100% kostenlos.",
+  "download.faq.a5.p1": "IronCode ist zu 100% kostenlos.",
   "download.faq.a5.p2.beforeZen":
-    "Zusatzliche Kosten entstehen durch dein Abo bei einem Modellanbieter. OpenCode funktioniert mit jedem Modellanbieter, aber wir empfehlen",
+    "Zusatzliche Kosten entstehen durch dein Abo bei einem Modellanbieter. IronCode funktioniert mit jedem Modellanbieter, aber wir empfehlen",
   "download.faq.a5.p2.afterZen": " zu nutzen.",
 
-  "download.faq.a6.p1": "Deine Daten werden nur gespeichert, wenn du in OpenCode teilbare Links erstellst.",
+  "download.faq.a6.p1": "Deine Daten werden nur gespeichert, wenn du in IronCode teilbare Links erstellst.",
   "download.faq.a6.p2.beforeShare": "Mehr erfahren uber",
   "download.faq.a6.shareLink": "Share-Seiten",
 
-  "enterprise.title": "OpenCode | Enterprise-Losungen fur Ihre Organisation",
-  "enterprise.meta.description": "Kontaktieren Sie OpenCode fur Enterprise-Losungen",
+  "enterprise.title": "IronCode | Enterprise-Losungen fur Ihre Organisation",
+  "enterprise.meta.description": "Kontaktieren Sie IronCode fur Enterprise-Losungen",
   "enterprise.hero.title": "Ihr Code gehort Ihnen",
   "enterprise.hero.body1":
-    "OpenCode arbeitet sicher innerhalb Ihrer Organisation, ohne dass Daten oder Kontext gespeichert werden, und ohne Lizenzbeschrankungen oder Eigentumsanspruche. Starten Sie einen Testlauf mit Ihrem Team und rollen Sie es anschliessend in der gesamten Organisation aus, indem Sie es in Ihr SSO und Ihr internes AI-Gateway integrieren.",
+    "IronCode arbeitet sicher innerhalb Ihrer Organisation, ohne dass Daten oder Kontext gespeichert werden, und ohne Lizenzbeschrankungen oder Eigentumsanspruche. Starten Sie einen Testlauf mit Ihrem Team und rollen Sie es anschliessend in der gesamten Organisation aus, indem Sie es in Ihr SSO und Ihr internes AI-Gateway integrieren.",
   "enterprise.hero.body2": "Sagen Sie uns, wie wir helfen konnen.",
   "enterprise.form.name.label": "Vollstandiger Name",
   "enterprise.form.name.placeholder": "Jeff Bezos",
@@ -264,28 +264,28 @@ export const dict = {
   "enterprise.form.sending": "Wird gesendet...",
   "enterprise.form.success": "Nachricht gesendet, wir melden uns bald.",
   "enterprise.faq.title": "FAQ",
-  "enterprise.faq.q1": "Was ist OpenCode Enterprise?",
+  "enterprise.faq.q1": "Was ist IronCode Enterprise?",
   "enterprise.faq.a1":
-    "OpenCode Enterprise richtet sich an Organisationen, die sicherstellen wollen, dass Code und Daten ihre Infrastruktur niemals verlassen. Das wird durch eine zentralisierte Konfiguration erreicht, die sich in Ihr SSO und Ihr internes AI-Gateway integrieren lasst.",
-  "enterprise.faq.q2": "Wie starte ich mit OpenCode Enterprise?",
+    "IronCode Enterprise richtet sich an Organisationen, die sicherstellen wollen, dass Code und Daten ihre Infrastruktur niemals verlassen. Das wird durch eine zentralisierte Konfiguration erreicht, die sich in Ihr SSO und Ihr internes AI-Gateway integrieren lasst.",
+  "enterprise.faq.q2": "Wie starte ich mit IronCode Enterprise?",
   "enterprise.faq.a2":
-    "Starten Sie einfach mit einem internen Testlauf mit Ihrem Team. OpenCode speichert standardmassig weder Code noch Kontextdaten, sodass der Einstieg leicht ist. Kontaktieren Sie uns anschliessend, um Preise und Implementierungsoptionen zu besprechen.",
+    "Starten Sie einfach mit einem internen Testlauf mit Ihrem Team. IronCode speichert standardmassig weder Code noch Kontextdaten, sodass der Einstieg leicht ist. Kontaktieren Sie uns anschliessend, um Preise und Implementierungsoptionen zu besprechen.",
   "enterprise.faq.q3": "Wie funktioniert die Enterprise-Preisgestaltung?",
   "enterprise.faq.a3":
     "Wir bieten Enterprise-Preise pro Sitz an. Wenn Sie ein eigenes LLM-Gateway haben, berechnen wir keine Kosten fur verwendete Token. Fur weitere Details kontaktieren Sie uns bitte fur ein individuelles Angebot basierend auf den Anforderungen Ihrer Organisation.",
-  "enterprise.faq.q4": "Sind meine Daten mit OpenCode Enterprise sicher?",
+  "enterprise.faq.q4": "Sind meine Daten mit IronCode Enterprise sicher?",
   "enterprise.faq.a4":
-    "Ja. OpenCode speichert weder Code noch Kontextdaten. Die Verarbeitung erfolgt lokal oder uber direkte API-Aufrufe an Ihren AI-Anbieter. Mit zentraler Konfiguration und SSO-Integration bleiben Ihre Daten sicher innerhalb Ihrer Infrastruktur.",
+    "Ja. IronCode speichert weder Code noch Kontextdaten. Die Verarbeitung erfolgt lokal oder uber direkte API-Aufrufe an Ihren AI-Anbieter. Mit zentraler Konfiguration und SSO-Integration bleiben Ihre Daten sicher innerhalb Ihrer Infrastruktur.",
 
-  "brand.title": "OpenCode | Marke",
-  "brand.meta.description": "OpenCode Markenrichtlinien",
+  "brand.title": "IronCode | Marke",
+  "brand.meta.description": "IronCode Markenrichtlinien",
   "brand.heading": "Markenrichtlinien",
-  "brand.subtitle": "Ressourcen und Assets, die dir helfen, mit der OpenCode-Marke zu arbeiten.",
+  "brand.subtitle": "Ressourcen und Assets, die dir helfen, mit der IronCode-Marke zu arbeiten.",
   "brand.downloadAll": "Alle Assets herunterladen",
-  "changelog.title": "OpenCode | Changelog",
-  "changelog.meta.description": "OpenCode Release Notes und Changelog",
+  "changelog.title": "IronCode | Changelog",
+  "changelog.meta.description": "IronCode Release Notes und Changelog",
   "changelog.hero.title": "Changelog",
-  "changelog.hero.subtitle": "Neue Updates und Verbesserungen fur OpenCode",
+  "changelog.hero.subtitle": "Neue Updates und Verbesserungen fur IronCode",
   "changelog.empty": "Keine Changelog-Eintrage gefunden.",
   "changelog.viewJson": "JSON ansehen",
   "workspace.nav.zen": "Zen",
@@ -305,15 +305,15 @@ export const dict = {
     "Für optimale Performance konfigurierte Zugangsmodelle – keine Downgrades oder Weiterleitung zu günstigeren Anbietern.",
   "workspace.newUser.feature.lockin.title": "Kein Lock-in",
   "workspace.newUser.feature.lockin.body":
-    "Verwenden Sie Zen mit einem beliebigen Codierungsagenten und nutzen Sie weiterhin andere Anbieter mit opencode, wann immer Sie möchten.",
+    "Verwenden Sie Zen mit einem beliebigen Codierungsagenten und nutzen Sie weiterhin andere Anbieter mit ironcode, wann immer Sie möchten.",
   "workspace.newUser.copyApiKey": "Kopieren Sie den Schlüssel API",
   "workspace.newUser.copyKey": "Schlüssel kopieren",
   "workspace.newUser.copied": "Kopiert!",
   "workspace.newUser.step.enableBilling": "Abrechnung aktivieren",
   "workspace.newUser.step.login.before": "Laufen",
-  "workspace.newUser.step.login.after": "und wählen Sie opencode",
+  "workspace.newUser.step.login.after": "und wählen Sie ironcode",
   "workspace.newUser.step.pasteKey": "Fügen Sie Ihren API-Schlüssel ein",
-  "workspace.newUser.step.models.before": "Starten Sie opencode und führen Sie es aus",
+  "workspace.newUser.step.models.before": "Starten Sie ironcode und führen Sie es aus",
   "workspace.newUser.step.models.after": "um ein Modell auszuwählen",
   "workspace.models.title": "Modelle",
   "workspace.models.subtitle.beforeLink":
@@ -352,10 +352,10 @@ export const dict = {
   "workspace.cost.empty": "Für den ausgewählten Zeitraum sind keine Nutzungsdaten verfügbar.",
   "workspace.cost.subscriptionShort": "sub",
   "workspace.keys.title": "API-Schlüssel",
-  "workspace.keys.subtitle": "Verwalten Sie Ihre API-Schlüssel für den Zugriff auf opencode-Dienste.",
+  "workspace.keys.subtitle": "Verwalten Sie Ihre API-Schlüssel für den Zugriff auf ironcode-Dienste.",
   "workspace.keys.create": "Erstellen Sie einen API-Schlüssel",
   "workspace.keys.placeholder": "Geben Sie den Schlüsselnamen ein",
-  "workspace.keys.empty": "Erstellen Sie einen opencode Gateway-API-Schlüssel",
+  "workspace.keys.empty": "Erstellen Sie einen ironcode Gateway-API-Schlüssel",
   "workspace.keys.table.name": "Name",
   "workspace.keys.table.key": "Schlüssel",
   "workspace.keys.table.createdBy": "Erstellt von",
@@ -454,7 +454,7 @@ export const dict = {
   "workspace.black.time.minutes": "Minuten",
   "workspace.black.time.fewSeconds": "ein paar Sekunden",
   "workspace.black.subscription.title": "Abonnement",
-  "workspace.black.subscription.message": "Sie haben OpenCode Black für {{plan}} pro Monat abonniert.",
+  "workspace.black.subscription.message": "Sie haben IronCode Black für {{plan}} pro Monat abonniert.",
   "workspace.black.subscription.manage": "Abonnement verwalten",
   "workspace.black.subscription.rollingUsage": "5-stündige Nutzung",
   "workspace.black.subscription.weeklyUsage": "Wöchentliche Nutzung",
@@ -463,9 +463,9 @@ export const dict = {
     "Nutzen Sie Ihr verfügbares Guthaben, nachdem Sie die Nutzungslimits erreicht haben",
   "workspace.black.waitlist.title": "Warteliste",
   "workspace.black.waitlist.joined":
-    "Sie stehen auf der Warteliste für den Black-Plan im Wert von ${{plan}} pro Monat OpenCode.",
+    "Sie stehen auf der Warteliste für den Black-Plan im Wert von ${{plan}} pro Monat IronCode.",
   "workspace.black.waitlist.ready":
-    "Wir sind bereit, Sie für den Black-Plan im Wert von ${{plan}} pro Monat OpenCode anzumelden.",
+    "Wir sind bereit, Sie für den Black-Plan im Wert von ${{plan}} pro Monat IronCode anzumelden.",
   "workspace.black.waitlist.leave": "Warteliste verlassen",
   "workspace.black.waitlist.leaving": "Verlassen...",
   "workspace.black.waitlist.left": "Links",

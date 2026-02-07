@@ -1,10 +1,10 @@
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "https://ironcode.ai/config.json",
   // "enterprise": {
-  //   "url": "https://enterprise.dev.opencode.ai",
+  //   "url": "https://enterprise.dev.ironcode.ai",
   // },
   "provider": {
-    "opencode": {
+    "ironcode": {
       "options": {},
     },
   },

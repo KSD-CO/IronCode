@@ -22,11 +22,11 @@ const images = ["base", "bun-node", "rust", "tauri-linux", "publish"]
 const setup = async () => {
   if (!push) return
   const list = await $`docker buildx ls`.text()
-  if (list.includes("opencode")) {
-    await $`docker buildx use opencode`
+  if (list.includes("ironcode")) {
+    await $`docker buildx use ironcode`
     return
   }
-  await $`docker buildx create --name opencode --use`
+  await $`docker buildx create --name ironcode --use`
 }
 
 await setup()

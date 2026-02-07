@@ -225,7 +225,7 @@ pub fn run() {
 
     #[cfg(all(target_os = "macos", not(debug_assertions)))]
     let _ = std::process::Command::new("killall")
-        .arg("opencode-cli")
+        .arg("ironcode-cli")
         .output();
 
     let mut builder = tauri::Builder::default()
@@ -327,7 +327,7 @@ async fn initialize(app: AppHandle) {
                             else {
                                 let _ = child.kill();
                                 return Err(format!(
-                                    "Failed to spawn OpenCode Server. Logs:\n{}",
+                                    "Failed to spawn IronCode Server. Logs:\n{}",
                                     get_logs(app.clone()).await.unwrap()
                                 ));
                             };
@@ -364,7 +364,7 @@ async fn initialize(app: AppHandle) {
                     if !sqlite_exists {
                         println!(
                             "Sqlite file not found at {}, waiting for it to be generated",
-                            opencode_db_path().expect("failed to get db path").display()
+                            ironcode_db_path().expect("failed to get db path").display()
                         );
                         let _ = init_tx.send(InitStep::SqliteWaiting);
 
@@ -503,14 +503,14 @@ fn get_sidecar_port() -> u32 {
 }
 
 fn sqlite_file_exists() -> bool {
-    let Ok(path) = opencode_db_path() else {
+    let Ok(path) = ironcode_db_path() else {
         return true;
     };
 
     path.exists()
 }
 
-fn opencode_db_path() -> Result<PathBuf, &'static str> {
+fn ironcode_db_path() -> Result<PathBuf, &'static str> {
     let xdg_data_home = env::var_os("XDG_DATA_HOME").filter(|v| !v.is_empty());
 
     let data_home = match xdg_data_home {
@@ -521,7 +521,7 @@ fn opencode_db_path() -> Result<PathBuf, &'static str> {
         }
     };
 
-    Ok(data_home.join("opencode").join("opencode.db"))
+    Ok(data_home.join("ironcode").join("ironcode.db"))
 }
 
 // Creates a `once` listener for the specified event and returns a future that resolves

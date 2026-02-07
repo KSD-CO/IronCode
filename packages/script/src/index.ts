@@ -33,7 +33,7 @@ const IS_PREVIEW = CHANNEL !== "latest"
 const VERSION = await (async () => {
   if (env.OPENCODE_VERSION) return env.OPENCODE_VERSION
   if (IS_PREVIEW) return `0.0.0-${CHANNEL}-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "")}`
-  const version = await fetch("https://registry.npmjs.org/opencode-ai/latest")
+  const version = await fetch("https://registry.npmjs.org/ironcode-ai/latest")
     .then((res) => {
       if (!res.ok) throw new Error(res.statusText)
       return res.json()
@@ -48,7 +48,7 @@ const VERSION = await (async () => {
 
 const team = [
   "actions-user",
-  "opencode",
+  "ironcode",
   "rekram1-node",
   "thdxr",
   "kommander",
@@ -56,7 +56,7 @@ const team = [
   "fwang",
   "adamdotdevin",
   "iamdavidhill",
-  "opencode-agent[bot]",
+  "ironcode-agent[bot]",
   "R44VC0RP",
 ]
 
@@ -77,4 +77,4 @@ export const Script = {
     return team
   },
 }
-console.log(`opencode script`, JSON.stringify(Script, null, 2))
+console.log(`ironcode script`, JSON.stringify(Script, null, 2))

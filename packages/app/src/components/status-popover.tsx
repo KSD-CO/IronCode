@@ -1,19 +1,19 @@
 import { createEffect, createMemo, For, onCleanup, Show } from "solid-js"
 import { createStore, reconcile } from "solid-js/store"
 import { useNavigate } from "@solidjs/router"
-import { useDialog } from "@opencode-ai/ui/context/dialog"
-import { Popover } from "@opencode-ai/ui/popover"
-import { Tabs } from "@opencode-ai/ui/tabs"
-import { Button } from "@opencode-ai/ui/button"
-import { Switch } from "@opencode-ai/ui/switch"
-import { Icon } from "@opencode-ai/ui/icon"
+import { useDialog } from "@ironcode-ai/ui/context/dialog"
+import { Popover } from "@ironcode-ai/ui/popover"
+import { Tabs } from "@ironcode-ai/ui/tabs"
+import { Button } from "@ironcode-ai/ui/button"
+import { Switch } from "@ironcode-ai/ui/switch"
+import { Icon } from "@ironcode-ai/ui/icon"
 import { useSync } from "@/context/sync"
 import { useSDK } from "@/context/sdk"
 import { normalizeServerUrl, useServer } from "@/context/server"
 import { usePlatform } from "@/context/platform"
 import { useLanguage } from "@/context/language"
 import { DialogSelectServer } from "./dialog-select-server"
-import { showToast } from "@opencode-ai/ui/toast"
+import { showToast } from "@ironcode-ai/ui/toast"
 import { ServerRow } from "@/components/server/server-row"
 import { checkServerHealth, type ServerHealth } from "@/utils/server-health"
 
@@ -338,7 +338,7 @@ export function StatusPopover() {
                     <div class="text-14-regular text-text-base text-center my-auto">
                       {(() => {
                         const value = language.t("dialog.plugins.empty")
-                        const file = "opencode.json"
+                        const file = "ironcode.json"
                         const parts = value.split(file)
                         if (parts.length === 1) return value
                         return (

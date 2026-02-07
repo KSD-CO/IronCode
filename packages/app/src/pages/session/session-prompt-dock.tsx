@@ -1,6 +1,6 @@
 import { For, Show, type ComponentProps } from "solid-js"
-import { Button } from "@opencode-ai/ui/button"
-import { BasicTool } from "@opencode-ai/ui/basic-tool"
+import { Button } from "@ironcode-ai/ui/button"
+import { BasicTool } from "@ironcode-ai/ui/basic-tool"
 import { PromptInput } from "@/components/prompt-input"
 import { QuestionDock } from "@/components/question-dock"
 import { questionSubtitle } from "@/pages/session/session-prompt-helpers"

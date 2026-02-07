@@ -1,16 +1,16 @@
-import type { ProviderAuthAuthorization } from "@opencode-ai/sdk/v2/client"
-import { Button } from "@opencode-ai/ui/button"
-import { useDialog } from "@opencode-ai/ui/context/dialog"
-import { Dialog } from "@opencode-ai/ui/dialog"
-import { Icon } from "@opencode-ai/ui/icon"
-import { IconButton } from "@opencode-ai/ui/icon-button"
-import type { IconName } from "@opencode-ai/ui/icons/provider"
-import { List, type ListRef } from "@opencode-ai/ui/list"
-import { ProviderIcon } from "@opencode-ai/ui/provider-icon"
-import { Spinner } from "@opencode-ai/ui/spinner"
-import { TextField } from "@opencode-ai/ui/text-field"
-import { showToast } from "@opencode-ai/ui/toast"
-import { iife } from "@opencode-ai/util/iife"
+import type { ProviderAuthAuthorization } from "@ironcode-ai/sdk/v2/client"
+import { Button } from "@ironcode-ai/ui/button"
+import { useDialog } from "@ironcode-ai/ui/context/dialog"
+import { Dialog } from "@ironcode-ai/ui/dialog"
+import { Icon } from "@ironcode-ai/ui/icon"
+import { IconButton } from "@ironcode-ai/ui/icon-button"
+import type { IconName } from "@ironcode-ai/ui/icons/provider"
+import { List, type ListRef } from "@ironcode-ai/ui/list"
+import { ProviderIcon } from "@ironcode-ai/ui/provider-icon"
+import { Spinner } from "@ironcode-ai/ui/spinner"
+import { TextField } from "@ironcode-ai/ui/text-field"
+import { showToast } from "@ironcode-ai/ui/toast"
+import { iife } from "@ironcode-ai/util/iife"
 import { createMemo, Match, onCleanup, onMount, Switch } from "solid-js"
 import { createStore, produce } from "solid-js/store"
 import { Link } from "@/components/link"
@@ -265,20 +265,20 @@ export function DialogConnectProvider(props: { provider: string }) {
                 return (
                   <div class="flex flex-col gap-6">
                     <Switch>
-                      <Match when={provider().id === "opencode"}>
+                      <Match when={provider().id === "ironcode"}>
                         <div class="flex flex-col gap-4">
                           <div class="text-14-regular text-text-base">
-                            {language.t("provider.connect.opencodeZen.line1")}
+                            {language.t("provider.connect.ironcodeZen.line1")}
                           </div>
                           <div class="text-14-regular text-text-base">
-                            {language.t("provider.connect.opencodeZen.line2")}
+                            {language.t("provider.connect.ironcodeZen.line2")}
                           </div>
                           <div class="text-14-regular text-text-base">
-                            {language.t("provider.connect.opencodeZen.visit.prefix")}
-                            <Link href="https://opencode.ai/zen" tabIndex={-1}>
-                              {language.t("provider.connect.opencodeZen.visit.link")}
+                            {language.t("provider.connect.ironcodeZen.visit.prefix")}
+                            <Link href="https://ironcode.ai/zen" tabIndex={-1}>
+                              {language.t("provider.connect.ironcodeZen.visit.link")}
                             </Link>
-                            {language.t("provider.connect.opencodeZen.visit.suffix")}
+                            {language.t("provider.connect.ironcodeZen.visit.suffix")}
                           </div>
                         </div>
                       </Match>

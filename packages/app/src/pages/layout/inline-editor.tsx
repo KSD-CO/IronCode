@@ -1,6 +1,6 @@
 import { createStore } from "solid-js/store"
 import { Show, type Accessor } from "solid-js"
-import { InlineInput } from "@opencode-ai/ui/inline-input"
+import { InlineInput } from "@ironcode-ai/ui/inline-input"
 
 export function createInlineEditorController() {
   const [editor, setEditor] = createStore({

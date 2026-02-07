@@ -6,8 +6,8 @@ use tauri_plugin_shell::{
 
 use crate::{LogState, constants::MAX_LOG_ENTRIES};
 
-const CLI_INSTALL_DIR: &str = ".opencode/bin";
-const CLI_BINARY_NAME: &str = "opencode";
+const CLI_INSTALL_DIR: &str = ".ironcode/bin";
+const CLI_BINARY_NAME: &str = "ironcode";
 
 #[derive(serde::Deserialize)]
 pub struct ServerConfig {
@@ -44,7 +44,7 @@ pub fn get_sidecar_path(app: &tauri::AppHandle) -> std::path::PathBuf {
         .expect("Failed to get current binary")
         .parent()
         .expect("Failed to get parent dir")
-        .join("opencode-cli")
+        .join("ironcode-cli")
 }
 
 fn is_cli_installed() -> bool {
@@ -67,7 +67,7 @@ pub fn install_cli(app: tauri::AppHandle) -> Result<String, String> {
         return Err("Sidecar binary not found".to_string());
     }
 
-    let temp_script = std::env::temp_dir().join("opencode-install.sh");
+    let temp_script = std::env::temp_dir().join("ironcode-install.sh");
     std::fs::write(&temp_script, INSTALL_SCRIPT)
         .map_err(|e| format!("Failed to write install script: {}", e))?;
 
@@ -159,7 +159,7 @@ pub fn create_command(app: &tauri::AppHandle, args: &str) -> Command {
     #[cfg(target_os = "windows")]
     return app
         .shell()
-        .sidecar("opencode-cli")
+        .sidecar("ironcode-cli")
         .unwrap()
         .args(args.split_whitespace())
         .env("OPENCODE_EXPERIMENTAL_ICON_DISCOVERY", "true")
@@ -198,10 +198,10 @@ pub fn serve(app: &AppHandle, hostname: &str, port: u32, password: &str) -> Comm
         app,
         format!("serve --hostname {hostname} --port {port}").as_str(),
     )
-    .env("OPENCODE_SERVER_USERNAME", "opencode")
+    .env("OPENCODE_SERVER_USERNAME", "ironcode")
     .env("OPENCODE_SERVER_PASSWORD", password)
     .spawn()
-    .expect("Failed to spawn opencode");
+    .expect("Failed to spawn ironcode");
 
     tokio::spawn(async move {
         while let Some(event) = rx.recv().await {

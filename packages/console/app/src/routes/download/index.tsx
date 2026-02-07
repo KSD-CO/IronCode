@@ -5,7 +5,7 @@ import { Header } from "~/component/header"
 import { Footer } from "~/component/footer"
 import { IconCopy, IconCheck } from "~/component/icon"
 import { Faq } from "~/component/faq"
-import desktopAppIcon from "../../asset/lander/opencode-desktop-icon.png"
+import desktopAppIcon from "../../asset/lander/ironcode-desktop-icon.png"
 import { Legal } from "~/component/legal"
 import { config } from "~/config"
 import { createSignal, onMount, Show, JSX } from "solid-js"
@@ -118,34 +118,34 @@ export default function Download() {
             <div data-component="section-content">
               <button
                 data-component="cli-row"
-                onClick={handleCopyClick("curl -fsSL https://opencode.ai/install | bash")}
+                onClick={handleCopyClick("curl -fsSL https://ironcode.ai/install | bash")}
               >
                 <code>
-                  curl -fsSL https://<strong>opencode.ai/install</strong> | bash
+                  curl -fsSL https://<strong>ironcode.ai/install</strong> | bash
                 </code>
                 <CopyStatus />
               </button>
-              <button data-component="cli-row" onClick={handleCopyClick("npm i -g opencode-ai")}>
+              <button data-component="cli-row" onClick={handleCopyClick("npm i -g ironcode-ai")}>
                 <code>
-                  npm i -g <strong>opencode-ai</strong>
+                  npm i -g <strong>ironcode-ai</strong>
                 </code>
                 <CopyStatus />
               </button>
-              <button data-component="cli-row" onClick={handleCopyClick("bun add -g opencode-ai")}>
+              <button data-component="cli-row" onClick={handleCopyClick("bun add -g ironcode-ai")}>
                 <code>
-                  bun add -g <strong>opencode-ai</strong>
+                  bun add -g <strong>ironcode-ai</strong>
                 </code>
                 <CopyStatus />
               </button>
-              <button data-component="cli-row" onClick={handleCopyClick("brew install anomalyco/tap/opencode")}>
+              <button data-component="cli-row" onClick={handleCopyClick("brew install anomalyco/tap/ironcode")}>
                 <code>
-                  brew install <strong>anomalyco/tap/opencode</strong>
+                  brew install <strong>anomalyco/tap/ironcode</strong>
                 </code>
                 <CopyStatus />
               </button>
-              <button data-component="cli-row" onClick={handleCopyClick("paru -S opencode")}>
+              <button data-component="cli-row" onClick={handleCopyClick("paru -S ironcode")}>
                 <code>
-                  paru -S <strong>opencode</strong>
+                  paru -S <strong>ironcode</strong>
                 </code>
                 <CopyStatus />
               </button>
@@ -157,9 +157,9 @@ export default function Download() {
               <span>[2]</span> {i18n.t("download.section.desktop")}
             </div>
             <div data-component="section-content">
-              <button data-component="cli-row" onClick={handleCopyClick("brew install --cask opencode-desktop")}>
+              <button data-component="cli-row" onClick={handleCopyClick("brew install --cask ironcode-desktop")}>
                 <code>
-                  brew install --cask <strong>opencode-desktop</strong>
+                  brew install --cask <strong>ironcode-desktop</strong>
                 </code>
                 <CopyStatus />
               </button>
@@ -294,7 +294,7 @@ export default function Download() {
                   </span>
                   <span>VS Code</span>
                 </div>
-                <a href="https://opencode.ai/docs/ide/" data-component="action-button">
+                <a href="https://ironcode.ai/docs/ide/" data-component="action-button">
                   {i18n.t("download.action.install")}
                 </a>
               </div>
@@ -318,7 +318,7 @@ export default function Download() {
                   </span>
                   <span>Cursor</span>
                 </div>
-                <a href="https://opencode.ai/docs/ide/" data-component="action-button">
+                <a href="https://ironcode.ai/docs/ide/" data-component="action-button">
                   {i18n.t("download.action.install")}
                 </a>
               </div>
@@ -335,7 +335,7 @@ export default function Download() {
                   </span>
                   <span>Zed</span>
                 </div>
-                <a href="https://opencode.ai/docs/ide/" data-component="action-button">
+                <a href="https://ironcode.ai/docs/ide/" data-component="action-button">
                   {i18n.t("download.action.install")}
                 </a>
               </div>
@@ -352,7 +352,7 @@ export default function Download() {
                   </span>
                   <span>Windsurf</span>
                 </div>
-                <a href="https://opencode.ai/docs/ide/" data-component="action-button">
+                <a href="https://ironcode.ai/docs/ide/" data-component="action-button">
                   {i18n.t("download.action.install")}
                 </a>
               </div>
@@ -369,7 +369,7 @@ export default function Download() {
                   </span>
                   <span>VSCodium</span>
                 </div>
-                <a href="https://opencode.ai/docs/ide/" data-component="action-button">
+                <a href="https://ironcode.ai/docs/ide/" data-component="action-button">
                   {i18n.t("download.action.install")}
                 </a>
               </div>
@@ -393,7 +393,7 @@ export default function Download() {
                   </span>
                   <span>GitHub</span>
                 </div>
-                <a href="https://opencode.ai/docs/github/" data-component="action-button">
+                <a href="https://ironcode.ai/docs/github/" data-component="action-button">
                   {i18n.t("download.action.install")}
                 </a>
               </div>
@@ -410,7 +410,7 @@ export default function Download() {
                   </span>
                   <span>GitLab</span>
                 </div>
-                <a href="https://opencode.ai/docs/gitlab/" data-component="action-button">
+                <a href="https://ironcode.ai/docs/gitlab/" data-component="action-button">
                   {i18n.t("download.action.install")}
                 </a>
               </div>

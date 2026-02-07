@@ -5,9 +5,9 @@ import { useSDK } from "@/context/sdk"
 import { monoFontFamily, useSettings } from "@/context/settings"
 import { SerializeAddon } from "@/addons/serialize"
 import { LocalPTY } from "@/context/terminal"
-import { resolveThemeVariant, useTheme, withAlpha, type HexColor } from "@opencode-ai/ui/theme"
+import { resolveThemeVariant, useTheme, withAlpha, type HexColor } from "@ironcode-ai/ui/theme"
 import { useLanguage } from "@/context/language"
-import { showToast } from "@opencode-ai/ui/toast"
+import { showToast } from "@ironcode-ai/ui/toast"
 import { disposeIfDisposable, getHoveredLinkText, setOptionIfSupported } from "@/utils/runtime-adapters"
 
 export interface TerminalProps extends ComponentProps<"div"> {
@@ -164,7 +164,7 @@ export const Terminal = (props: TerminalProps) => {
       const url = new URL(sdk.url + `/pty/${local.pty.id}/connect?directory=${encodeURIComponent(sdk.directory)}`)
       url.protocol = url.protocol === "https:" ? "wss:" : "ws:"
       if (window.__OPENCODE__?.serverPassword) {
-        url.username = "opencode"
+        url.username = "ironcode"
         url.password = window.__OPENCODE__?.serverPassword
       }
       const socket = new WebSocket(url)

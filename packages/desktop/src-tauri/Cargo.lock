@@ -3062,7 +3062,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "opencode-desktop"
+name = "ironcode-desktop"
 version = "0.0.0"
 dependencies = [
  "comrak",

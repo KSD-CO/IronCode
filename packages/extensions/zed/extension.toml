@@ -1,36 +1,36 @@
-id = "opencode"
-name = "OpenCode"
+id = "ironcode"
+name = "IronCode"
 description = "The open source coding agent."
 version = "1.1.53"
 schema_version = 1
 authors = ["Anomaly"]
-repository = "https://github.com/anomalyco/opencode"
+repository = "https://github.com/anomalyco/ironcode"
 
-[agent_servers.opencode]
-name = "OpenCode"
-icon = "./icons/opencode.svg"
+[agent_servers.ironcode]
+name = "IronCode"
+icon = "./icons/ironcode.svg"
 
-[agent_servers.opencode.targets.darwin-aarch64]
-archive = "https://github.com/anomalyco/opencode/releases/download/v1.1.53/opencode-darwin-arm64.zip"
-cmd = "./opencode"
+[agent_servers.ironcode.targets.darwin-aarch64]
+archive = "https://github.com/anomalyco/ironcode/releases/download/v1.1.53/ironcode-darwin-arm64.zip"
+cmd = "./ironcode"
 args = ["acp"]
 
-[agent_servers.opencode.targets.darwin-x86_64]
-archive = "https://github.com/anomalyco/opencode/releases/download/v1.1.53/opencode-darwin-x64.zip"
-cmd = "./opencode"
+[agent_servers.ironcode.targets.darwin-x86_64]
+archive = "https://github.com/anomalyco/ironcode/releases/download/v1.1.53/ironcode-darwin-x64.zip"
+cmd = "./ironcode"
 args = ["acp"]
 
-[agent_servers.opencode.targets.linux-aarch64]
-archive = "https://github.com/anomalyco/opencode/releases/download/v1.1.53/opencode-linux-arm64.tar.gz"
-cmd = "./opencode"
+[agent_servers.ironcode.targets.linux-aarch64]
+archive = "https://github.com/anomalyco/ironcode/releases/download/v1.1.53/ironcode-linux-arm64.tar.gz"
+cmd = "./ironcode"
 args = ["acp"]
 
-[agent_servers.opencode.targets.linux-x86_64]
-archive = "https://github.com/anomalyco/opencode/releases/download/v1.1.53/opencode-linux-x64.tar.gz"
-cmd = "./opencode"
+[agent_servers.ironcode.targets.linux-x86_64]
+archive = "https://github.com/anomalyco/ironcode/releases/download/v1.1.53/ironcode-linux-x64.tar.gz"
+cmd = "./ironcode"
 args = ["acp"]
 
-[agent_servers.opencode.targets.windows-x86_64]
-archive = "https://github.com/anomalyco/opencode/releases/download/v1.1.53/opencode-windows-x64.zip"
-cmd = "./opencode.exe"
+[agent_servers.ironcode.targets.windows-x86_64]
+archive = "https://github.com/anomalyco/ironcode/releases/download/v1.1.53/ironcode-windows-x64.zip"
+cmd = "./ironcode.exe"
 args = ["acp"]
