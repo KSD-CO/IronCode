@@ -15,6 +15,7 @@ import { DialogMcp } from "@tui/component/dialog-mcp"
 import { DialogStatus } from "@tui/component/dialog-status"
 import { DialogThemeList } from "@tui/component/dialog-theme-list"
 import { DialogThemeEditor } from "@tui/component/dialog-theme-editor"
+import { DialogExplorer } from "@tui/component/dialog-explorer"
 import { DialogHelp } from "./ui/dialog-help"
 import { DialogPrompt } from "./ui/dialog-prompt"
 import { CommandProvider, useCommandDialog } from "@tui/component/dialog-command"
@@ -527,6 +528,18 @@ function App() {
         }
       },
       category: "System",
+    },
+    {
+      title: "Project explorer",
+      value: "explorer.open",
+      category: "System",
+      slash: {
+        name: "explorer",
+        aliases: ["files", "browse"],
+      },
+      onSelect: () => {
+        dialog.replace(() => <DialogExplorer />, undefined, "fullscreen")
+      },
     },
     {
       title: "Toggle appearance",

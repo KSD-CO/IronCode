@@ -8,7 +8,7 @@ import { useToast } from "./toast"
 
 export function Dialog(
   props: ParentProps<{
-    size?: "medium" | "large"
+    size?: "medium" | "large" | "fullscreen"
     onClose: () => void
   }>,
 ) {
@@ -16,28 +16,31 @@ export function Dialog(
   const { theme } = useTheme()
   const renderer = useRenderer()
 
+  const isFullscreen = props.size === "fullscreen"
+
   return (
     <box
       onMouseUp={async () => {
         if (renderer.getSelection()) return
-        props.onClose?.()
+        if (!isFullscreen) props.onClose?.()
       }}
       width={dimensions().width}
       height={dimensions().height}
-      alignItems="center"
+      alignItems={isFullscreen ? undefined : "center"}
       position="absolute"
-      paddingTop={dimensions().height / 4}
+      paddingTop={isFullscreen ? 0 : dimensions().height / 4}
       left={0}
       top={0}
-      backgroundColor={RGBA.fromInts(0, 0, 0, 150)}
+      backgroundColor={isFullscreen ? undefined : RGBA.fromInts(0, 0, 0, 150)}
     >
       <box
         onMouseUp={async (e) => {
           if (renderer.getSelection()) return
           e.stopPropagation()
         }}
-        width={props.size === "large" ? 80 : 60}
-        maxWidth={dimensions().width - 2}
+        width={isFullscreen ? dimensions().width : props.size === "large" ? 80 : 60}
+        height={isFullscreen ? dimensions().height : undefined}
+        maxWidth={isFullscreen ? undefined : dimensions().width - 2}
         backgroundColor={theme.backgroundPanel}
         paddingTop={1}
       >
@@ -53,7 +56,7 @@ function init() {
       element: JSX.Element
       onClose?: () => void
     }[],
-    size: "medium" as "medium" | "large",
+    size: "medium" as "medium" | "large" | "fullscreen",
   })
 
   useKeyboard((evt) => {
@@ -97,7 +100,7 @@ function init() {
       })
       refocus()
     },
-    replace(input: any, onClose?: () => void) {
+    replace(input: any, onClose?: () => void, size?: "medium" | "large" | "fullscreen") {
       if (store.stack.length === 0) {
         focus = renderer.currentFocusedRenderable
         focus?.blur()
@@ -105,13 +108,15 @@ function init() {
       for (const item of store.stack) {
         if (item.onClose) item.onClose()
       }
-      setStore("size", "medium")
-      setStore("stack", [
-        {
-          element: input,
-          onClose,
-        },
-      ])
+      batch(() => {
+        setStore("size", size || "medium")
+        setStore("stack", [
+          {
+            element: input,
+            onClose,
+          },
+        ])
+      })
     },
     get stack() {
       return store.stack
@@ -119,7 +124,7 @@ function init() {
     get size() {
       return store.size
     },
-    setSize(size: "medium" | "large") {
+    setSize(size: "medium" | "large" | "fullscreen") {
       setStore("size", size)
     },
   }
