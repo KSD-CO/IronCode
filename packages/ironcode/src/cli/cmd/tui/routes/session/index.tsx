@@ -1740,7 +1740,8 @@ function Write(props: ToolProps<typeof WriteTool>) {
 function Glob(props: ToolProps<typeof GlobTool>) {
   return (
     <InlineTool icon="✱" pending="Finding files..." complete={props.input.pattern} part={props.part}>
-      Glob "{props.input.pattern}" <Show when={props.input.path}>in {normalizePath(props.input.path)} </Show>
+      Glob "{props.input.pattern}"{" "}
+      <Show when={props.input.path}>in {normalizePath(props.input.path ?? undefined)} </Show>
       <Show when={props.metadata.count}>
         ({props.metadata.count} {props.metadata.count === 1 ? "match" : "matches"})
       </Show>
@@ -1778,7 +1779,8 @@ function Read(props: ToolProps<typeof ReadTool>) {
 function Grep(props: ToolProps<typeof GrepTool>) {
   return (
     <InlineTool icon="✱" pending="Searching content..." complete={props.input.pattern} part={props.part}>
-      Grep "{props.input.pattern}" <Show when={props.input.path}>in {normalizePath(props.input.path)} </Show>
+      Grep "{props.input.pattern}"{" "}
+      <Show when={props.input.path}>in {normalizePath(props.input.path ?? undefined)} </Show>
       <Show when={props.metadata.matches}>
         ({props.metadata.matches} {props.metadata.matches === 1 ? "match" : "matches"})
       </Show>
@@ -1789,7 +1791,7 @@ function Grep(props: ToolProps<typeof GrepTool>) {
 function List(props: ToolProps<typeof ListTool>) {
   const dir = createMemo(() => {
     if (props.input.path) {
-      return normalizePath(props.input.path)
+      return normalizePath(props.input.path ?? undefined)
     }
     return ""
   })
