@@ -23,9 +23,9 @@ jobs:
       matrix:
         include:
           - system: x86_64-linux
-            runner: blacksmith-4vcpu-ubuntu-2404
+            runner: ubuntu-latest
           - system: aarch64-linux
-            runner: blacksmith-4vcpu-ubuntu-2404-arm
+            runner: ubuntu-latest
           - system: x86_64-darwin
             runner: macos-15-intel
           - system: aarch64-darwin
@@ -74,7 +74,7 @@ jobs:
   update-hashes:
     needs: compute-hash
     if: github.event_name != 'pull_request'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
@@ -84,11 +84,10 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.ref_name }}
 
-      - name: Setup git committer
-        uses: ./.github/actions/setup-git-committer
-        with:
-          ironcode-app-id: ${{ vars.IRONCODE_APP_ID }}
-          ironcode-app-secret: ${{ secrets.IRONCODE_APP_SECRET }}
+      - name: Setup git user
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Pull latest changes
         run: |
