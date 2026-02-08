@@ -14,7 +14,9 @@ import { DialogModel, useConnected } from "@tui/component/dialog-model"
 import { DialogMcp } from "@tui/component/dialog-mcp"
 import { DialogStatus } from "@tui/component/dialog-status"
 import { DialogThemeList } from "@tui/component/dialog-theme-list"
+import { DialogThemeEditor } from "@tui/component/dialog-theme-editor"
 import { DialogHelp } from "./ui/dialog-help"
+import { DialogPrompt } from "./ui/dialog-prompt"
 import { CommandProvider, useCommandDialog } from "@tui/component/dialog-command"
 import { DialogAgent } from "@tui/component/dialog-agent"
 import { DialogSessionList } from "@tui/component/dialog-session-list"
@@ -194,7 +196,8 @@ function App() {
   const command = useCommandDialog()
   const sdk = useSDK()
   const toast = useToast()
-  const { theme, mode, setMode } = useTheme()
+  const themeContext = useTheme()
+  const { theme, mode, setMode } = themeContext
   const sync = useSync()
   const exit = useExit()
   const promptRef = usePromptRef()
@@ -486,6 +489,42 @@ function App() {
       },
       onSelect: () => {
         dialog.replace(() => <DialogThemeList />)
+      },
+      category: "System",
+    },
+    {
+      title: "Edit theme",
+      value: "theme.edit",
+      slash: {
+        name: "edit-theme",
+      },
+      onSelect: () => {
+        const currentTheme = themeContext.selected
+        dialog.replace(() => <DialogThemeEditor themeName={currentTheme} />)
+      },
+      category: "System",
+    },
+    {
+      title: "Duplicate theme",
+      value: "theme.duplicate",
+      slash: {
+        name: "duplicate-theme",
+      },
+      onSelect: async () => {
+        const currentTheme = themeContext.selected
+        const newName = await DialogPrompt.show(dialog, "Duplicate Theme", {
+          placeholder: "Enter new theme name",
+          value: `${currentTheme}-copy`,
+        })
+
+        if (newName) {
+          const allThemes = themeContext.all()
+          const theme = allThemes[currentTheme]
+          if (theme) {
+            await themeContext.save(newName, theme)
+            dialog.replace(() => <DialogThemeEditor themeName={newName} />)
+          }
+        }
       },
       category: "System",
     },

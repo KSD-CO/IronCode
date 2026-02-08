@@ -384,6 +384,17 @@ export const { use: useTheme, provider: ThemeProvider } = createSimpleContext({
         setStore("active", theme)
         kv.set("theme", theme)
       },
+      async save(name: string, theme: ThemeJson) {
+        const themesDir = path.join(Global.Path.config, "themes")
+        // Ensure themes directory exists
+        await Bun.write(path.join(themesDir, ".gitkeep"), "")
+        await Bun.write(path.join(themesDir, `${name}.json`), JSON.stringify(theme, null, 2))
+        setStore(
+          produce((draft) => {
+            draft.themes[name] = theme
+          }),
+        )
+      },
       get ready() {
         return store.ready
       },
