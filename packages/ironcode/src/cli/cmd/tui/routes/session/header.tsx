@@ -1,4 +1,4 @@
-import { type Accessor, createMemo, createSignal, Match, Show, Switch } from "solid-js"
+import { type Accessor, createMemo, createSignal, Match, onCleanup, onMount, Show, Switch } from "solid-js"
 import { useRouteData } from "@tui/context/route"
 import { useSync } from "@tui/context/sync"
 import { pipe, sumBy } from "remeda"
@@ -9,6 +9,7 @@ import { useCommandDialog } from "@tui/component/dialog-command"
 import { useKeybind } from "../../context/keybind"
 import { Installation } from "@/installation"
 import { useTerminalDimensions } from "@opentui/solid"
+import { getSystemStatsFFI, type SystemStats } from "@/tool/ffi"
 
 const Title = (props: { session: Accessor<Session> }) => {
   const { theme } = useTheme()
@@ -35,6 +36,26 @@ export function Header() {
   const sync = useSync()
   const session = createMemo(() => sync.session.get(route.sessionID)!)
   const messages = createMemo(() => sync.data.message[route.sessionID] ?? [])
+
+  const [stats, setStats] = createSignal<SystemStats>({
+    cpu_usage: 0,
+    memory_used_mb: 0,
+    memory_total_mb: 0,
+    memory_percent: 0,
+  })
+
+  onMount(() => {
+    const updateStats = () => {
+      try {
+        setStats(getSystemStatsFFI())
+      } catch (e) {
+        // Ignore errors
+      }
+    }
+    updateStats()
+    const interval = setInterval(updateStats, 2000)
+    onCleanup(() => clearInterval(interval))
+  })
 
   const cost = createMemo(() => {
     const total = pipe(
@@ -89,6 +110,15 @@ export function Header() {
                 </text>
                 <box flexDirection="row" gap={1} flexShrink={0}>
                   <ContextInfo context={context} cost={cost} />
+                  <text fg={theme.textMuted}>
+                    CPU {stats().cpu_usage.toFixed(0)}% {(() => {
+                      const bars = Math.round(stats().cpu_usage / 10)
+                      return '▓'.repeat(bars) + '░'.repeat(10 - bars)
+                    })()} Mem {(stats().memory_used_mb / 1024).toFixed(1)}/{(stats().memory_total_mb / 1024).toFixed(0)}G {(() => {
+                      const bars = Math.round((stats().memory_used_mb / stats().memory_total_mb) * 10)
+                      return '▓'.repeat(bars) + '░'.repeat(10 - bars)
+                    })()}
+                  </text>
                   <text fg={theme.textMuted}>v{Installation.VERSION}</text>
                 </box>
               </box>
@@ -131,6 +161,15 @@ export function Header() {
               <Title session={session} />
               <box flexDirection="row" gap={1} flexShrink={0}>
                 <ContextInfo context={context} cost={cost} />
+                <text fg={theme.textMuted}>
+                  CPU {stats().cpu_usage.toFixed(0)}% {(() => {
+                    const bars = Math.round(stats().cpu_usage / 10)
+                    return '▓'.repeat(bars) + '░'.repeat(10 - bars)
+                  })()} Mem {(stats().memory_used_mb / 1024).toFixed(1)}/{(stats().memory_total_mb / 1024).toFixed(0)}G {(() => {
+                    const bars = Math.round((stats().memory_used_mb / stats().memory_total_mb) * 10)
+                    return '▓'.repeat(bars) + '░'.repeat(10 - bars)
+                  })()}
+                </text>
                 <text fg={theme.textMuted}>v{Installation.VERSION}</text>
               </box>
             </box>

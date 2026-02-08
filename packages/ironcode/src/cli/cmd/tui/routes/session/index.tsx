@@ -1901,8 +1901,8 @@ function Edit(props: ToolProps<typeof EditTool>) {
   const view = createMemo(() => {
     const diffStyle = ctx.sync.data.config.tui?.diff_style
     if (diffStyle === "stacked") return "unified"
-    // Default to "auto" behavior
-    return ctx.width > 120 ? "split" : "unified"
+    // Default to unified view like GitHub
+    return "unified"
   })
 
   const ft = createMemo(() => filetype(props.input.filePath))

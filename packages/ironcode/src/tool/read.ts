@@ -8,7 +8,7 @@ import { Instance } from "../project/instance"
 import { Identifier } from "../id/id"
 import { assertExternalDirectory } from "./external-directory"
 import { InstructionPrompt } from "../session/instruction"
-import { $ } from "bun"
+import { readFFI } from "./ffi"
 
 const DEFAULT_READ_LIMIT = 2000
 const MAX_LINE_LENGTH = 2000
@@ -73,11 +73,10 @@ export const ReadTool = Tool.define("read", {
       }
     }
 
-    const toolPath = path.join(Instance.worktree, "packages/ironcode/native/tool/target/release/ironcode-tool")
     const offset = params.offset || 0
     const limit = params.limit || DEFAULT_READ_LIMIT
     
-    const result = await $`${toolPath} read ${filepath} ${offset} ${limit}`.json()
+    const result = readFFI(filepath, offset, limit)
 
     LSP.touchFile(filepath, false)
     FileTime.read(ctx.sessionID, filepath)

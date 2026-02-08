@@ -57,7 +57,7 @@ function EditBody(props: { request: PermissionRequest }) {
   const view = createMemo(() => {
     const diffStyle = sync.data.config.tui?.diff_style
     if (diffStyle === "stacked") return "unified"
-    return dimensions().width > 120 ? "split" : "unified"
+    return "unified"
   })
 
   const ft = createMemo(() => filetype(filepath()))
