@@ -58,28 +58,28 @@ const sandbox = await fs.mkdtemp(path.join(os.tmpdir(), "ironcode-e2e-"))
 
 const serverEnv = {
   ...process.env,
-  OPENCODE_DISABLE_SHARE: process.env.OPENCODE_DISABLE_SHARE ?? "true",
-  OPENCODE_DISABLE_LSP_DOWNLOAD: "true",
-  OPENCODE_DISABLE_DEFAULT_PLUGINS: "true",
-  OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: "true",
-  OPENCODE_TEST_HOME: path.join(sandbox, "home"),
+  IRONCODE_DISABLE_SHARE: process.env.IRONCODE_DISABLE_SHARE ?? "true",
+  IRONCODE_DISABLE_LSP_DOWNLOAD: "true",
+  IRONCODE_DISABLE_DEFAULT_PLUGINS: "true",
+  IRONCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: "true",
+  IRONCODE_TEST_HOME: path.join(sandbox, "home"),
   XDG_DATA_HOME: path.join(sandbox, "share"),
   XDG_CACHE_HOME: path.join(sandbox, "cache"),
   XDG_CONFIG_HOME: path.join(sandbox, "config"),
   XDG_STATE_HOME: path.join(sandbox, "state"),
-  OPENCODE_E2E_PROJECT_DIR: repoDir,
-  OPENCODE_E2E_SESSION_TITLE: "E2E Session",
-  OPENCODE_E2E_MESSAGE: "Seeded for UI e2e",
-  OPENCODE_E2E_MODEL: "ironcode/gpt-5-nano",
-  OPENCODE_CLIENT: "app",
+  IRONCODE_E2E_PROJECT_DIR: repoDir,
+  IRONCODE_E2E_SESSION_TITLE: "E2E Session",
+  IRONCODE_E2E_MESSAGE: "Seeded for UI e2e",
+  IRONCODE_E2E_MODEL: "ironcode/gpt-5-nano",
+  IRONCODE_CLIENT: "app",
 } satisfies Record<string, string>
 
 const runnerEnv = {
   ...serverEnv,
   PLAYWRIGHT_SERVER_HOST: "127.0.0.1",
   PLAYWRIGHT_SERVER_PORT: String(serverPort),
-  VITE_OPENCODE_SERVER_HOST: "127.0.0.1",
-  VITE_OPENCODE_SERVER_PORT: String(serverPort),
+  VITE_IRONCODE_SERVER_HOST: "127.0.0.1",
+  VITE_IRONCODE_SERVER_PORT: String(serverPort),
   PLAYWRIGHT_PORT: String(webPort),
 } satisfies Record<string, string>
 
@@ -97,7 +97,7 @@ if (seedExit !== 0) {
 
 Object.assign(process.env, serverEnv)
 process.env.AGENT = "1"
-process.env.OPENCODE = "1"
+process.env.IRONCODE = "1"
 
 const log = await import("../../ironcode/src/util/log")
 const install = await import("../../ironcode/src/installation")

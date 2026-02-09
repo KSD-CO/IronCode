@@ -78,9 +78,9 @@ export namespace Server {
           })
         })
         .use((c, next) => {
-          const password = Flag.OPENCODE_SERVER_PASSWORD
+          const password = Flag.IRONCODE_SERVER_PASSWORD
           if (!password) return next()
-          const username = Flag.OPENCODE_SERVER_USERNAME ?? "ironcode"
+          const username = Flag.IRONCODE_SERVER_USERNAME ?? "ironcode"
           return basicAuth({ username, password })(c, next)
         })
         .use(async (c, next) => {

@@ -8,8 +8,8 @@ import { iife } from "@/util/iife"
 import { Flag } from "../flag/flag"
 
 declare global {
-  const OPENCODE_VERSION: string
-  const OPENCODE_CHANNEL: string
+  const IRONCODE_VERSION: string
+  const IRONCODE_CHANNEL: string
 }
 
 export namespace Installation {
@@ -179,9 +179,9 @@ export namespace Installation {
     await $`${process.execPath} --version`.nothrow().quiet().text()
   }
 
-  export const VERSION = typeof OPENCODE_VERSION === "string" ? OPENCODE_VERSION : "local"
-  export const CHANNEL = typeof OPENCODE_CHANNEL === "string" ? OPENCODE_CHANNEL : "local"
-  export const USER_AGENT = `ironcode/${CHANNEL}/${VERSION}/${Flag.OPENCODE_CLIENT}`
+  export const VERSION = typeof IRONCODE_VERSION === "string" ? IRONCODE_VERSION : "local"
+  export const CHANNEL = typeof IRONCODE_CHANNEL === "string" ? IRONCODE_CHANNEL : "local"
+  export const USER_AGENT = `ironcode/${CHANNEL}/${VERSION}/${Flag.IRONCODE_CLIENT}`
 
   export async function latest(installMethod?: Method) {
     const detectedMethod = installMethod || (await method())

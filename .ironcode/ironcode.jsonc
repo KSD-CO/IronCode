@@ -1,7 +1,7 @@
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   // "enterprise": {
-  //   "url": "https://enterprise.dev.ironcode.ai",
+  //   "url": "https://enterprise.dev.ironcode.cloud",
   // },
   "provider": {
     "ironcode": {

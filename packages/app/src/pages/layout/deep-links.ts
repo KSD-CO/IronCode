@@ -13,14 +13,14 @@ export const collectOpenProjectDeepLinks = (urls: string[]) =>
   urls.map(parseDeepLink).filter((directory): directory is string => !!directory)
 
 type IronCodeWindow = Window & {
-  __OPENCODE__?: {
+  __IRONCODE__?: {
     deepLinks?: string[]
   }
 }
 
 export const drainPendingDeepLinks = (target: IronCodeWindow) => {
-  const pending = target.__OPENCODE__?.deepLinks ?? []
+  const pending = target.__IRONCODE__?.deepLinks ?? []
   if (pending.length === 0) return []
-  if (target.__OPENCODE__) target.__OPENCODE__.deepLinks = []
+  if (target.__IRONCODE__) target.__IRONCODE__.deepLinks = []
   return pending
 }

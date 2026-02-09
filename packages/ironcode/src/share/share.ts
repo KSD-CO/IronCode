@@ -80,7 +80,7 @@ export namespace Share {
   }
 
   export const URL =
-    process.env["OPENCODE_API"] ??
+    process.env["IRONCODE_API"] ??
     (Installation.isPreview() || Installation.isLocal()
       ? "https://api.dev.ironcode.cloud"
       : "https://api.ironcode.cloud")

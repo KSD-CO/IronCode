@@ -23,7 +23,7 @@ export const AttachCommand = cmd({
       .option("password", {
         alias: ["p"],
         type: "string",
-        describe: "basic auth password (defaults to OPENCODE_SERVER_PASSWORD)",
+        describe: "basic auth password (defaults to IRONCODE_SERVER_PASSWORD)",
       }),
   handler: async (args) => {
     const directory = (() => {
@@ -37,7 +37,7 @@ export const AttachCommand = cmd({
       }
     })()
     const headers = (() => {
-      const password = args.password ?? process.env.OPENCODE_SERVER_PASSWORD
+      const password = args.password ?? process.env.IRONCODE_SERVER_PASSWORD
       if (!password) return undefined
       const auth = `Basic ${Buffer.from(`ironcode:${password}`).toString("base64")}`
       return { Authorization: auth }

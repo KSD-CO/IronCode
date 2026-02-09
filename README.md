@@ -212,4 +212,4 @@ This project maintains the same license as [OpenCode](https://github.com/anomaly
 ## Links
 
 - [Upstream OpenCode](https://github.com/anomalyco/opencode)
-- [OpenCode Documentation](https://docs.opencode.ai)
+- [IronCode Documentation](https://ironcode.cloud/docs)

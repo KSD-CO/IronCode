@@ -35,7 +35,7 @@ export async function createOpencodeServer(options?: ServerOptions) {
     signal: options.signal,
     env: {
       ...process.env,
-      OPENCODE_CONFIG_CONTENT: JSON.stringify(options.config ?? {}),
+      IRONCODE_CONFIG_CONTENT: JSON.stringify(options.config ?? {}),
     },
   })
 
@@ -111,7 +111,7 @@ export function createOpencodeTui(options?: TuiOptions) {
     stdio: "inherit",
     env: {
       ...process.env,
-      OPENCODE_CONFIG_CONTENT: JSON.stringify(options?.config ?? {}),
+      IRONCODE_CONFIG_CONTENT: JSON.stringify(options?.config ?? {}),
     },
   })
 

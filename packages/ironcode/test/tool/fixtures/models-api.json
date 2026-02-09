@@ -20973,13 +20973,13 @@
       }
     }
   },
-  "opencode": {
-    "id": "opencode",
-    "env": ["OPENCODE_API_KEY"],
+  "ironcode": {
+    "id": "ironcode",
+    "env": ["IRONCODE_API_KEY"],
     "npm": "@ai-sdk/openai-compatible",
-    "api": "https://opencode.ai/zen/v1",
-    "name": "OpenCode Zen",
-    "doc": "https://opencode.ai/docs/zen",
+    "api": "https://ironcode.cloud/zen/v1",
+    "name": "IronCode Zen",
+    "doc": "https://ironcode.cloud/docs/zen",
     "models": {
       "glm-4.7": {
         "id": "glm-4.7",

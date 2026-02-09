@@ -26,7 +26,7 @@ import { Auth } from "@/auth"
 export namespace LLM {
   const log = Log.create({ service: "llm" })
 
-  export const OUTPUT_TOKEN_MAX = Flag.OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX || 32_000
+  export const OUTPUT_TOKEN_MAX = Flag.IRONCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX || 32_000
 
   export type StreamInput = {
     user: MessageV2.User
@@ -221,7 +221,7 @@ export namespace LLM {
               "x-ironcode-project": Instance.project.id,
               "x-ironcode-session": input.sessionID,
               "x-ironcode-request": input.user.id,
-              "x-ironcode-client": Flag.OPENCODE_CLIENT,
+              "x-ironcode-client": Flag.IRONCODE_CLIENT,
             }
           : input.model.providerID !== "anthropic"
             ? {
