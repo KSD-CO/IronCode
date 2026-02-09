@@ -53,9 +53,17 @@ export function Header() {
       }
     }
     updateStats()
-    const interval = setInterval(updateStats, 2000)
-    onCleanup(() => clearInterval(interval))
   })
+
+  const interval = setInterval(() => {
+    try {
+      setStats(getSystemStatsFFI())
+    } catch (e) {
+      // Ignore errors
+    }
+  }, 2000)
+
+  onCleanup(() => clearInterval(interval))
 
   const cost = createMemo(() => {
     const total = pipe(
