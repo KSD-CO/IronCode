@@ -17,7 +17,7 @@ import { Filesystem } from "../util/filesystem"
 import { Instance } from "../project/instance"
 import { Snapshot } from "@/snapshot"
 import { assertExternalDirectory } from "./external-directory"
-import { editReplaceFFI } from "./ffi"
+import { editReplaceFFI, fileExistsFFI, fileStatFFI, writeRawFFI, readRawFFI } from "./ffi"
 
 const MAX_DIAGNOSTICS_PER_FILE = 20
 
@@ -50,7 +50,7 @@ export const EditTool = Tool.define("edit", {
     let contentNew = ""
     await FileTime.withLock(filePath, async () => {
       if (params.oldString === "") {
-        const existed = await Bun.file(filePath).exists()
+        const existed = fileExistsFFI(filePath)
         contentNew = params.newString
         diff = trimDiff(createTwoFilesPatch(filePath, filePath, contentOld, contentNew))
         await ctx.ask({
@@ -62,7 +62,7 @@ export const EditTool = Tool.define("edit", {
             diff,
           },
         })
-        await Bun.write(filePath, params.newString)
+        writeRawFFI(filePath, params.newString)
         await Bus.publish(File.Event.Edited, {
           file: filePath,
         })
@@ -74,12 +74,11 @@ export const EditTool = Tool.define("edit", {
         return
       }
 
-      const file = Bun.file(filePath)
-      const stats = await file.stat().catch(() => {})
-      if (!stats) throw new Error(`File ${filePath} not found`)
-      if (stats.isDirectory()) throw new Error(`Path is a directory, not a file: ${filePath}`)
+      const stats = fileStatFFI(filePath)
+      if (!stats.exists) throw new Error(`File ${filePath} not found`)
+      if (stats.is_dir) throw new Error(`Path is a directory, not a file: ${filePath}`)
       await FileTime.assert(ctx.sessionID, filePath)
-      contentOld = await file.text()
+      contentOld = readRawFFI(filePath)
       // Use native Rust implementation for better performance
       contentNew = editReplaceFFI(contentOld, params.oldString, params.newString, params.replaceAll ?? false)
 
@@ -96,7 +95,7 @@ export const EditTool = Tool.define("edit", {
         },
       })
 
-      await file.write(contentNew)
+      writeRawFFI(filePath, contentNew)
       await Bus.publish(File.Event.Edited, {
         file: filePath,
       })
@@ -104,7 +103,7 @@ export const EditTool = Tool.define("edit", {
         file: filePath,
         event: "change",
       })
-      contentNew = await file.text()
+      contentNew = readRawFFI(filePath)
       diff = trimDiff(
         createTwoFilesPatch(filePath, filePath, normalizeLineEndings(contentOld), normalizeLineEndings(contentNew)),
       )

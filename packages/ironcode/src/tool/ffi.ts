@@ -46,6 +46,14 @@ const lib = dlopen(libPath, {
     args: [FFIType.cstring, FFIType.cstring, FFIType.cstring, FFIType.bool],
     returns: FFIType.ptr,
   },
+  file_exists_ffi: {
+    args: [FFIType.cstring],
+    returns: FFIType.i32,
+  },
+  file_stat_ffi: {
+    args: [FFIType.cstring],
+    returns: FFIType.ptr,
+  },
   free_string: {
     args: [FFIType.ptr],
     returns: FFIType.void,
@@ -182,4 +190,29 @@ export function editReplaceFFI(content: string, oldString: string, newString: st
   }
 
   return response.content!
+}
+
+// Check if file exists
+export function fileExistsFFI(filepath: string): boolean {
+  const result = lib.symbols.file_exists_ffi(Buffer.from(filepath + "\0"))
+  return result === 1
+}
+
+// Get file metadata
+export interface FileStat {
+  exists: boolean
+  size: number
+  modified: number
+  is_file: boolean
+  is_dir: boolean
+}
+
+export function fileStatFFI(filepath: string): FileStat {
+  const ptr = lib.symbols.file_stat_ffi(Buffer.from(filepath + "\0"))
+  if (!ptr) throw new Error("file_stat_ffi returned null")
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  return JSON.parse(jsonStr)
 }

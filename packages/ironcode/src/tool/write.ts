@@ -12,7 +12,7 @@ import { Filesystem } from "../util/filesystem"
 import { Instance } from "../project/instance"
 import { trimDiff } from "./edit"
 import { assertExternalDirectory } from "./external-directory"
-import { writeRawFFI, readRawFFI } from "./ffi"
+import { writeRawFFI, readRawFFI, fileExistsFFI } from "./ffi"
 
 const MAX_DIAGNOSTICS_PER_FILE = 20
 const MAX_PROJECT_DIAGNOSTICS_FILES = 5
@@ -27,8 +27,7 @@ export const WriteTool = Tool.define("write", {
     const filepath = path.isAbsolute(params.filePath) ? params.filePath : path.join(Instance.directory, params.filePath)
     await assertExternalDirectory(ctx, filepath)
 
-    const file = Bun.file(filepath)
-    const exists = await file.exists()
+    const exists = fileExistsFFI(filepath)
     const contentOld = exists ? readRawFFI(filepath) : ""
     if (exists) await FileTime.assert(ctx.sessionID, filepath)
 

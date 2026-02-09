@@ -8,7 +8,7 @@ import { Instance } from "../project/instance"
 import { Identifier } from "../id/id"
 import { assertExternalDirectory } from "./external-directory"
 import { InstructionPrompt } from "../session/instruction"
-import { readRawFFI } from "./ffi"
+import { readRawFFI, fileExistsFFI } from "./ffi"
 
 const DEFAULT_READ_LIMIT = 2000
 const MAX_LINE_LENGTH = 2000
@@ -39,12 +39,14 @@ export const ReadTool = Tool.define("read", {
       metadata: {},
     })
 
-    const file = Bun.file(filepath)
-    if (!(await file.exists())) {
+    if (!fileExistsFFI(filepath)) {
       throw new Error(`File not found: ${filepath}`)
     }
 
     const instructions = await InstructionPrompt.resolve(ctx.messages, filepath, ctx.messageID)
+
+    // Check file type using Bun for mime detection (keep this as Bun is better for this)
+    const file = Bun.file(filepath)
 
     const isImage =
       file.type.startsWith("image/") && file.type !== "image/svg+xml" && file.type !== "image/vnd.fastbidsheet"

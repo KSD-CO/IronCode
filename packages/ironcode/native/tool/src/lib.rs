@@ -397,3 +397,71 @@ pub extern "C" fn edit_replace_ffi(
         Err(_) => std::ptr::null_mut(),
     }
 }
+
+// File existence check
+#[no_mangle]
+pub extern "C" fn file_exists_ffi(filepath: *const c_char) -> i32 {
+    let path_str = unsafe {
+        if filepath.is_null() {
+            return 0;
+        }
+        CStr::from_ptr(filepath).to_str().unwrap_or("")
+    };
+
+    if std::path::Path::new(path_str).exists() {
+        1
+    } else {
+        0
+    }
+}
+
+// Get file metadata (size, modified time, etc)
+#[no_mangle]
+pub extern "C" fn file_stat_ffi(filepath: *const c_char) -> *mut c_char {
+    let path_str = unsafe {
+        if filepath.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(filepath).to_str().unwrap_or("")
+    };
+
+    #[derive(serde::Serialize)]
+    struct FileStat {
+        exists: bool,
+        size: u64,
+        modified: u64,
+        is_file: bool,
+        is_dir: bool,
+    }
+
+    let stat = match std::fs::metadata(path_str) {
+        Ok(meta) => {
+            let modified = meta
+                .modified()
+                .ok()
+                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                .map(|d| d.as_secs())
+                .unwrap_or(0);
+
+            FileStat {
+                exists: true,
+                size: meta.len(),
+                modified,
+                is_file: meta.is_file(),
+                is_dir: meta.is_dir(),
+            }
+        }
+        Err(_) => FileStat {
+            exists: false,
+            size: 0,
+            modified: 0,
+            is_file: false,
+            is_dir: false,
+        },
+    };
+
+    match serde_json::to_string(&stat) {
+        Ok(json) => CString::new(json).unwrap().into_raw(),
+        Err(_) => std::ptr::null_mut(),
+    }
+}
