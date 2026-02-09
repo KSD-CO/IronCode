@@ -1644,7 +1644,7 @@ export type Config = {
   }
   server?: ServerConfig
   /**
-   * Command configuration, see https://ironcode.ai/docs/commands
+   * Command configuration, see https://ironcode.cloud/docs/commands
    */
   command?: {
     [key: string]: {
@@ -1718,7 +1718,7 @@ export type Config = {
     [key: string]: AgentConfig | undefined
   }
   /**
-   * Agent configuration, see https://ironcode.ai/docs/agents
+   * Agent configuration, see https://ironcode.cloud/docs/agents
    */
   agent?: {
     plan?: AgentConfig

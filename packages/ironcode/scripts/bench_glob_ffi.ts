@@ -43,25 +43,29 @@ const rgTimes = await benchRipgrep()
 const ffiStats = stats(ffiTimes)
 const rgStats = stats(rgTimes)
 
-console.log('Rust FFI (zero spawn overhead):')
-console.log(`  avg: ${ffiStats.avg.toFixed(2)}ms, median: ${ffiStats.median.toFixed(2)}ms, min: ${ffiStats.min.toFixed(2)}ms, max: ${ffiStats.max.toFixed(2)}ms`)
+console.log("Rust FFI (zero spawn overhead):")
+console.log(
+  `  avg: ${ffiStats.avg.toFixed(2)}ms, median: ${ffiStats.median.toFixed(2)}ms, min: ${ffiStats.min.toFixed(2)}ms, max: ${ffiStats.max.toFixed(2)}ms`,
+)
 
-console.log('\nRipgrep (with spawn overhead):')
-console.log(`  avg: ${rgStats.avg.toFixed(2)}ms, median: ${rgStats.median.toFixed(2)}ms, min: ${rgStats.min.toFixed(2)}ms, max: ${rgStats.max.toFixed(2)}ms`)
+console.log("\nRipgrep (with spawn overhead):")
+console.log(
+  `  avg: ${rgStats.avg.toFixed(2)}ms, median: ${rgStats.median.toFixed(2)}ms, min: ${rgStats.min.toFixed(2)}ms, max: ${rgStats.max.toFixed(2)}ms`,
+)
 
 const speedup = rgStats.avg / ffiStats.avg
-console.log(`\nSpeedup: ${speedup.toFixed(2)}x ${speedup > 1 ? '(Rust FFI faster)' : '(Ripgrep faster)'}\n`)
+console.log(`\nSpeedup: ${speedup.toFixed(2)}x ${speedup > 1 ? "(Rust FFI faster)" : "(Ripgrep faster)"}\n`)
 
 // Test correctness
-console.log('=== Testing correctness ===')
+console.log("=== Testing correctness ===")
 try {
   const ffiResult = globFFI(pattern, search)
   const fileCount = ffiResult.metadata.count
-  console.log('FFI test passed, found', fileCount, 'files')
+  console.log("FFI test passed, found", fileCount, "files")
   if (ffiResult.output) {
-    const firstFile = ffiResult.output.split('\n')[0]
-    console.log('First file:', firstFile)
+    const firstFile = ffiResult.output.split("\n")[0]
+    console.log("First file:", firstFile)
   }
 } catch (e) {
-  console.log('FFI test failed:', e instanceof Error ? e.message : String(e))
+  console.log("FFI test failed:", e instanceof Error ? e.message : String(e))
 }

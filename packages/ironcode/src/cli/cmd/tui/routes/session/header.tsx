@@ -111,12 +111,15 @@ export function Header() {
                 <box flexDirection="row" gap={1} flexShrink={0}>
                   <ContextInfo context={context} cost={cost} />
                   <text fg={theme.textMuted}>
-                    CPU {stats().cpu_usage.toFixed(0)}% {(() => {
+                    CPU {stats().cpu_usage.toFixed(0)}%{" "}
+                    {(() => {
                       const bars = Math.round(stats().cpu_usage / 10)
-                      return '▓'.repeat(bars) + '░'.repeat(10 - bars)
-                    })()} Mem {(stats().memory_used_mb / 1024).toFixed(1)}/{(stats().memory_total_mb / 1024).toFixed(0)}G {(() => {
+                      return "▓".repeat(bars) + "░".repeat(10 - bars)
+                    })()}{" "}
+                    Mem {(stats().memory_used_mb / 1024).toFixed(1)}/{(stats().memory_total_mb / 1024).toFixed(0)}G{" "}
+                    {(() => {
                       const bars = Math.round((stats().memory_used_mb / stats().memory_total_mb) * 10)
-                      return '▓'.repeat(bars) + '░'.repeat(10 - bars)
+                      return "▓".repeat(bars) + "░".repeat(10 - bars)
                     })()}
                   </text>
                   <text fg={theme.textMuted}>v{Installation.VERSION}</text>
@@ -162,12 +165,15 @@ export function Header() {
               <box flexDirection="row" gap={1} flexShrink={0}>
                 <ContextInfo context={context} cost={cost} />
                 <text fg={theme.textMuted}>
-                  CPU {stats().cpu_usage.toFixed(0)}% {(() => {
+                  CPU {stats().cpu_usage.toFixed(0)}%{" "}
+                  {(() => {
                     const bars = Math.round(stats().cpu_usage / 10)
-                    return '▓'.repeat(bars) + '░'.repeat(10 - bars)
-                  })()} Mem {(stats().memory_used_mb / 1024).toFixed(1)}/{(stats().memory_total_mb / 1024).toFixed(0)}G {(() => {
+                    return "▓".repeat(bars) + "░".repeat(10 - bars)
+                  })()}{" "}
+                  Mem {(stats().memory_used_mb / 1024).toFixed(1)}/{(stats().memory_total_mb / 1024).toFixed(0)}G{" "}
+                  {(() => {
                     const bars = Math.round((stats().memory_used_mb / stats().memory_total_mb) * 10)
-                    return '▓'.repeat(bars) + '░'.repeat(10 - bars)
+                    return "▓".repeat(bars) + "░".repeat(10 - bars)
                   })()}
                 </text>
                 <text fg={theme.textMuted}>v{Installation.VERSION}</text>

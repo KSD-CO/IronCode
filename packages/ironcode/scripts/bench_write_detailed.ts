@@ -4,7 +4,7 @@ import { join } from "path"
 
 async function benchmark(content: string, label: string, iterations = 50) {
   const testFile = join(process.cwd(), "bench-write-test.txt")
-  
+
   console.log(`\n${label} (${content.length} bytes, ${iterations} iterations)`)
 
   const ffiTimes: number[] = []
@@ -56,23 +56,23 @@ async function benchmark(content: string, label: string, iterations = 50) {
 
   console.log("Rust FFI:")
   console.log(
-    `  avg: ${ffiStats.avg.toFixed(2)}ms, median: ${ffiStats.median.toFixed(2)}ms, p95: ${ffiStats.p95.toFixed(2)}ms`
+    `  avg: ${ffiStats.avg.toFixed(2)}ms, median: ${ffiStats.median.toFixed(2)}ms, p95: ${ffiStats.p95.toFixed(2)}ms`,
   )
   console.log(`  min: ${ffiStats.min.toFixed(2)}ms, max: ${ffiStats.max.toFixed(2)}ms`)
   console.log(`  peak memory delta: ${(ffiMemDelta / 1024 / 1024).toFixed(2)}MB`)
 
   console.log("\nNode.js (writeFileSync):")
   console.log(
-    `  avg: ${nodeStats.avg.toFixed(2)}ms, median: ${nodeStats.median.toFixed(2)}ms, p95: ${nodeStats.p95.toFixed(2)}ms`
+    `  avg: ${nodeStats.avg.toFixed(2)}ms, median: ${nodeStats.median.toFixed(2)}ms, p95: ${nodeStats.p95.toFixed(2)}ms`,
   )
   console.log(`  min: ${nodeStats.min.toFixed(2)}ms, max: ${nodeStats.max.toFixed(2)}ms`)
   console.log(`  peak memory delta: ${(nodeMemDelta / 1024 / 1024).toFixed(2)}MB`)
 
   const speedup = nodeStats.avg / ffiStats.avg
+  console.log(`\nSpeedup: ${speedup.toFixed(2)}x (${speedup > 1 ? "Rust FFI" : "Node.js"} faster)`)
   console.log(
-    `\nSpeedup: ${speedup.toFixed(2)}x (${speedup > 1 ? "Rust FFI" : "Node.js"} faster)`
+    `Memory: ${((nodeMemDelta - ffiMemDelta) / 1024 / 1024).toFixed(2)}MB ${nodeMemDelta > ffiMemDelta ? "saved" : "more"}`,
   )
-  console.log(`Memory: ${((nodeMemDelta - ffiMemDelta) / 1024 / 1024).toFixed(2)}MB ${nodeMemDelta > ffiMemDelta ? "saved" : "more"}`)
 
   // Clean up
   if (existsSync(testFile)) {

@@ -24,24 +24,22 @@ function benchNode() {
   const MAX_LINE_LENGTH = 2000
   const MAX_BYTES = 50 * 1024
   const times: number[] = []
-  
+
   for (let i = 0; i < iterations; i++) {
     const start = performance.now()
-    
-    const content = fs.readFileSync(filepath, 'utf8')
-    const lines = content.split('\n')
+
+    const content = fs.readFileSync(filepath, "utf8")
+    const lines = content.split("\n")
     const totalLines = lines.length
-    
+
     const raw: string[] = []
     let bytes = 0
     let truncatedByBytes = false
-    
+
     for (let j = offset; j < Math.min(totalLines, offset + limit); j++) {
-      const line = lines[j].length > MAX_LINE_LENGTH 
-        ? lines[j].substring(0, MAX_LINE_LENGTH) + '...' 
-        : lines[j]
-      
-      const size = Buffer.byteLength(line, 'utf-8') + (raw.length > 0 ? 1 : 0)
+      const line = lines[j].length > MAX_LINE_LENGTH ? lines[j].substring(0, MAX_LINE_LENGTH) + "..." : lines[j]
+
+      const size = Buffer.byteLength(line, "utf-8") + (raw.length > 0 ? 1 : 0)
       if (bytes + size > MAX_BYTES) {
         truncatedByBytes = true
         break
@@ -49,7 +47,7 @@ function benchNode() {
       raw.push(line)
       bytes += size
     }
-    
+
     times.push(performance.now() - start)
   }
   return times
@@ -72,13 +70,17 @@ const nodeTimes = benchNode()
 const rustStats = stats(rustTimes)
 const nodeStats = stats(nodeTimes)
 
-console.log('Rust (with process spawn):')
-console.log(`  avg: ${rustStats.avg.toFixed(2)}ms, median: ${rustStats.median.toFixed(2)}ms, min: ${rustStats.min.toFixed(2)}ms, max: ${rustStats.max.toFixed(2)}ms`)
+console.log("Rust (with process spawn):")
+console.log(
+  `  avg: ${rustStats.avg.toFixed(2)}ms, median: ${rustStats.median.toFixed(2)}ms, min: ${rustStats.min.toFixed(2)}ms, max: ${rustStats.max.toFixed(2)}ms`,
+)
 
-console.log('\nNode.js (in-process):')
-console.log(`  avg: ${nodeStats.avg.toFixed(2)}ms, median: ${nodeStats.median.toFixed(2)}ms, min: ${nodeStats.min.toFixed(2)}ms, max: ${nodeStats.max.toFixed(2)}ms`)
+console.log("\nNode.js (in-process):")
+console.log(
+  `  avg: ${nodeStats.avg.toFixed(2)}ms, median: ${nodeStats.median.toFixed(2)}ms, min: ${nodeStats.min.toFixed(2)}ms, max: ${nodeStats.max.toFixed(2)}ms`,
+)
 
 const speedup = nodeStats.avg / rustStats.avg
-console.log(`\nSpeedup: ${speedup.toFixed(2)}x ${speedup > 1 ? '(Rust faster)' : '(Node.js faster)'}\n`)
-console.log('Note: Node.js is faster because it runs in-process without spawning overhead.')
-console.log('Process spawning adds ~2ms overhead, which is larger than file I/O time for small files.')
+console.log(`\nSpeedup: ${speedup.toFixed(2)}x ${speedup > 1 ? "(Rust faster)" : "(Node.js faster)"}\n`)
+console.log("Note: Node.js is faster because it runs in-process without spawning overhead.")
+console.log("Process spawning adds ~2ms overhead, which is larger than file I/O time for small files.")

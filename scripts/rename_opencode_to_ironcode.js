@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-const fs = require('fs')
-const path = require('path')
+const fs = require("fs")
+const path = require("path")
 
 const root = process.cwd()
 
-const excludeDirs = ['.git', 'node_modules', 'target', 'dist', 'packages/*/node_modules']
+const excludeDirs = [".git", "node_modules", "target", "dist", "packages/*/node_modules"]
 
 function shouldSkip(file) {
   for (const ex of excludeDirs) {
@@ -19,17 +19,17 @@ function processFile(file) {
     if (!stat.isFile()) return
     if (stat.size > 1024 * 1024) return // skip large files
     const ext = path.extname(file)
-    if (['.png', '.jpg', '.jpeg', '.gif', '.wasm', '.zip', '.tar', '.gz', '.ico'].includes(ext)) return
-    let txt = fs.readFileSync(file, 'utf8')
+    if ([".png", ".jpg", ".jpeg", ".gif", ".wasm", ".zip", ".tar", ".gz", ".ico"].includes(ext)) return
+    let txt = fs.readFileSync(file, "utf8")
     let orig = txt
     // Case-sensitive replacements
-    txt = txt.replace(/IronCode/g, 'IronCode')
-    txt = txt.replace(/ironcode/g, 'ironcode')
-    txt = txt.replace(/@ironcode-ai/g, '@ironcode-ai')
-    txt = txt.replace(/ironcode.ai/g, 'ironcode.ai')
+    txt = txt.replace(/IronCode/g, "IronCode")
+    txt = txt.replace(/ironcode/g, "ironcode")
+    txt = txt.replace(/@ironcode-ai/g, "@ironcode-ai")
+    txt = txt.replace(/ironcode.ai/g, "ironcode.ai")
     if (txt !== orig) {
-      fs.writeFileSync(file, txt, 'utf8')
-      console.log('patched', file)
+      fs.writeFileSync(file, txt, "utf8")
+      console.log("patched", file)
     }
   } catch (e) {
     // ignore
@@ -49,6 +49,6 @@ function walk(dir) {
   }
 }
 
-console.log('Starting rename ironcode -> ironcode in', root)
+console.log("Starting rename ironcode -> ironcode in", root)
 walk(root)
-console.log('Done')
+console.log("Done")

@@ -9513,7 +9513,7 @@
             "$ref": "#/components/schemas/ServerConfig"
           },
           "command": {
-            "description": "Command configuration, see https://ironcode.ai/docs/commands",
+            "description": "Command configuration, see https://ironcode.cloud/docs/commands",
             "type": "object",
             "propertyNames": {
               "type": "string"
@@ -9647,7 +9647,7 @@
             }
           },
           "agent": {
-            "description": "Agent configuration, see https://ironcode.ai/docs/agents",
+            "description": "Agent configuration, see https://ironcode.cloud/docs/agents",
             "type": "object",
             "properties": {
               "plan": {
@@ -10789,6 +10789,15 @@
         "properties": {
           "branch": {
             "type": "string"
+          },
+          "added": {
+            "type": "number"
+          },
+          "modified": {
+            "type": "number"
+          },
+          "deleted": {
+            "type": "number"
           }
         },
         "required": ["branch"]

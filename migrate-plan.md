@@ -4,9 +4,8 @@ kế hoạch thực tế để làm hybrid Rust + TypeScript cho kiểu project 
 
 🎯 Mục tiêu kiến trúc
 TypeScript (orchestrator + LLM + tools)
-        ↓
+↓
 Rust (high-performance core)
-
 
 TS = “brain điều phối”
 Rust = “cơ bắp xử lý nặng”
@@ -60,7 +59,6 @@ TS chỉ gửi query:
 
 query → rust search → top-k context
 
-
 👉 Giảm latency rõ rệt.
 
 ✅ Giai đoạn 3 — Rust context builder (2–3 tuần)
@@ -93,7 +91,6 @@ Nếu cần tối ưu hơn:
 
 CLI → napi-rs
 
-
 Rust compile thành Node addon.
 
 👉 Zero spawn overhead
@@ -102,11 +99,11 @@ Rust compile thành Node addon.
 
 🧠 Tech stack đề xuất
 Rust side
-tokio          async
-tree-sitter    parsing
-tantivy        search
-serde          json
-rayon          parallel
+tokio async
+tree-sitter parsing
+tantivy search
+serde json
+rayon parallel
 
 TS side
 LangChain / custom agent
@@ -117,8 +114,8 @@ session memory
 📦 Dev workflow chuẩn
 Root scripts
 /scripts
-  build-rust.sh
-  dev.sh
+build-rust.sh
+dev.sh
 
 dev.sh
 cargo build
@@ -160,7 +157,7 @@ parsing
 
 🧠 Kiến trúc lý tưởng (giống Cursor-lite)
 TS Agent Layer
-   ↓
+↓
 Rust Context Engine
-   ↓
+↓
 Vector DB / Cache

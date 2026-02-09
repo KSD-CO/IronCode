@@ -25,7 +25,9 @@ export const Splash = (props: Pick<ComponentProps<"svg">, "ref" | "class">) => {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <text x="0" y="30" font-family="monospace" font-weight="bold" font-size="32" fill="var(--icon-strong-base)">IRONCODE</text>
+      <text x="0" y="30" font-family="monospace" font-weight="bold" font-size="32" fill="var(--icon-strong-base)">
+        IRONCODE
+      </text>
     </svg>
   )
 }
@@ -38,7 +40,9 @@ export const Logo = (props: { class?: string }) => {
       fill="none"
       classList={{ [props.class ?? ""]: !!props.class }}
     >
-      <text x="0" y="30" font-family="monospace" font-weight="bold" font-size="32" fill="var(--icon-base)">IRONCODE</text>
+      <text x="0" y="30" font-family="monospace" font-weight="bold" font-size="32" fill="var(--icon-base)">
+        IRONCODE
+      </text>
     </svg>
   )
 }

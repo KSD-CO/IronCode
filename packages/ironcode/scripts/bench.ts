@@ -43,20 +43,24 @@ console.log(`Benchmarking ${iterations} iterations each...\n`)
 
 for (const tc of testCases) {
   console.log(`Test: glob "${tc.pattern}" in ${tc.search}`)
-  
+
   const rgTimes = await benchRg(tc.pattern, tc.search)
   const rgStats = stats(rgTimes)
-  
+
   const rustTimes = await benchRust(tc.pattern, tc.search)
   const rustStats = stats(rustTimes)
-  
+
   console.log(`  Ripgrep (Node.js):`)
-  console.log(`    avg: ${rgStats.avg.toFixed(2)}ms, median: ${rgStats.median.toFixed(2)}ms, min: ${rgStats.min.toFixed(2)}ms, max: ${rgStats.max.toFixed(2)}ms`)
-  
+  console.log(
+    `    avg: ${rgStats.avg.toFixed(2)}ms, median: ${rgStats.median.toFixed(2)}ms, min: ${rgStats.min.toFixed(2)}ms, max: ${rgStats.max.toFixed(2)}ms`,
+  )
+
   console.log(`  Rust:`)
-  console.log(`    avg: ${rustStats.avg.toFixed(2)}ms, median: ${rustStats.median.toFixed(2)}ms, min: ${rustStats.min.toFixed(2)}ms, max: ${rustStats.max.toFixed(2)}ms`)
-  
+  console.log(
+    `    avg: ${rustStats.avg.toFixed(2)}ms, median: ${rustStats.median.toFixed(2)}ms, min: ${rustStats.min.toFixed(2)}ms, max: ${rustStats.max.toFixed(2)}ms`,
+  )
+
   const speedup = rgStats.avg / rustStats.avg
-  console.log(`  Speedup: ${speedup.toFixed(2)}x ${speedup > 1 ? '(Rust faster)' : '(Ripgrep faster)'}`)
+  console.log(`  Speedup: ${speedup.toFixed(2)}x ${speedup > 1 ? "(Rust faster)" : "(Ripgrep faster)"}`)
   console.log()
 }

@@ -75,7 +75,7 @@ export const ReadTool = Tool.define("read", {
 
     const offset = params.offset || 0
     const limit = params.limit || DEFAULT_READ_LIMIT
-    
+
     const result = readFFI(filepath, offset, limit)
 
     LSP.touchFile(filepath, false)
