@@ -1,8 +1,8 @@
-use std::fs;
-use std::time::UNIX_EPOCH;
+use crate::types::{Metadata, Output};
 use globset::{GlobBuilder, GlobSetBuilder};
 use ignore::WalkBuilder;
-use crate::types::{Metadata, Output};
+use std::fs;
+use std::time::UNIX_EPOCH;
 
 pub fn execute(pattern: &str, search: &str) -> Result<Output, String> {
     let mut set_builder = GlobSetBuilder::new();
@@ -10,7 +10,7 @@ pub fn execute(pattern: &str, search: &str) -> Result<Output, String> {
         .literal_separator(false)
         .build()
         .map_err(|e| format!("Invalid glob: {}", e))?;
-    
+
     set_builder.add(g);
     let matcher = set_builder
         .build()
@@ -34,7 +34,10 @@ pub fn execute(pattern: &str, search: &str) -> Result<Output, String> {
             continue;
         }
         let path = entry.path().to_path_buf();
-        let rel = path.strip_prefix(search).unwrap_or(path.as_path()).to_path_buf();
+        let rel = path
+            .strip_prefix(search)
+            .unwrap_or(path.as_path())
+            .to_path_buf();
         if !(matcher.is_match(path.as_path()) || matcher.is_match(rel.as_path())) {
             continue;
         }
@@ -58,7 +61,10 @@ pub fn execute(pattern: &str, search: &str) -> Result<Output, String> {
         let mut out: Vec<String> = files.iter().map(|(p, _)| p.clone()).collect();
         if truncated {
             out.push(String::new());
-            out.push("(Results are truncated. Consider using a more specific path or pattern.)".to_string());
+            out.push(
+                "(Results are truncated. Consider using a more specific path or pattern.)"
+                    .to_string(),
+            );
         }
         out.join("\n")
     };

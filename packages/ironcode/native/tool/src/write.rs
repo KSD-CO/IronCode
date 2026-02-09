@@ -1,10 +1,10 @@
+use crate::types::Output;
 use std::fs;
 use std::path::Path;
-use crate::types::Output;
 
 pub fn execute(filepath: &str, content: &str) -> Result<Output, String> {
     let path = Path::new(filepath);
-    
+
     // Create parent directories if they don't exist
     if let Some(parent) = path.parent() {
         if !parent.exists() {
@@ -14,8 +14,7 @@ pub fn execute(filepath: &str, content: &str) -> Result<Output, String> {
     }
 
     // Write the file
-    fs::write(path, content)
-        .map_err(|e| format!("Failed to write file: {}", e))?;
+    fs::write(path, content).map_err(|e| format!("Failed to write file: {}", e))?;
 
     Ok(Output {
         title: filepath.to_string(),

@@ -1,7 +1,7 @@
+use crate::types::{Metadata, Output};
 use ignore::WalkBuilder;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
-use crate::types::{Metadata, Output};
 
 const LIMIT: usize = 100;
 
@@ -14,7 +14,7 @@ pub fn execute(search_path: &str, ignore_patterns: Vec<String>) -> Result<Output
         .ignore(false);
 
     let mut files = Vec::new();
-    
+
     for result in builder.build() {
         let entry = match result {
             Ok(e) => e,
@@ -65,7 +65,7 @@ pub fn execute(search_path: &str, ignore_patterns: Vec<String>) -> Result<Output
             .and_then(|p| p.to_str())
             .unwrap_or(".")
             .to_string();
-        
+
         let parts: Vec<&str> = if dir == "." {
             vec![]
         } else {
@@ -99,15 +99,12 @@ pub fn execute(search_path: &str, ignore_patterns: Vec<String>) -> Result<Output
         let mut output = String::new();
 
         if depth > 0 {
-            let basename = Path::new(dir_path)
-                .file_name()
-                .unwrap()
-                .to_string_lossy();
+            let basename = Path::new(dir_path).file_name().unwrap().to_string_lossy();
             output.push_str(&format!("{}{}/\n", indent, basename));
         }
 
         let child_indent = "  ".repeat(depth + 1);
-        
+
         // Get and sort children directories
         let mut children: Vec<String> = dirs
             .iter()
