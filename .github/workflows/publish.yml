@@ -4,10 +4,8 @@ run-name: "${{ format('release {0}', inputs.bump) }}"
 on:
   push:
     branches:
-      - ci
       - dev
-      - beta
-      - snapshot-*
+      - master
   workflow_dispatch:
     inputs:
       bump:
@@ -33,26 +31,26 @@ permissions:
 jobs:
   version:
     runs-on: ubuntu-latest
-    if: github.repository == 'anomalyco/opencode'
+    if: github.repository == 'KSD-CO/IronCode'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - uses: ./.github/actions/setup-bun
 
-      - name: Install OpenCode
+      - name: Install IronCode
         if: inputs.bump || inputs.version
-        run: bun i -g opencode-ai
+        run: bun i -g ironcode-ai
 
       - id: version
         run: |
           ./script/version.ts
         env:
           GH_TOKEN: ${{ github.token }}
-          OPENCODE_BUMP: ${{ inputs.bump }}
-          OPENCODE_VERSION: ${{ inputs.version }}
-          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          IRONCODE_BUMP: ${{ inputs.bump }}
+          IRONCODE_VERSION: ${{ inputs.version }}
+          IRONCODE_API_KEY: ${{ secrets.IRONCODE_API_KEY }}
     outputs:
       version: ${{ steps.version.outputs.version }}
       release: ${{ steps.version.outputs.release }}
@@ -61,9 +59,9 @@ jobs:
   build-cli:
     needs: version
     runs-on: ubuntu-latest
-    if: github.repository == 'anomalyco/opencode'
+    if: github.repository == 'KSD-CO/IronCode'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-tags: true
 
@@ -72,16 +70,16 @@ jobs:
       - name: Build
         id: build
         run: |
-          ./packages/opencode/script/build.ts
+          ./packages/ironcode/script/build.ts
         env:
-          OPENCODE_VERSION: ${{ needs.version.outputs.version }}
-          OPENCODE_RELEASE: ${{ needs.version.outputs.release }}
+          IRONCODE_VERSION: ${{ needs.version.outputs.version }}
+          IRONCODE_RELEASE: ${{ needs.version.outputs.release }}
           GH_TOKEN: ${{ github.token }}
 
       - uses: actions/upload-artifact@v4
         with:
-          name: opencode-cli
-          path: packages/opencode/dist
+          name: ironcode-cli
+          path: packages/ironcode/dist
 
     outputs:
       version: ${{ needs.version.outputs.version }}
@@ -107,7 +105,7 @@ jobs:
             target: aarch64-unknown-linux-gnu
     runs-on: ${{ matrix.settings.host }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-tags: true
 
@@ -163,7 +161,7 @@ jobs:
           cd packages/desktop
           bun ./scripts/prepare.ts
         env:
-          OPENCODE_VERSION: ${{ needs.version.outputs.version }}
+          IRONCODE_VERSION: ${{ needs.version.outputs.version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RUST_TARGET: ${{ matrix.settings.target }}
           GH_TOKEN: ${{ github.token }}
@@ -209,7 +207,7 @@ jobs:
       - build-tauri
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-bun
 
@@ -238,8 +236,8 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: opencode-cli
-          path: packages/opencode/dist
+          name: ironcode-cli
+          path: packages/ironcode/dist
 
       - name: Cache apt packages (AUR)
         uses: actions/cache@v4
@@ -256,14 +254,14 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.AUR_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          git config --global user.email "opencode@sst.dev"
-          git config --global user.name "opencode"
+          git config --global user.email "ttvuhm@gmail.com"
+          git config --global user.name "ironcode"
           ssh-keyscan -H aur.archlinux.org >> ~/.ssh/known_hosts || true
 
       - run: ./script/publish.ts
         env:
-          OPENCODE_VERSION: ${{ needs.version.outputs.version }}
-          OPENCODE_RELEASE: ${{ needs.version.outputs.release }}
+          IRONCODE_VERSION: ${{ needs.version.outputs.version }}
+          IRONCODE_RELEASE: ${{ needs.version.outputs.release }}
           AUR_KEY: ${{ secrets.AUR_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: false
