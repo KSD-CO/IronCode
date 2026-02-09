@@ -11,6 +11,8 @@ pub mod stats;
 pub mod terminal;
 pub mod types;
 pub mod vcs;
+#[cfg(feature = "webfetch")]
+pub mod webfetch;
 pub mod write;
 
 #[no_mangle]
@@ -487,5 +489,58 @@ pub extern "C" fn extract_zip_ffi(zip_path: *const c_char, dest_dir: *const c_ch
     match archive::extract_zip(zip_path_str, dest_dir_str) {
         Ok(_) => 0,   // Success
         Err(_) => -1, // Error
+    }
+}
+
+// Web fetch (EXPERIMENTAL - NOT RECOMMENDED FOR PRODUCTION)
+// Benchmark results: TypeScript is better for this use case (0.71ms avg processing)
+// Network latency (500-2000ms) >> Processing time (1-60ms)
+// To enable: cargo build --release --features webfetch
+#[cfg(feature = "webfetch")]
+#[no_mangle]
+pub extern "C" fn webfetch_ffi(
+    url: *const c_char,
+    format: *const c_char,
+    timeout_secs: u64,
+) -> *mut c_char {
+    let url_str = unsafe {
+        if url.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(url).to_str().unwrap_or("")
+    };
+
+    let format_str = unsafe {
+        if format.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(format).to_str().unwrap_or("markdown")
+    };
+
+    let content_format = match format_str {
+        "text" => webfetch::ContentFormat::Text,
+        "html" => webfetch::ContentFormat::Html,
+        _ => webfetch::ContentFormat::Markdown,
+    };
+
+    match webfetch::fetch_url(url_str, content_format, timeout_secs) {
+        Ok(result) => {
+            #[derive(serde::Serialize)]
+            struct Response {
+                content: String,
+                content_type: String,
+            }
+
+            let response = Response {
+                content: result.content,
+                content_type: result.content_type,
+            };
+
+            match serde_json::to_string(&response) {
+                Ok(json) => CString::new(json).unwrap().into_raw(),
+                Err(_) => std::ptr::null_mut(),
+            }
+        }
+        Err(_) => std::ptr::null_mut(),
     }
 }

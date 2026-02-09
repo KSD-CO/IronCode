@@ -41,5 +41,16 @@ lazy_static = "1.4"
 git2 = "0.19"
 s-zip = "0.10.1"
 
+# Webfetch dependencies (experimental - NOT recommended for production)
+# Benchmark results show TypeScript is better for this use case
+# Keep for reference only
+reqwest = { version = "0.12", features = ["blocking"], optional = true }
+scraper = { version = "0.20", optional = true }
+html2md = { version = "0.2", optional = true }
+
+[features]
+default = []
+webfetch = ["reqwest", "scraper", "html2md"]
+
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
