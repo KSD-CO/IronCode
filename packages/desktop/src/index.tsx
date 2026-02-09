@@ -38,9 +38,9 @@ const deepLinkEvent = "ironcode:deep-link"
 
 const emitDeepLinks = (urls: string[]) => {
   if (urls.length === 0) return
-  window.__OPENCODE__ ??= {}
-  const pending = window.__OPENCODE__.deepLinks ?? []
-  window.__OPENCODE__.deepLinks = [...pending, ...urls]
+  window.__IRONCODE__ ??= {}
+  const pending = window.__IRONCODE__.deepLinks ?? []
+  window.__IRONCODE__.deepLinks = [...pending, ...urls]
   window.dispatchEvent(new CustomEvent(deepLinkEvent, { detail: { urls } }))
 }
 
@@ -377,8 +377,8 @@ render(() => {
         <ServerGate>
           {(data) => {
             setServerPassword(data().password)
-            window.__OPENCODE__ ??= {}
-            window.__OPENCODE__.serverPassword = data().password ?? undefined
+            window.__IRONCODE__ ??= {}
+            window.__IRONCODE__.serverPassword = data().password ?? undefined
 
             function Inner() {
               const cmd = useCommand()
