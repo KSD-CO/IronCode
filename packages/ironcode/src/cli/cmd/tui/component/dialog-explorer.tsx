@@ -7,6 +7,7 @@ import { readdir, readFile, stat } from "fs/promises"
 import { join, dirname, extname, basename } from "path"
 import { homedir } from "os"
 import { highlightLine, getLanguageFromExtension, type Theme as SyntaxTheme } from "../util/syntax-highlight"
+import { Terminal } from "./terminal"
 
 interface FileNode {
   name: string
@@ -33,6 +34,9 @@ export function DialogExplorer() {
   const [previewContent, setPreviewContent] = createSignal<string>("")
   const [previewLoading, setPreviewLoading] = createSignal(false)
   const [previewError, setPreviewError] = createSignal<string | null>(null)
+
+  // Terminal state
+  const [showTerminal, setShowTerminal] = createSignal(true)
 
   let fileScrollBoxRef: ScrollBoxRenderable
   let previewScrollBoxRef: ScrollBoxRenderable
@@ -290,6 +294,9 @@ export function DialogExplorer() {
       setCurrentPath(process.cwd())
       refreshFiles()
       evt.preventDefault()
+    } else if (name === "t") {
+      setShowTerminal((prev) => !prev)
+      evt.preventDefault()
     }
   })
 
@@ -302,6 +309,8 @@ export function DialogExplorer() {
   })
 
   const maxHeight = createMemo(() => dimensions().height - 10)
+  const previewHeight = createMemo(() => (showTerminal() ? Math.floor(maxHeight() / 2) : maxHeight()))
+  const terminalHeight = createMemo(() => maxHeight() - previewHeight())
 
   function formatFileSize(bytes?: number): string {
     if (bytes === undefined) return ""
@@ -419,105 +428,114 @@ export function DialogExplorer() {
             <text fg={theme.textMuted}>r: refresh</text>
             <text fg={theme.textMuted}>~: home</text>
             <text fg={theme.textMuted}>.: project root</text>
+            <text fg={theme.textMuted}>t: toggle terminal</text>
           </box>
         </box>
 
-        {/* Right panel - File preview */}
+        {/* Right panel - File preview and terminal */}
         <box flexDirection="column" width="60%" gap={1}>
-          <box flexDirection="row" justifyContent="space-between" paddingBottom={1}>
-            <text attributes={TextAttributes.BOLD} fg={theme.accent}>
-              {selectedFile()?.isDirectory ? "Directory" : "Preview"}
-            </text>
-            <Show when={selectedFile() && !selectedFile()!.isDirectory}>
-              <text fg={theme.textMuted}>{formatFileSize(selectedFile()?.size)}</text>
-            </Show>
-          </box>
+          {/* File Preview */}
+          <box flexDirection="column" gap={1}>
+            <box flexDirection="row" justifyContent="space-between" paddingBottom={1}>
+              <text attributes={TextAttributes.BOLD} fg={theme.accent}>
+                {selectedFile()?.isDirectory ? "Directory" : "Preview"}
+              </text>
+              <Show when={selectedFile() && !selectedFile()!.isDirectory}>
+                <text fg={theme.textMuted}>{formatFileSize(selectedFile()?.size)}</text>
+              </Show>
+            </box>
 
-          <Show
-            when={selectedFile()}
-            fallback={
-              <box
-                height={maxHeight()}
-                backgroundColor={theme.backgroundElement}
-                alignItems="center"
-                justifyContent="center"
-              >
-                <text fg={theme.textMuted}>Select a file to preview</text>
-              </box>
-            }
-          >
-            <Show when={!selectedFile()!.isDirectory}>
-              <scrollbox
-                ref={(ref) => (previewScrollBoxRef = ref)}
-                height={maxHeight()}
-                backgroundColor={theme.backgroundElement}
-                paddingLeft={2}
-                paddingRight={2}
-                paddingTop={1}
-                paddingBottom={1}
-              >
-                <Show
-                  when={!previewLoading() && !previewError()}
-                  fallback={
-                    <box flexDirection="column" gap={1}>
-                      <Show when={previewLoading()}>
-                        <text fg={theme.textMuted}>Loading preview...</text>
-                      </Show>
-                      <Show when={previewError()}>
-                        <text fg={theme.error}>{previewError()}</text>
-                      </Show>
-                    </box>
-                  }
+            <Show
+              when={selectedFile()}
+              fallback={
+                <box
+                  height={previewHeight()}
+                  backgroundColor={theme.backgroundElement}
+                  alignItems="center"
+                  justifyContent="center"
                 >
-                  <box flexDirection="column">
-                    <For each={previewLines()}>
-                      {(line, index) => {
-                        const tokens = language()
-                          ? highlightLine(line || " ", language()!, syntaxTheme())
-                          : [{ text: line || " " }]
-
-                        return (
-                          <box flexDirection="row">
-                            <text fg={theme.textMuted} minWidth={4}>
-                              {(index() + 1).toString().padStart(4, " ")}
-                            </text>
-                            <box flexDirection="row" paddingLeft={1}>
-                              <For each={tokens}>
-                                {(token) => <text fg={token.color || theme.text}>{token.text}</text>}
-                              </For>
-                            </box>
-                          </box>
-                        )
-                      }}
-                    </For>
-                  </box>
-                </Show>
-              </scrollbox>
-            </Show>
-
-            <Show when={selectedFile()!.isDirectory}>
-              <box
-                height={maxHeight()}
-                backgroundColor={theme.backgroundElement}
-                alignItems="center"
-                justifyContent="center"
-                paddingLeft={2}
-                paddingRight={2}
-              >
-                <box flexDirection="column" gap={1} alignItems="center">
-                  <text fg={theme.primary} attributes={TextAttributes.BOLD}>
-                    📁 {selectedFile()!.name}
-                  </text>
-                  <text fg={theme.textMuted}>Press → or Enter to expand</text>
+                  <text fg={theme.textMuted}>Select a file to preview</text>
                 </box>
-              </box>
-            </Show>
-          </Show>
+              }
+            >
+              <Show when={!selectedFile()!.isDirectory}>
+                <scrollbox
+                  ref={(ref) => (previewScrollBoxRef = ref)}
+                  height={previewHeight()}
+                  backgroundColor={theme.backgroundElement}
+                  paddingLeft={2}
+                  paddingRight={2}
+                  paddingTop={1}
+                  paddingBottom={1}
+                >
+                  <Show
+                    when={!previewLoading() && !previewError()}
+                    fallback={
+                      <box flexDirection="column" gap={1}>
+                        <Show when={previewLoading()}>
+                          <text fg={theme.textMuted}>Loading preview...</text>
+                        </Show>
+                        <Show when={previewError()}>
+                          <text fg={theme.error}>{previewError()}</text>
+                        </Show>
+                      </box>
+                    }
+                  >
+                    <box flexDirection="column">
+                      <For each={previewLines()}>
+                        {(line, index) => {
+                          const tokens = language()
+                            ? highlightLine(line || " ", language()!, syntaxTheme())
+                            : [{ text: line || " " }]
 
-          <box flexDirection="row" gap={1} paddingTop={1}>
-            <text fg={theme.textMuted}>Full path:</text>
-            <text fg={theme.text}>{selectedFile()?.path || "No file selected"}</text>
+                          return (
+                            <box flexDirection="row">
+                              <text fg={theme.textMuted} minWidth={4}>
+                                {(index() + 1).toString().padStart(4, " ")}
+                              </text>
+                              <box flexDirection="row" paddingLeft={1}>
+                                <For each={tokens}>
+                                  {(token) => <text fg={token.color || theme.text}>{token.text}</text>}
+                                </For>
+                              </box>
+                            </box>
+                          )
+                        }}
+                      </For>
+                    </box>
+                  </Show>
+                </scrollbox>
+              </Show>
+
+              <Show when={selectedFile()!.isDirectory}>
+                <box
+                  height={previewHeight()}
+                  backgroundColor={theme.backgroundElement}
+                  alignItems="center"
+                  justifyContent="center"
+                  paddingLeft={2}
+                  paddingRight={2}
+                >
+                  <box flexDirection="column" gap={1} alignItems="center">
+                    <text fg={theme.primary} attributes={TextAttributes.BOLD}>
+                      📁 {selectedFile()!.name}
+                    </text>
+                    <text fg={theme.textMuted}>Press → or Enter to expand</text>
+                  </box>
+                </box>
+              </Show>
+            </Show>
+
+            <box flexDirection="row" gap={1} paddingTop={1}>
+              <text fg={theme.textMuted}>Full path:</text>
+              <text fg={theme.text}>{selectedFile()?.path || "No file selected"}</text>
+            </box>
           </box>
+
+          {/* Terminal */}
+          <Show when={showTerminal()}>
+            <Terminal height={terminalHeight()} workingDirectory={currentPath()} />
+          </Show>
         </box>
       </box>
     </box>
