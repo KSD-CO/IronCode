@@ -2134,6 +2134,9 @@ export type Path = {
 
 export type VcsInfo = {
   branch: string
+  added?: number
+  modified?: number
+  deleted?: number
 }
 
 export type Command = {

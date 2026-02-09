@@ -7,7 +7,6 @@ import { readdir, readFile, stat } from "fs/promises"
 import { join, dirname, extname, basename } from "path"
 import { homedir } from "os"
 import { highlightLine, getLanguageFromExtension, type Theme as SyntaxTheme } from "../util/syntax-highlight"
-import { Terminal } from "./terminal"
 
 interface FileNode {
   name: string
@@ -34,10 +33,6 @@ export function DialogExplorer() {
   const [previewContent, setPreviewContent] = createSignal<string>("")
   const [previewLoading, setPreviewLoading] = createSignal(false)
   const [previewError, setPreviewError] = createSignal<string | null>(null)
-
-  // Terminal state
-  const [showTerminal, setShowTerminal] = createSignal(true)
-  const [terminalHeightPercent, setTerminalHeightPercent] = createSignal(10) // Default 10%
 
   let fileScrollBoxRef: ScrollBoxRenderable
   let previewScrollBoxRef: ScrollBoxRenderable
@@ -295,9 +290,6 @@ export function DialogExplorer() {
       setCurrentPath(process.cwd())
       refreshFiles()
       evt.preventDefault()
-    } else if (name === "t") {
-      setShowTerminal((prev) => !prev)
-      evt.preventDefault()
     }
   })
 
@@ -310,10 +302,6 @@ export function DialogExplorer() {
   })
 
   const maxHeight = createMemo(() => dimensions().height - 10)
-  const terminalHeight = createMemo(() =>
-    showTerminal() ? Math.floor((maxHeight() * terminalHeightPercent()) / 100) : 0,
-  )
-  const previewHeight = createMemo(() => maxHeight() - terminalHeight())
 
   function formatFileSize(bytes?: number): string {
     if (bytes === undefined) return ""
@@ -431,11 +419,10 @@ export function DialogExplorer() {
             <text fg={theme.textMuted}>r: refresh</text>
             <text fg={theme.textMuted}>~: home</text>
             <text fg={theme.textMuted}>.: project root</text>
-            <text fg={theme.textMuted}>t: toggle terminal</text>
           </box>
         </box>
 
-        {/* Right panel - File preview and terminal */}
+        {/* Right panel - File preview */}
         <box flexDirection="column" width="70%" gap={1}>
           {/* File Preview */}
           <box flexDirection="column" gap={1}>
@@ -452,7 +439,7 @@ export function DialogExplorer() {
               when={selectedFile()}
               fallback={
                 <box
-                  height={previewHeight()}
+                  height={maxHeight()}
                   backgroundColor={theme.backgroundElement}
                   alignItems="center"
                   justifyContent="center"
@@ -464,7 +451,7 @@ export function DialogExplorer() {
               <Show when={!selectedFile()!.isDirectory}>
                 <scrollbox
                   ref={(ref) => (previewScrollBoxRef = ref)}
-                  height={previewHeight()}
+                  height={maxHeight()}
                   backgroundColor={theme.backgroundElement}
                   paddingLeft={2}
                   paddingRight={2}
@@ -512,7 +499,7 @@ export function DialogExplorer() {
 
               <Show when={selectedFile()!.isDirectory}>
                 <box
-                  height={previewHeight()}
+                  height={maxHeight()}
                   backgroundColor={theme.backgroundElement}
                   alignItems="center"
                   justifyContent="center"
@@ -534,11 +521,6 @@ export function DialogExplorer() {
               <text fg={theme.text}>{selectedFile()?.path || "No file selected"}</text>
             </box>
           </box>
-
-          {/* Terminal */}
-          <Show when={showTerminal()}>
-            <Terminal height={terminalHeight()} workingDirectory={currentPath()} />
-          </Show>
         </box>
       </box>
     </box>

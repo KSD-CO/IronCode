@@ -155,12 +155,15 @@ export function Home() {
         <box flexGrow={1} />
         <box flexShrink={0} gap={2} flexDirection="row">
           <text fg={theme.textMuted}>
-            CPU {stats().cpu_usage.toFixed(0)}% {(() => {
+            CPU {stats().cpu_usage.toFixed(0)}%{" "}
+            {(() => {
               const bars = Math.round(stats().cpu_usage / 20)
-              return '▓'.repeat(bars) + '░'.repeat(5 - bars)
-            })()} Mem {(stats().memory_used_mb / 1024).toFixed(1)}/{(stats().memory_total_mb / 1024).toFixed(0)}G {(() => {
+              return "▓".repeat(bars) + "░".repeat(5 - bars)
+            })()}{" "}
+            Mem {(stats().memory_used_mb / 1024).toFixed(1)}/{(stats().memory_total_mb / 1024).toFixed(0)}G{" "}
+            {(() => {
               const bars = Math.round((stats().memory_used_mb / stats().memory_total_mb) * 5)
-              return '▓'.repeat(bars) + '░'.repeat(5 - bars)
+              return "▓".repeat(bars) + "░".repeat(5 - bars)
             })()}
           </text>
           <text fg={theme.textMuted}>{Installation.VERSION}</text>

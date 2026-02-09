@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::sync::{Arc, Mutex};
-use std::thread;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TerminalInfo {
@@ -19,9 +18,12 @@ pub struct TerminalOutput {
 
 pub struct TerminalSession {
     master: Box<dyn MasterPty + Send>,
+    #[allow(dead_code)]
     child: Box<dyn Child + Send + Sync>,
     reader: Arc<Mutex<Box<dyn Read + Send>>>,
     writer: Arc<Mutex<Box<dyn Write + Send>>>,
+    #[cfg(unix)]
+    reader_fd: std::os::unix::io::RawFd,
 }
 
 lazy_static::lazy_static! {
@@ -61,11 +63,19 @@ pub fn create(id: &str, cwd: Option<&str>, rows: u16, cols: u16) -> Result<Termi
         .take_writer()
         .map_err(|e| format!("Failed to take writer: {}", e))?;
 
+    #[cfg(unix)]
+    let reader_fd = {
+        use std::os::unix::io::AsRawFd;
+        pair.master.as_raw_fd().expect("Failed to get raw FD")
+    };
+
     let session = TerminalSession {
         master: pair.master,
         child,
         reader: Arc::new(Mutex::new(reader)),
         writer: Arc::new(Mutex::new(writer)),
+        #[cfg(unix)]
+        reader_fd,
     };
 
     let mut sessions = SESSIONS.lock().unwrap();
@@ -101,6 +111,16 @@ pub fn read(id: &str) -> Result<TerminalOutput, String> {
         .get(id)
         .ok_or_else(|| format!("Session {} not found", id))?;
 
+    // Set non-blocking mode on the file descriptor
+    #[cfg(unix)]
+    {
+        let fd = session.reader_fd;
+        unsafe {
+            let flags = libc::fcntl(fd, libc::F_GETFL, 0);
+            libc::fcntl(fd, libc::F_SETFL, flags | libc::O_NONBLOCK);
+        }
+    }
+
     let mut reader = session.reader.lock().unwrap();
     let mut buffer = [0u8; 4096];
 
@@ -112,6 +132,12 @@ pub fn read(id: &str) -> Result<TerminalOutput, String> {
         Ok(_) => Ok(TerminalOutput {
             data: String::new(),
         }),
+        Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+            // No data available, return empty
+            Ok(TerminalOutput {
+                data: String::new(),
+            })
+        }
         Err(e) => Err(format!("Failed to read from PTY: {}", e)),
     }
 }

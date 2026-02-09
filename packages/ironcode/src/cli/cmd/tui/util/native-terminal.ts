@@ -1,7 +1,7 @@
 import { dlopen, FFIType, suffix, ptr, CString, toArrayBuffer } from "bun:ffi"
 import { join } from "path"
 
-const libPath = join(import.meta.dir, "../../../native/tool/target/release", `libironcode_tool.${suffix}`)
+const libPath = join(import.meta.dir, "../../../../../native/tool/target/release", `libironcode_tool.${suffix}`)
 
 const lib = dlopen(libPath, {
   terminal_create: {

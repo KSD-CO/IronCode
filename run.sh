@@ -71,9 +71,11 @@ TARGET="${1:-dev}"
 case "$TARGET" in
   dev)
     export BUILD_MODE=debug
+    export IRONCODE_PROJECT_ROOT="$REPO_ROOT"
     build_rust_if_needed
     echo "🚀 Starting dev"
-    exec bun run dev
+    cd "$IRONCODE_DIR"
+    exec bun run --conditions=browser src/index.ts
     ;;
   web)
     export BUILD_MODE=release

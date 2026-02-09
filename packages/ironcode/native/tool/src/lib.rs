@@ -8,6 +8,7 @@ pub mod read;
 pub mod stats;
 pub mod terminal;
 pub mod types;
+pub mod vcs;
 pub mod write;
 
 #[no_mangle]
@@ -266,4 +267,23 @@ pub extern "C" fn terminal_close(id: *const c_char) -> bool {
     };
 
     terminal::close(id_str).is_ok()
+}
+
+// VCS FFI function
+#[no_mangle]
+pub extern "C" fn vcs_info_ffi(cwd: *const c_char) -> *mut c_char {
+    let cwd_str = unsafe {
+        if cwd.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(cwd).to_str().unwrap_or(".")
+    };
+
+    match vcs::get_info(cwd_str) {
+        Ok(info) => match serde_json::to_string(&info) {
+            Ok(json) => CString::new(json).unwrap().into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        },
+        Err(_) => std::ptr::null_mut(),
+    }
 }

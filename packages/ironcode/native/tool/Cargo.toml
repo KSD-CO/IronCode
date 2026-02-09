@@ -11,6 +11,14 @@ crate-type = ["cdylib", "rlib"]
 name = "ironcode-tool"
 path = "src/main.rs"
 
+[[bin]]
+name = "compare"
+path = "benches/compare.rs"
+
+[[bench]]
+name = "vcs_bench"
+harness = false
+
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -22,3 +30,7 @@ sysinfo = "0.32"
 portable-pty = "0.8"
 libc = "0.2"
 lazy_static = "1.4"
+git2 = "0.19"
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
