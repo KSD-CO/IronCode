@@ -1,6 +1,6 @@
 import { Accessor } from "solid-js"
 import { useNavigate, useParams } from "@solidjs/router"
-import { createOpencodeClient, type Message } from "@ironcode-ai/sdk/v2/client"
+import { createIroncodeClient, type Message } from "@ironcode-ai/sdk/v2/client"
 import { showToast } from "@ironcode-ai/ui/toast"
 import { base64Encode } from "@ironcode-ai/util/encode"
 import { useLocal } from "@/context/local"
@@ -171,7 +171,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       }
 
       if (sessionDirectory !== projectDirectory) {
-        client = createOpencodeClient({
+        client = createIroncodeClient({
           baseUrl: sdk.url,
           fetch: platform.fetch,
           directory: sessionDirectory,

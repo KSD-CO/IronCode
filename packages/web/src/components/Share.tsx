@@ -2,7 +2,7 @@ import { For, Show, onMount, Suspense, onCleanup, createMemo, createSignal, Susp
 import { DateTime } from "luxon"
 import { createStore, reconcile, unwrap } from "solid-js/store"
 import { IconArrowDown } from "./icons"
-import { IconOpencode } from "./icons/custom"
+import { IconIroncode } from "./icons/custom"
 import styles from "./share.module.css"
 import type { MessageV2 } from "ironcode/session/message-v2"
 import type { Message } from "ironcode/session/message"
@@ -304,7 +304,7 @@ export default function Share(props: { id: string; api: string; info: Session.In
             <ul data-component="header-stats">
               <li title="ironcode version" data-slot="item">
                 <div data-slot="icon" title="ironcode">
-                  <IconOpencode width={16} height={16} />
+                  <IconIroncode width={16} height={16} />
                 </div>
                 <Show when={store.info?.version} fallback="v0.0.1">
                   <span>v{store.info?.version}</span>

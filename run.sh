@@ -37,11 +37,7 @@ LIB_PATH="$RUST_DIR/target/$TARGET_DIR/$LIB_NAME"
 # Rust build
 # =========================
 build_rust_if_needed() {
-  if [[ -f "$LIB_PATH" ]]; then
-    echo "✅ Native lib exists: $LIB_PATH"
-    return
-  fi
-
+  
   echo "⚙️  Building Rust native ($BUILD_MODE)..."
   pushd "$RUST_DIR" >/dev/null
 

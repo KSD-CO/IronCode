@@ -34,8 +34,8 @@ stdenvNoCC.mkDerivation (finalAttrs: {
   '';
 
   env.MODELS_DEV_API_JSON = "${models-dev}/dist/_api.json";
-  env.OPENCODE_VERSION = finalAttrs.version;
-  env.OPENCODE_CHANNEL = "local";
+  env.IRONCODE_VERSION = finalAttrs.version;
+  env.IRONCODE_CHANNEL = "local";
 
   buildPhase = ''
     runHook preBuild

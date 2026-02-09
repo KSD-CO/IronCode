@@ -300,7 +300,7 @@ async fn initialize(app: AppHandle) {
 
     println!("Main and loading windows created");
 
-    let sqlite_enabled = option_env!("OPENCODE_SQLITE").is_some();
+    let sqlite_enabled = option_env!("IRONCODE_SQLITE").is_some();
 
     let loading_task = tokio::spawn({
         let init_tx = init_tx.clone();
@@ -489,9 +489,9 @@ async fn setup_server_connection(app: AppHandle) -> ServerConnection {
 }
 
 fn get_sidecar_port() -> u32 {
-    option_env!("OPENCODE_PORT")
+    option_env!("IRONCODE_PORT")
         .map(|s| s.to_string())
-        .or_else(|| std::env::var("OPENCODE_PORT").ok())
+        .or_else(|| std::env::var("IRONCODE_PORT").ok())
         .and_then(|port_str| port_str.parse().ok())
         .unwrap_or_else(|| {
             TcpListener::bind("127.0.0.1:0")

@@ -15,7 +15,7 @@
 
 <p align="center"><strong>Lightweight, local-first AI coding agent</strong></p>
 <p align="center">
-  <a href="https://github.com/anomalyco/opencode"><img alt="Upstream" src="https://img.shields.io/badge/upstream-opencode-blue?style=flat-square" /></a>
+  <a href="https://github.com/anomalyco/opencode"><img alt="Upstream" src="https://img.shields.io/badge/upstream-ironcode-blue?style=flat-square" /></a>
   <a href="https://github.com/KSD-CO/IronCode/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/KSD-CO/IronCode/publish.yml?style=flat-square&branch=dev" /></a>
 </p>
 
@@ -161,7 +161,6 @@ IronCode is built with:
 - **Web Frontend**: SolidJS (embedded in desktop app)
 - **Plugins**: TypeScript plugin system
 - **Native Tools**: Rust for performance-critical operations
-
 
 ---
 

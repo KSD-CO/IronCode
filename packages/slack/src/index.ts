@@ -1,5 +1,5 @@
 import { App } from "@slack/bolt"
-import { createOpencode, type ToolPart } from "@ironcode-ai/sdk"
+import { createIroncode, type ToolPart } from "@ironcode-ai/sdk"
 
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
@@ -14,10 +14,10 @@ console.log("- Signing secret present:", !!process.env.SLACK_SIGNING_SECRET)
 console.log("- App token present:", !!process.env.SLACK_APP_TOKEN)
 
 console.log("🚀 Starting ironcode server...")
-const ironcode = await createOpencode({
+const ironcode = await createIroncode({
   port: 0,
 })
-console.log("✅ Opencode server ready")
+console.log("✅ Ironcode server ready")
 
 const sessions = new Map<string, { client: any; server: any; sessionId: string; channel: string; thread: string }>()
 ;(async () => {
@@ -107,7 +107,7 @@ app.message(async ({ message, say }) => {
     body: { parts: [{ type: "text", text: message.text }] },
   })
 
-  console.log("📤 Opencode response:", JSON.stringify(result, null, 2))
+  console.log("📤 Ironcode response:", JSON.stringify(result, null, 2))
 
   if (result.error) {
     console.error("❌ Failed to send message:", result.error)

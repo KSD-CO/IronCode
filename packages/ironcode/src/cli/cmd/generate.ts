@@ -14,9 +14,9 @@ export const GenerateCommand = {
           {
             lang: "js",
             source: [
-              `import { createOpencodeClient } from "@ironcode-ai/sdk`,
+              `import { createIroncodeClient } from "@ironcode-ai/sdk`,
               ``,
-              `const client = createOpencodeClient()`,
+              `const client = createIroncodeClient()`,
               `await client.${operation.operationId}({`,
               `  ...`,
               `})`,

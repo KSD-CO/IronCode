@@ -100,7 +100,7 @@ export function AppInterface(props: { defaultUrl?: string; children?: JSX.Elemen
     if (stored) return stored
     if (location.hostname.includes("ironcode.ai")) return "http://localhost:4096"
     if (import.meta.env.DEV)
-      return `http://${import.meta.env.VITE_OPENCODE_SERVER_HOST ?? "localhost"}:${import.meta.env.VITE_OPENCODE_SERVER_PORT ?? "4096"}`
+      return `http://${import.meta.env.VITE_IRONCODE_SERVER_HOST ?? "localhost"}:${import.meta.env.VITE_IRONCODE_SERVER_PORT ?? "4096"}`
 
     return window.location.origin
   }

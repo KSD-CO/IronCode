@@ -1,16 +1,16 @@
 export * from "./client.js"
 export * from "./server.js"
 
-import { createOpencodeClient } from "./client.js"
-import { createOpencodeServer } from "./server.js"
+import { createIroncodeClient } from "./client.js"
+import { createIroncodeServer } from "./server.js"
 import type { ServerOptions } from "./server.js"
 
-export async function createOpencode(options?: ServerOptions) {
-  const server = await createOpencodeServer({
+export async function createIroncode(options?: ServerOptions) {
+  const server = await createIroncodeServer({
     ...options,
   })
 
-  const client = createOpencodeClient({
+  const client = createIroncodeClient({
     baseUrl: server.url,
   })
 

@@ -2,7 +2,7 @@ import type { Hooks, PluginInput, Plugin as PluginInstance } from "@ironcode-ai/
 import { Config } from "../config/config"
 import { Bus } from "../bus"
 import { Log } from "../util/log"
-import { createOpencodeClient } from "@ironcode-ai/sdk"
+import { createIroncodeClient } from "@ironcode-ai/sdk"
 import { Server } from "../server/server"
 import { BunProc } from "../bun"
 import { Instance } from "../project/instance"
@@ -22,7 +22,7 @@ export namespace Plugin {
   const INTERNAL_PLUGINS: PluginInstance[] = [CodexAuthPlugin, CopilotAuthPlugin, GitlabAuthPlugin]
 
   const state = Instance.state(async () => {
-    const client = createOpencodeClient({
+    const client = createIroncodeClient({
       baseUrl: "http://localhost:4096",
       directory: Instance.directory,
       // @ts-ignore - fetch type incompatibility

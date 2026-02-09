@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { $ } from "bun"
-import { createOpencode } from "@ironcode-ai/sdk/v2"
+import { createIroncode } from "@ironcode-ai/sdk/v2"
 import { parseArgs } from "util"
 import { Script } from "@ironcode-ai/script"
 
@@ -136,7 +136,7 @@ function getSection(areas: Set<string>): string {
   return "Core"
 }
 
-async function summarizeCommit(ironcode: Awaited<ReturnType<typeof createOpencode>>, message: string): Promise<string> {
+async function summarizeCommit(ironcode: Awaited<ReturnType<typeof createIroncode>>, message: string): Promise<string> {
   console.log("summarizing commit:", message)
   const session = await ironcode.client.session.create()
   const result = await ironcode.client.session
@@ -164,7 +164,7 @@ Commit: ${message}`,
   return result.trim()
 }
 
-export async function generateChangelog(commits: Commit[], ironcode: Awaited<ReturnType<typeof createOpencode>>) {
+export async function generateChangelog(commits: Commit[], ironcode: Awaited<ReturnType<typeof createIroncode>>) {
   // Summarize commits in parallel with max 10 concurrent requests
   const BATCH_SIZE = 10
   const summaries: string[] = []
@@ -227,7 +227,7 @@ export async function buildNotes(from: string, to: string) {
 
   console.log("generating changelog since " + from)
 
-  const ironcode = await createOpencode({ port: 0 })
+  const ironcode = await createIroncode({ port: 0 })
   const notes: string[] = []
 
   try {

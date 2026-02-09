@@ -1,4 +1,4 @@
-import { createOpencodeClient, type Event } from "@ironcode-ai/sdk/v2/client"
+import { createIroncodeClient, type Event } from "@ironcode-ai/sdk/v2/client"
 import { createSimpleContext } from "@ironcode-ai/ui/context"
 import { createGlobalEmitter } from "@solid-primitives/event-bus"
 import { batch, onCleanup } from "solid-js"
@@ -12,7 +12,7 @@ export const { use: useGlobalSDK, provider: GlobalSDKProvider } = createSimpleCo
     const platform = usePlatform()
     const abort = new AbortController()
 
-    const eventSdk = createOpencodeClient({
+    const eventSdk = createIroncodeClient({
       baseUrl: server.url,
       signal: abort.signal,
       fetch: platform.fetch,
@@ -97,7 +97,7 @@ export const { use: useGlobalSDK, provider: GlobalSDKProvider } = createSimpleCo
       flush()
     })
 
-    const sdk = createOpencodeClient({
+    const sdk = createIroncodeClient({
       baseUrl: server.url,
       fetch: platform.fetch,
       throwOnError: true,

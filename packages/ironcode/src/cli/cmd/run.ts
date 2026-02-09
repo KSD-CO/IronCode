@@ -6,7 +6,7 @@ import { cmd } from "./cmd"
 import { Flag } from "../../flag/flag"
 import { bootstrap } from "../bootstrap"
 import { EOL } from "os"
-import { createOpencodeClient, type Message, type OpencodeClient, type ToolPart } from "@ironcode-ai/sdk/v2"
+import { createIroncodeClient, type Message, type IroncodeClient, type ToolPart } from "@ironcode-ai/sdk/v2"
 import { Server } from "../../server/server"
 import { Provider } from "../../provider/provider"
 import { Agent } from "../../agent/agent"
@@ -358,7 +358,7 @@ export const RunCommand = cmd({
       return message.slice(0, 50) + (message.length > 50 ? "..." : "")
     }
 
-    async function session(sdk: OpencodeClient) {
+    async function session(sdk: IroncodeClient) {
       const baseID = args.continue ? (await sdk.session.list()).data?.find((s) => !s.parentID)?.id : args.session
 
       if (baseID && args.fork) {
@@ -373,7 +373,7 @@ export const RunCommand = cmd({
       return result.data?.id
     }
 
-    async function share(sdk: OpencodeClient, sessionID: string) {
+    async function share(sdk: IroncodeClient, sessionID: string) {
       const cfg = await sdk.config.get()
       if (!cfg.data) return
       if (cfg.data.share !== "auto" && !Flag.IRONCODE_AUTO_SHARE && !args.share) return
@@ -388,7 +388,7 @@ export const RunCommand = cmd({
       }
     }
 
-    async function execute(sdk: OpencodeClient) {
+    async function execute(sdk: IroncodeClient) {
       function tool(part: ToolPart) {
         if (part.tool === "bash") return bash(props<typeof BashTool>(part))
         if (part.tool === "glob") return glob(props<typeof GlobTool>(part))
@@ -582,7 +582,7 @@ export const RunCommand = cmd({
     }
 
     if (args.attach) {
-      const sdk = createOpencodeClient({ baseUrl: args.attach })
+      const sdk = createIroncodeClient({ baseUrl: args.attach })
       return await execute(sdk)
     }
 
@@ -591,7 +591,7 @@ export const RunCommand = cmd({
         const request = new Request(input, init)
         return Server.App().fetch(request)
       }) as typeof globalThis.fetch
-      const sdk = createOpencodeClient({ baseUrl: "http://ironcode.internal", fetch: fetchFn })
+      const sdk = createIroncodeClient({ baseUrl: "http://ironcode.internal", fetch: fetchFn })
       await execute(sdk)
     })
   },

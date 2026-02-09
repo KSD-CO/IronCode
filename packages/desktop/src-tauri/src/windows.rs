@@ -34,8 +34,8 @@ impl MainWindow {
         .maximized(true)
         .initialization_script(format!(
             r#"
-            window.__OPENCODE__ ??= {{}};
-            window.__OPENCODE__.updaterEnabled = {UPDATER_ENABLED};
+            window.__IRONCODE__ ??= {{}};
+            window.__IRONCODE__.updaterEnabled = {UPDATER_ENABLED};
           "#
         ));
 

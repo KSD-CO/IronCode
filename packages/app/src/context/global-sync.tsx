@@ -4,7 +4,7 @@ import {
   type Project,
   type ProviderAuthResponse,
   type ProviderListResponse,
-  createOpencodeClient,
+  createIroncodeClient,
 } from "@ironcode-ai/sdk/v2/client"
 import { createStore, produce, reconcile } from "solid-js/store"
 import { useGlobalSDK } from "./global-sdk"
@@ -59,7 +59,7 @@ function createGlobalSync() {
     loadSessionsFallback: 0,
   }
 
-  const sdkCache = new Map<string, ReturnType<typeof createOpencodeClient>>()
+  const sdkCache = new Map<string, ReturnType<typeof createIroncodeClient>>()
   const booting = new Map<string, Promise<void>>()
   const sessionLoads = new Map<string, Promise<void>>()
   const sessionMeta = new Map<string, { limit: number }>()
@@ -126,7 +126,7 @@ function createGlobalSync() {
   const sdkFor = (directory: string) => {
     const cached = sdkCache.get(directory)
     if (cached) return cached
-    const sdk = createOpencodeClient({
+    const sdk = createIroncodeClient({
       baseUrl: globalSDK.url,
       fetch: platform.fetch,
       directory,

@@ -1657,8 +1657,8 @@ describe("IRONCODE_DISABLE_PROJECT_CONFIG", () => {
         fn: async () => {
           const directories = await Config.directories()
           // Project .ironcode should NOT be in directories list
-          const hasProjectOpencode = directories.some((d) => d.startsWith(tmp.path))
-          expect(hasProjectOpencode).toBe(false)
+          const hasProjectIroncode = directories.some((d) => d.startsWith(tmp.path))
+          expect(hasProjectIroncode).toBe(false)
         },
       })
     } finally {

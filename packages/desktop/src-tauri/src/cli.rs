@@ -162,9 +162,9 @@ pub fn create_command(app: &tauri::AppHandle, args: &str) -> Command {
         .sidecar("ironcode-cli")
         .unwrap()
         .args(args.split_whitespace())
-        .env("OPENCODE_EXPERIMENTAL_ICON_DISCOVERY", "true")
-        .env("OPENCODE_EXPERIMENTAL_FILEWATCHER", "true")
-        .env("OPENCODE_CLIENT", "desktop")
+        .env("IRONCODE_EXPERIMENTAL_ICON_DISCOVERY", "true")
+        .env("IRONCODE_EXPERIMENTAL_FILEWATCHER", "true")
+        .env("IRONCODE_CLIENT", "desktop")
         .env("XDG_STATE_HOME", &state_dir);
 
     #[cfg(not(target_os = "windows"))]
@@ -180,9 +180,9 @@ pub fn create_command(app: &tauri::AppHandle, args: &str) -> Command {
 
         app.shell()
             .command(&shell)
-            .env("OPENCODE_EXPERIMENTAL_ICON_DISCOVERY", "true")
-            .env("OPENCODE_EXPERIMENTAL_FILEWATCHER", "true")
-            .env("OPENCODE_CLIENT", "desktop")
+            .env("IRONCODE_EXPERIMENTAL_ICON_DISCOVERY", "true")
+            .env("IRONCODE_EXPERIMENTAL_FILEWATCHER", "true")
+            .env("IRONCODE_CLIENT", "desktop")
             .env("XDG_STATE_HOME", &state_dir)
             .args(["-il", "-c", &cmd])
     };
@@ -198,8 +198,8 @@ pub fn serve(app: &AppHandle, hostname: &str, port: u32, password: &str) -> Comm
         app,
         format!("serve --hostname {hostname} --port {port}").as_str(),
     )
-    .env("OPENCODE_SERVER_USERNAME", "ironcode")
-    .env("OPENCODE_SERVER_PASSWORD", password)
+    .env("IRONCODE_SERVER_USERNAME", "ironcode")
+    .env("IRONCODE_SERVER_PASSWORD", password)
     .spawn()
     .expect("Failed to spawn ironcode");
 

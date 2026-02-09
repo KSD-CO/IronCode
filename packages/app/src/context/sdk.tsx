@@ -1,4 +1,4 @@
-import { createOpencodeClient, type Event } from "@ironcode-ai/sdk/v2/client"
+import { createIroncodeClient, type Event } from "@ironcode-ai/sdk/v2/client"
 import { createSimpleContext } from "@ironcode-ai/ui/context"
 import { createGlobalEmitter } from "@solid-primitives/event-bus"
 import { createEffect, createMemo, onCleanup, type Accessor } from "solid-js"
@@ -13,7 +13,7 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
 
     const directory = createMemo(props.directory)
     const client = createMemo(() =>
-      createOpencodeClient({
+      createIroncodeClient({
         baseUrl: globalSDK.url,
         fetch: platform.fetch,
         directory: directory(),
