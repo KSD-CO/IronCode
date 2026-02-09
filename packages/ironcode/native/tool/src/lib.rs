@@ -1,6 +1,7 @@
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
+pub mod archive;
 pub mod edit;
 pub mod glob;
 pub mod grep;
@@ -463,5 +464,28 @@ pub extern "C" fn file_stat_ffi(filepath: *const c_char) -> *mut c_char {
     match serde_json::to_string(&stat) {
         Ok(json) => CString::new(json).unwrap().into_raw(),
         Err(_) => std::ptr::null_mut(),
+    }
+}
+
+// Archive extraction
+#[no_mangle]
+pub extern "C" fn extract_zip_ffi(zip_path: *const c_char, dest_dir: *const c_char) -> i32 {
+    let zip_path_str = unsafe {
+        if zip_path.is_null() {
+            return -1;
+        }
+        CStr::from_ptr(zip_path).to_str().unwrap_or("")
+    };
+
+    let dest_dir_str = unsafe {
+        if dest_dir.is_null() {
+            return -1;
+        }
+        CStr::from_ptr(dest_dir).to_str().unwrap_or("")
+    };
+
+    match archive::extract_zip(zip_path_str, dest_dir_str) {
+        Ok(_) => 0,   // Success
+        Err(_) => -1, // Error
     }
 }

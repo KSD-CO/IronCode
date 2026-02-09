@@ -39,6 +39,7 @@ portable-pty = "0.8"
 libc = "0.2"
 lazy_static = "1.4"
 git2 = "0.19"
+s-zip = "0.10.1"
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }

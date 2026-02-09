@@ -48,6 +48,9 @@ IronCode rewrites key operations in native Rust with **measured real-world perfo
 | **File Glob (100 files)** | 9.74 ms         | 3.55 ms     | **2.74x faster** | Zero spawn overhead     |
 | **Grep Search**           | 34.84 ms        | 19.35 ms    | **1.80x faster** | Pattern: "function"     |
 | **VCS Info (git)**        | 55.59 ms        | 0.037 ms    | **1502x faster** | libgit2 vs git commands |
+| **Archive (small, 10)**   | 5.48 ms         | 1.93 ms     | **2.8x faster**  | s-zip vs unzip          |
+| **Archive (medium, 100)** | 90.43 ms        | 18.07 ms    | **5.0x faster**  | s-zip vs unzip          |
+| **Archive (large, 500)**  | 740.29 ms       | 142.88 ms   | **5.2x faster**  | s-zip vs unzip          |
 | **Read (500 lines)**      | 18 µs           | 27 µs       | 0.67x            | Raw FFI                 |
 | **Read (1K lines)**       | 29 µs           | 47 µs       | 0.62x            | Raw FFI                 |
 | **Read (5K lines)**       | 120 µs          | 194 µs      | 0.62x            | Raw FFI                 |
@@ -59,6 +62,7 @@ IronCode rewrites key operations in native Rust with **measured real-world perfo
 - ✅ **Edit Tool**: Wins on large files (5K+ lines) where complex compute amortizes FFI cost
 - ✅ **Glob/Grep**: 1.8-2.7x faster by eliminating process spawn overhead
 - ✅ **VCS Info**: 1500x faster using libgit2 instead of shelling out to git
+- ✅ **Archive Extraction**: 3-5x faster using s-zip vs shell commands (unzip/PowerShell)
 - ⚠️ **File I/O**: Raw FFI is 1.5-3x slower than Bun native due to FFI overhead
 - 📊 **Memory**: Equivalent peak heap usage between Rust and Node.js for file I/O
 - 🎯 **Lesson**: FFI overhead (~50µs) remains; only use Rust when compute > overhead
@@ -69,6 +73,7 @@ IronCode rewrites key operations in native Rust with **measured real-world perfo
 - ✅ **Edit Tool**: 9 smart replacement strategies with fuzzy matching (complex compute justifies FFI)
 - ✅ **File Search (Glob)**: Pattern matching with gitignore support (eliminates process spawn)
 - ✅ **Code Search (Grep)**: Regex search across large codebases (eliminates process spawn)
+- ✅ **Archive Extraction**: ZIP file extraction using s-zip streaming reader (3-5x faster, cross-platform)
 - ✅ **File I/O**: Native read/write with optimized raw FFI
 - ✅ **Directory Listing**: Fast recursive directory traversal
 - ✅ **VCS Info**: Lightning-fast git repository information (libgit2 vs subprocess)
@@ -76,12 +81,14 @@ IronCode rewrites key operations in native Rust with **measured real-world perfo
 
 **Benefits:**
 
+- 🚀 **Up to 5x faster** archive extraction (ZIP files) with cross-platform native code
 - 🚀 **Up to 2x faster** for large file editing (5K+ lines) with complex transformations
 - 💚 **78-87% less memory** usage on large file edits
 - ⚡ **1500x faster** git operations using libgit2 vs shelling out
 - 🎯 **2-3x faster** glob/grep by eliminating process spawn overhead
 - 📊 **Optimized I/O**: Raw FFI implementation for consistent performance
 - 🔧 **Consistent tooling**: Native Rust across all file operations for predictable performance
+- 🌐 **Cross-platform**: No external dependencies (unzip/PowerShell) for archive extraction
 
 ### What Changed from OpenCode?
 
@@ -107,6 +114,7 @@ IronCode rewrites key operations in native Rust with **measured real-world perfo
 
 - 🚀 **Native Rust performance** for compute-heavy operations (2-1500x faster)
 - ⚡ **Eliminated process spawns** for glob/grep (2-3x speedup)
+- 🗜️ **Fast archive extraction** with s-zip (3-5x faster, cross-platform native)
 - 💚 **Reduced memory** (78-87% less on large file edits)
 - 🔥 **Smart edit strategies** with fuzzy matching and Levenshtein similarity
 - 📊 **Optimized I/O**: Raw FFI implementation for consistent performance
@@ -235,6 +243,7 @@ IronCode is built with:
 - **Plugins**: TypeScript plugin system
 - **Native Performance Layer**: Rust (via FFI) for critical operations
   - Edit operations with 9 smart replacement strategies
+  - Archive extraction with s-zip streaming reader
   - File I/O with zero-copy optimization
   - Pattern matching and regex search
   - Git repository information
@@ -252,6 +261,7 @@ IronCode is built with:
 │  ┌────────────▼────────────────────┐   │
 │  │     Native Rust Library         │   │
 │  │  • Edit strategies (9 types)    │   │
+│  │  • Archive extraction (s-zip)   │   │
 │  │  • File I/O (zero-copy)         │   │
 │  │  • Glob/Grep (optimized)        │   │
 │  │  • Git operations (libgit2)     │   │

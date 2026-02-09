@@ -54,6 +54,10 @@ const lib = dlopen(libPath, {
     args: [FFIType.cstring],
     returns: FFIType.ptr,
   },
+  extract_zip_ffi: {
+    args: [FFIType.cstring, FFIType.cstring],
+    returns: FFIType.i32,
+  },
   free_string: {
     args: [FFIType.ptr],
     returns: FFIType.void,
@@ -215,4 +219,12 @@ export function fileStatFFI(filepath: string): FileStat {
   lib.symbols.free_string(ptr)
 
   return JSON.parse(jsonStr)
+}
+
+// Extract zip archive
+export function extractZipFFI(zipPath: string, destDir: string): void {
+  const result = lib.symbols.extract_zip_ffi(Buffer.from(zipPath + "\0"), Buffer.from(destDir + "\0"))
+  if (result !== 0) {
+    throw new Error(`Failed to extract zip: ${zipPath} to ${destDir}`)
+  }
 }
