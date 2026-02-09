@@ -1,9 +1,10 @@
 name: beta
 
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: "0 * * * *"
+# Disabled - uncomment to enable beta branch sync
+# on:
+#   workflow_dispatch:
+#   schedule:
+#     - cron: "0 * * * *"
 
 jobs:
   sync:

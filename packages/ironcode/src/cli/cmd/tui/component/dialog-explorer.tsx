@@ -42,9 +42,12 @@ export function DialogExplorer() {
       const entries = await readdir(path, { withFileTypes: true })
       const nodes: FileNode[] = []
 
-      // Filter out hidden files and common ignore patterns
+      // Filter out common ignore patterns but keep git folders
       const filtered = entries.filter((entry) => {
         const name = entry.name
+        // Keep .git and .github folders
+        if (name === ".git" || name === ".github") return true
+        // Filter other hidden files
         if (name.startsWith(".")) return false
         if (name === "node_modules") return false
         if (name === "dist") return false
@@ -243,8 +246,8 @@ export function DialogExplorer() {
     if (selected.isDirectory) {
       toggleExpand(selected)
     } else {
-      // Close dialog and return selected file path
-      dialog.clear()
+      // Just toggle preview, don't close dialog
+      // User can close with ESC key
       console.log("Selected file:", selected.path)
       // TODO: Insert file path into prompt or open in editor
     }
