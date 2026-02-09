@@ -15,8 +15,16 @@ path = "src/main.rs"
 name = "compare"
 path = "benches/compare.rs"
 
+[[bin]]
+name = "memory_bench"
+path = "benches/memory_bench.rs"
+
 [[bench]]
 name = "vcs_bench"
+harness = false
+
+[[bench]]
+name = "edit_bench"
 harness = false
 
 [dependencies]

@@ -2,6 +2,8 @@ use portable_pty::{native_pty_system, Child, CommandBuilder, MasterPty, PtySize}
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io::{Read, Write};
+#[cfg(unix)]
+use std::os::unix::io::AsRawFd;
 use std::sync::{Arc, Mutex};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -64,10 +66,7 @@ pub fn create(id: &str, cwd: Option<&str>, rows: u16, cols: u16) -> Result<Termi
         .map_err(|e| format!("Failed to take writer: {}", e))?;
 
     #[cfg(unix)]
-    let reader_fd = {
-        use std::os::unix::io::AsRawFd;
-        pair.master.as_raw_fd().expect("Failed to get raw FD")
-    };
+    let reader_fd = { pair.master.as_raw_fd().expect("Failed to get raw FD") };
 
     let session = TerminalSession {
         master: pair.master,

@@ -17,6 +17,7 @@ import { Filesystem } from "../util/filesystem"
 import { Instance } from "../project/instance"
 import { Snapshot } from "@/snapshot"
 import { assertExternalDirectory } from "./external-directory"
+import { editReplaceFFI } from "./ffi"
 
 const MAX_DIAGNOSTICS_PER_FILE = 20
 
@@ -79,7 +80,8 @@ export const EditTool = Tool.define("edit", {
       if (stats.isDirectory()) throw new Error(`Path is a directory, not a file: ${filePath}`)
       await FileTime.assert(ctx.sessionID, filePath)
       contentOld = await file.text()
-      contentNew = replace(contentOld, params.oldString, params.newString, params.replaceAll)
+      // Use native Rust implementation for better performance
+      contentNew = editReplaceFFI(contentOld, params.oldString, params.newString, params.replaceAll ?? false)
 
       diff = trimDiff(
         createTwoFilesPatch(filePath, filePath, normalizeLineEndings(contentOld), normalizeLineEndings(contentNew)),

@@ -34,6 +34,10 @@ const lib = dlopen(libPath, {
     args: [FFIType.cstring],
     returns: FFIType.ptr,
   },
+  edit_replace_ffi: {
+    args: [FFIType.cstring, FFIType.cstring, FFIType.cstring, FFIType.bool],
+    returns: FFIType.ptr,
+  },
   free_string: {
     args: [FFIType.ptr],
     returns: FFIType.void,
@@ -124,4 +128,30 @@ export function getVcsInfoFFI(cwd: string = "."): VcsInfo | null {
   lib.symbols.free_string(ptr)
 
   return JSON.parse(jsonStr)
+}
+
+export interface EditReplaceResponse {
+  success: boolean
+  content?: string
+  error?: string
+}
+
+export function editReplaceFFI(content: string, oldString: string, newString: string, replaceAll: boolean): string {
+  const ptr = lib.symbols.edit_replace_ffi(
+    Buffer.from(content + "\0"),
+    Buffer.from(oldString + "\0"),
+    Buffer.from(newString + "\0"),
+    replaceAll,
+  )
+  if (!ptr) throw new Error("edit_replace_ffi returned null")
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  const response: EditReplaceResponse = JSON.parse(jsonStr)
+  if (!response.success) {
+    throw new Error(response.error || "Unknown error from native replace")
+  }
+
+  return response.content!
 }

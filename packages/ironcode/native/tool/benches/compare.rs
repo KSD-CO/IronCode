@@ -45,9 +45,9 @@ fn measure_typescript_pattern(repo_path: &str, iterations: usize) -> (u128, u128
         let status_text = String::from_utf8_lossy(&status_output.stdout);
 
         // Parse status
-        let mut added = 0;
-        let mut modified = 0;
-        let mut deleted = 0;
+        let mut _added = 0;
+        let mut _modified = 0;
+        let mut _deleted = 0;
 
         for line in status_text.lines() {
             if line.is_empty() {
@@ -58,11 +58,11 @@ fn measure_typescript_pattern(repo_path: &str, iterations: usize) -> (u128, u128
             }
             let status = &line[..2];
             if status.contains('?') || status.contains('A') {
-                added += 1;
+                _added += 1;
             } else if status.contains('M') {
-                modified += 1;
+                _modified += 1;
             } else if status.contains('D') {
-                deleted += 1;
+                _deleted += 1;
             }
         }
 

@@ -1,6 +1,7 @@
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
+pub mod edit;
 pub mod glob;
 pub mod grep;
 pub mod ls;
@@ -284,6 +285,73 @@ pub extern "C" fn vcs_info_ffi(cwd: *const c_char) -> *mut c_char {
             Ok(json) => CString::new(json).unwrap().into_raw(),
             Err(_) => std::ptr::null_mut(),
         },
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+// Edit FFI function
+#[no_mangle]
+pub extern "C" fn edit_replace_ffi(
+    content: *const c_char,
+    old_string: *const c_char,
+    new_string: *const c_char,
+    replace_all: bool,
+) -> *mut c_char {
+    let content_str = unsafe {
+        if content.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(content).to_str().unwrap_or("")
+    };
+
+    let old_str = unsafe {
+        if old_string.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(old_string).to_str().unwrap_or("")
+    };
+
+    let new_str = unsafe {
+        if new_string.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(new_string).to_str().unwrap_or("")
+    };
+
+    #[derive(serde::Serialize)]
+    struct Response {
+        success: bool,
+        content: Option<String>,
+        error: Option<String>,
+    }
+
+    let response = match edit::replace(content_str, old_str, new_str, replace_all) {
+        Ok(result) => Response {
+            success: true,
+            content: Some(result),
+            error: None,
+        },
+        Err(edit::ReplaceError::NotFound) => Response {
+            success: false,
+            content: None,
+            error: Some("oldString not found in content".to_string()),
+        },
+        Err(edit::ReplaceError::MultipleMatches) => Response {
+            success: false,
+            content: None,
+            error: Some(
+                "Found multiple matches for oldString. Provide more surrounding lines in oldString to identify the correct match.".to_string(),
+            ),
+        },
+        Err(edit::ReplaceError::SameStrings) => Response {
+            success: false,
+            content: None,
+            error: Some("oldString and newString must be different".to_string()),
+        },
+    };
+
+    match serde_json::to_string(&response) {
+        Ok(json) => CString::new(json).unwrap().into_raw(),
         Err(_) => std::ptr::null_mut(),
     }
 }
