@@ -56,31 +56,40 @@ if (!global.gc) {
 }
 
 // ============================================================================
-// READ Benchmarks
+// READ Benchmarks - Generate test files with various line counts
 // ============================================================================
 console.log("=".repeat(80))
 console.log("📖 READ Operations\n")
 
-const testFiles = [
-  { name: "Small (8KB)", path: "packages/ironcode/src/tool/glob.ts" },
-  { name: "Medium (20KB)", path: "packages/ironcode/src/tool/edit.ts" },
-  { name: "Large (50KB)", path: "README.md" },
+// Generate test files
+function generateTestFile(lines: number): string {
+  const tempFile = path.join("/tmp", `bench-read-${lines}lines.txt`)
+  let content = ""
+  for (let i = 0; i < lines; i++) {
+    content += `function test${i}() { console.log("line ${i}"); return ${i}; }\n`
+  }
+  fs.writeFileSync(tempFile, content)
+  return tempFile
+}
+
+const readTests = [
+  { name: "Small (100 lines)", lines: 100 },
+  { name: "Medium (500 lines)", lines: 500 },
+  { name: "Large (1K lines)", lines: 1000 },
+  { name: "X-Large (2K lines)", lines: 2000 },
+  { name: "XX-Large (3K lines)", lines: 3000 },
+  { name: "Huge (5K lines)", lines: 5000 },
 ]
 
-for (const { name, path: filePath } of testFiles) {
-  const fullPath = path.join(import.meta.dir, "..", filePath)
-  if (!fs.existsSync(fullPath)) {
-    console.log(`⚠️  Skipping ${name}: file not found`)
-    continue
-  }
-
+for (const { name, lines } of readTests) {
+  const fullPath = generateTestFile(lines)
   const fileSize = fs.statSync(fullPath).size
-  const iterations = 100
+  const iterations = 50
 
   console.log(`\n${name} (${(fileSize / 1024).toFixed(1)}KB, ${iterations} iterations)`)
 
   // Rust FFI
-  const rustResult = measureMemory("Rust FFI", () => readFFI(fullPath, 0, 1000), iterations)
+  const rustResult = measureMemory("Rust FFI", () => readFFI(fullPath), iterations)
 
   // TypeScript
   const tsResult = measureMemory("TypeScript", () => fs.readFileSync(fullPath, "utf-8"), iterations)
@@ -101,23 +110,40 @@ for (const { name, path: filePath } of testFiles) {
   console.log(`\nComparison:`)
   console.log(`  Speed:       ${speedup.toFixed(2)}x ${speedup > 1 ? "(Rust faster)" : "(TS faster)"}`)
   console.log(`  Memory:      ${memoryRatio.toFixed(2)}x peak heap (Rust vs TS)`)
+
+  // Cleanup
+  try {
+    fs.unlinkSync(fullPath)
+  } catch {}
 }
 
 // ============================================================================
-// WRITE Benchmarks
+// WRITE Benchmarks - Test with various sizes
 // ============================================================================
 console.log("\n" + "=".repeat(80))
 console.log("✍️  WRITE Operations\n")
 
+function generateWriteContent(lines: number): string {
+  let content = ""
+  for (let i = 0; i < lines; i++) {
+    content += `function test${i}() { console.log("line ${i}"); return ${i}; }\n`
+  }
+  return content
+}
+
 const writeTests = [
-  { name: "Small (1KB)", size: 1024 },
-  { name: "Medium (10KB)", size: 10 * 1024 },
-  { name: "Large (100KB)", size: 100 * 1024 },
+  { name: "Small (100 lines)", lines: 100 },
+  { name: "Medium (500 lines)", lines: 500 },
+  { name: "Large (1K lines)", lines: 1000 },
+  { name: "X-Large (2K lines)", lines: 2000 },
+  { name: "XX-Large (3K lines)", lines: 3000 },
+  { name: "Huge (5K lines)", lines: 5000 },
 ]
 
-for (const { name, size } of writeTests) {
-  const content = "x".repeat(size)
-  const tempFile = path.join("/tmp", `bench-${Date.now()}-${size}.txt`)
+for (const { name, lines } of writeTests) {
+  const content = generateWriteContent(lines)
+  const size = Buffer.byteLength(content)
+  const tempFile = path.join("/tmp", `bench-write-${lines}lines.txt`)
   const iterations = 50
 
   console.log(`\n${name} (${(size / 1024).toFixed(1)}KB, ${iterations} iterations)`)
