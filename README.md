@@ -36,21 +36,28 @@ IronCode is a **high-performance fork** of [OpenCode](https://github.com/anomaly
 
 ### 🚀 Performance Improvements
 
-IronCode rewrites key operations in native Rust for **up to 2x faster** performance on large files:
+IronCode rewrites key operations in native Rust with **measured real-world performance gains**:
 
-| Operation                 | TypeScript | Rust Native | **Speedup**       | Memory Savings     |
-| ------------------------- | ---------- | ----------- | ----------------- | ------------------ |
-| **Edit Tool (10 lines)**  | 147 µs     | 171 µs      | 0.86x (FFI cost)  | Similar            |
-| **Edit Tool (100 lines)** | 2.12 ms    | 1.95 ms     | **1.09x faster**  | Similar            |
-| **Edit Tool (1K lines)**  | 25.50 ms   | 34.07 ms    | 0.75x (FFI cost)  | Similar            |
-| **Edit Tool (5K lines)**  | 215.52 ms  | 105.37 ms   | **2.05x faster**  | 87% less memory    |
-| **Edit Tool (10K lines)** | 728.47 ms  | 438.15 ms   | **1.66x faster**  | 78% less memory    |
-| **File Glob**             | -          | Native      | **10-20x faster** | Minimal allocation |
-| **Grep Search**           | -          | Native      | **15-30x faster** | Streaming results  |
-| **File Operations**       | -          | Native      | **5-10x faster**  | Zero-copy I/O      |
-| **Git Status**            | -          | Native      | **10x faster**    | Direct libgit2     |
+| Operation                 | TypeScript/Node | Rust Native | **Speedup**      | Notes                    |
+| ------------------------- | --------------- | ----------- | ---------------- | ------------------------ |
+| **Edit Tool (10 lines)**  | 147 µs          | 171 µs      | 0.86x            | FFI overhead on small    |
+| **Edit Tool (100 lines)** | 2.12 ms         | 1.95 ms     | **1.09x faster** | Break-even point         |
+| **Edit Tool (1K lines)**  | 25.50 ms        | 34.07 ms    | 0.75x            | FFI overhead             |
+| **Edit Tool (5K lines)**  | 215.52 ms       | 105.37 ms   | **2.05x faster** | 87% less memory          |
+| **Edit Tool (10K lines)** | 728.47 ms       | 438.15 ms   | **1.66x faster** | 78% less memory          |
+| **File Glob (100 files)** | 9.74 ms         | 3.55 ms     | **2.74x faster** | Zero spawn overhead      |
+| **Grep Search**           | 34.84 ms        | 19.35 ms    | **1.80x faster** | Pattern: "function"      |
+| **VCS Info (git)**        | 55.59 ms        | 0.037 ms    | **1502x faster** | libgit2 vs git commands  |
+| **Read (small files)**    | 0.02 ms         | 0.05 ms     | 0.40x            | Node.js optimized for fs |
+| **Write (small files)**   | 0.05 ms         | 0.09 ms     | 0.56x            | Node.js optimized for fs |
 
-**Note:** Rust implementation shows significant performance gains on large files (5K+ lines), with the FFI overhead amortized over more work. For small files, TypeScript remains competitive due to FFI crossing costs.
+**Key Insights:**
+
+- ✅ **Edit Tool**: Wins on large files (5K+ lines) where FFI cost amortizes
+- ✅ **Glob/Grep**: 1.8-2.7x faster by eliminating process spawn overhead
+- ✅ **VCS Info**: 1500x faster using libgit2 instead of shelling out to git
+- ⚠️ **File I/O**: Node.js/Bun is faster for small files due to highly optimized fs APIs and FFI overhead
+- 📊 **Trade-off**: Rust excels at compute-heavy operations; Node.js excels at simple I/O
 
 **Native Rust Components:**
 
@@ -64,11 +71,11 @@ IronCode rewrites key operations in native Rust for **up to 2x faster** performa
 
 **Benefits:**
 
-- 🚀 **Up to 2x faster** for large file editing operations (5K+ lines)
-- 💚 **78-87% less** memory usage on large files
-- 🔥 **Reduced** garbage collection pressure in TypeScript runtime
-- ⚡ **Instant response** for large file operations
-- 📈 **Scales better** with file size due to native implementation
+- 🚀 **Up to 2x faster** for large file editing (5K+ lines) and search operations
+- 💚 **78-87% less memory** usage on large file edits
+- ⚡ **1500x faster** git operations using libgit2 vs shelling out
+- 🎯 **2-3x faster** glob/grep by eliminating process spawn overhead
+- 📊 **Honest trade-offs**: Node.js still wins for simple file I/O due to FFI costs
 
 ### What Changed from OpenCode?
 
@@ -92,11 +99,11 @@ IronCode rewrites key operations in native Rust for **up to 2x faster** performa
 
 **Enhanced:**
 
-- 🚀 **Native Rust performance layer** for up to 2x speedup on large files
-- ⚡ **Zero-allocation file operations** with efficient I/O
-- 💚 **Reduced memory footprint** (78-87% less on large files)
-- 🔥 **Smart edit strategies** with fuzzy matching and similarity detection
-- 📊 **Production-ready benchmarks** validating all improvements
+- 🚀 **Native Rust performance** for compute-heavy operations (2-1500x faster)
+- ⚡ **Eliminated process spawns** for glob/grep (2-3x speedup)
+- 💚 **Reduced memory** (78-87% less on large file edits)
+- 🔥 **Smart edit strategies** with fuzzy matching and Levenshtein similarity
+- 📊 **Honest benchmarks** showing real trade-offs (Node.js wins simple I/O)
 
 ---
 
