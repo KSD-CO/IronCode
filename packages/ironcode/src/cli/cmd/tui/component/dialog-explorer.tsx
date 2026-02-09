@@ -7,6 +7,7 @@ import { readdir, readFile, stat } from "fs/promises"
 import { join, dirname, extname, basename } from "path"
 import { homedir } from "os"
 import { highlightLine, getLanguageFromExtension, type Theme as SyntaxTheme } from "../util/syntax-highlight"
+import { useSync } from "../context/sync"
 
 interface FileNode {
   name: string
@@ -22,8 +23,9 @@ export function DialogExplorer() {
   const dialog = useDialog()
   const { theme } = useTheme()
   const dimensions = useTerminalDimensions()
+  const sync = useSync()
 
-  const [currentPath, setCurrentPath] = createSignal(process.cwd())
+  const [currentPath, setCurrentPath] = createSignal(sync.data.path.directory || process.cwd())
   const [files, setFiles] = createSignal<FileNode[]>([])
   const [selectedIndex, setSelectedIndex] = createSignal(0)
   const [loading, setLoading] = createSignal(true)
@@ -42,12 +44,12 @@ export function DialogExplorer() {
       const entries = await readdir(path, { withFileTypes: true })
       const nodes: FileNode[] = []
 
-      // Filter out common ignore patterns but keep git folders
+      // Filter out common ignore patterns but keep CI/CD config folders
       const filtered = entries.filter((entry) => {
         const name = entry.name
-        // Keep .git and .github folders
-        if (name === ".git" || name === ".github") return true
-        // Filter other hidden files
+        // Keep .github and .gitlab folders (for workflows and CI/CD config)
+        if (name === ".github" || name === ".gitlab") return true
+        // Filter other hidden files (including .git)
         if (name.startsWith(".")) return false
         if (name === "node_modules") return false
         if (name === "dist") return false
@@ -287,7 +289,7 @@ export function DialogExplorer() {
       refreshFiles()
       evt.preventDefault()
     } else if (name === ".") {
-      setCurrentPath(process.cwd())
+      setCurrentPath(sync.data.path.directory || process.cwd())
       refreshFiles()
       evt.preventDefault()
     }

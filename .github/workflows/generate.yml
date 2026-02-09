@@ -18,6 +18,18 @@ jobs:
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
 
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: packages/ironcode/native/tool
+
+      - name: Build Rust library
+        run: cargo build --release
+        working-directory: packages/ironcode/native/tool
+
       - name: Setup git user
         run: |
           git config --global user.name "github-actions[bot]"

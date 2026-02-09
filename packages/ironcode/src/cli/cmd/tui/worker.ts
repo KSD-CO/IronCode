@@ -94,7 +94,7 @@ const startEventStream = (directory: string) => {
   })
 }
 
-startEventStream(process.cwd())
+startEventStream(process.env.IRONCODE_PROJECT_ROOT || process.cwd())
 
 export const rpc = {
   async fetch(input: { url: string; method: string; headers: Record<string, string>; body?: string }) {
