@@ -30,7 +30,9 @@ export const ProjectIcon = (props: { project: LocalProject; class?: string; noti
         <Avatar
           fallback={name()}
           src={
-            props.project.id === IRONCODE_PROJECT_ID ? "https://ironcode.cloud/favicon.svg" : props.project.icon?.override
+            props.project.id === IRONCODE_PROJECT_ID
+              ? "https://ironcode.cloud/favicon.svg"
+              : props.project.icon?.override
           }
           {...getAvatarColors(props.project.icon?.color)}
           class="size-full rounded"
