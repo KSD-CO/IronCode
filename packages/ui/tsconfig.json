@@ -12,11 +12,13 @@
     "isolatedModules": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "allowArbitraryExtensions": true,
     "noEmit": true,
     "lib": ["es2023", "dom", "dom.iterable"],
     // Type Checking & Safety
     "strict": true,
+    "skipLibCheck": true,
     "types": ["vite/client", "bun"]
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "assets.d.ts", "../../global.d.ts"]
 }

@@ -81,4 +81,15 @@ declare module "*?worker" {
   export default WorkerConstructor
 }
 
+// @ironcode-ai/ui package asset imports (wildcard matches any path)
+declare module "@ironcode-ai/ui/audio/*" {
+  const content: string
+  export default content
+}
+
+declare module "@ironcode-ai/ui/fonts/*" {
+  const content: string
+  export default content
+}
+
 export {}

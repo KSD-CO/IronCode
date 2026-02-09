@@ -8,6 +8,7 @@
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
+    "allowArbitraryExtensions": true,
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
     "allowJs": true,
@@ -21,6 +22,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "package.json"],
+  "include": ["src", "package.json", "../../global.d.ts"],
   "exclude": ["dist", "ts-dist"]
 }
