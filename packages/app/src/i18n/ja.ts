@@ -124,7 +124,7 @@ export const dict = {
     "IronCode Zenは、コーディングエージェント向けに最適化された信頼性の高いモデルへのアクセスを提供します。",
   "provider.connect.ironcodeZen.line2": "1つのAPIキーで、Claude、GPT、Gemini、GLMなどのモデルにアクセスできます。",
   "provider.connect.ironcodeZen.visit.prefix": " ",
-  "provider.connect.ironcodeZen.visit.link": "ironcode.ai/zen",
+  "provider.connect.ironcodeZen.visit.link": "ironcode.cloud/zen",
   "provider.connect.ironcodeZen.visit.suffix": " にアクセスしてAPIキーを取得してください。",
   "provider.connect.oauth.code.visit.prefix": " ",
   "provider.connect.oauth.code.visit.link": "このリンク",

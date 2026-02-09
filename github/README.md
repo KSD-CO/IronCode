@@ -1,6 +1,6 @@
 # ironcode GitHub Action
 
-A GitHub Action that integrates [ironcode](https://ironcode.ai) directly into your GitHub workflow.
+A GitHub Action that integrates [ironcode](https://ironcode.cloud) directly into your GitHub workflow.
 
 Mention `/ironcode` in your comment, and ironcode will execute tasks within your GitHub Actions runner.
 

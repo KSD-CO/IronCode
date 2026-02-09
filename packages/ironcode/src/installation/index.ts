@@ -132,7 +132,7 @@ export namespace Installation {
     let cmd
     switch (method) {
       case "curl":
-        cmd = $`curl -fsSL https://ironcode.ai/install | bash`.env({
+        cmd = $`curl -fsSL https://ironcode.cloud/install | bash`.env({
           ...process.env,
           VERSION: target,
         })

@@ -131,7 +131,7 @@ export const dict = {
   "provider.connect.ironcodeZen.line2":
     "With a single API key you'll get access to models such as Claude, GPT, Gemini, GLM and more.",
   "provider.connect.ironcodeZen.visit.prefix": "Visit ",
-  "provider.connect.ironcodeZen.visit.link": "ironcode.ai/zen",
+  "provider.connect.ironcodeZen.visit.link": "ironcode.cloud/zen",
   "provider.connect.ironcodeZen.visit.suffix": " to collect your API key.",
   "provider.connect.oauth.code.visit.prefix": "Visit ",
   "provider.connect.oauth.code.visit.link": "this link",

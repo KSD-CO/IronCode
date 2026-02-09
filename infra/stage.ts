@@ -1,7 +1,7 @@
 export const domain = (() => {
-  if ($app.stage === "production") return "ironcode.ai"
-  if ($app.stage === "dev") return "dev.ironcode.ai"
-  return `${$app.stage}.dev.ironcode.ai`
+  if ($app.stage === "production") return "ironcode.cloud"
+  if ($app.stage === "dev") return "dev.ironcode.cloud"
+  return `${$app.stage}.dev.ironcode.cloud`
 })()
 
 export const zoneID = "430ba34c138cfb5360826c4909f99be8"
@@ -13,7 +13,7 @@ new cloudflare.RegionalHostname("RegionalHostname", {
 })
 
 export const shortDomain = (() => {
-  if ($app.stage === "production") return "opncd.ai"
-  if ($app.stage === "dev") return "dev.opncd.ai"
-  return `${$app.stage}.dev.opncd.ai`
+  if ($app.stage === "production") return "ironcode.cloud"
+  if ($app.stage === "dev") return "dev.ironcode.cloud"
+  return `${$app.stage}.dev.ironcode.cloud`
 })()

@@ -125,7 +125,7 @@ export const dict = {
   "provider.connect.ironcodeZen.line2":
     "Con una sola clave API obtendrás acceso a modelos como Claude, GPT, Gemini, GLM y más.",
   "provider.connect.ironcodeZen.visit.prefix": "Visita ",
-  "provider.connect.ironcodeZen.visit.link": "ironcode.ai/zen",
+  "provider.connect.ironcodeZen.visit.link": "ironcode.cloud/zen",
   "provider.connect.ironcodeZen.visit.suffix": " para obtener tu clave API.",
   "provider.connect.oauth.code.visit.prefix": "Visita ",
   "provider.connect.oauth.code.visit.link": "este enlace",

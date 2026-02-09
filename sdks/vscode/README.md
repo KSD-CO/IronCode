@@ -1,10 +1,10 @@
 # ironcode VS Code Extension
 
-A Visual Studio Code extension that integrates [ironcode](https://ironcode.ai) directly into your development workflow.
+A Visual Studio Code extension that integrates [ironcode](https://ironcode.cloud) directly into your development workflow.
 
 ## Prerequisites
 
-This extension requires the [ironcode CLI](https://ironcode.ai) to be installed on your system. Visit [ironcode.ai](https://ironcode.ai) for installation instructions.
+This extension requires the [ironcode CLI](https://ironcode.cloud) to be installed on your system. Visit [ironcode.cloud](https://ironcode.cloud) for installation instructions.
 
 ## Features
 

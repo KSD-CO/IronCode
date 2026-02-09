@@ -228,7 +228,7 @@ export const GithubInstallCommand = cmd({
                 "",
                 "    3. Go to a GitHub issue and comment `/oc summarize` to see the agent in action",
                 "",
-                "   Learn more about the GitHub agent - https://ironcode.ai/docs/github/#usage-examples",
+                "   Learn more about the GitHub agent - https://ironcode.cloud/docs/github/#usage-examples",
               ].join("\n"),
             )
           }
@@ -347,7 +347,7 @@ export const GithubInstallCommand = cmd({
 
             async function getInstallation() {
               return await fetch(
-                `https://api.ironcode.ai/get_github_app_installation?owner=${app.owner}&repo=${app.repo}`,
+                `https://api.ironcode.cloud/get_github_app_installation?owner=${app.owner}&repo=${app.repo}`,
               )
                 .then((res) => res.json())
                 .then((data) => data.installation)
@@ -459,7 +459,7 @@ export const GithubRunCommand = cmd({
           ? (payload as IssueCommentEvent | IssuesEvent).issue.number
           : (payload as PullRequestEvent | PullRequestReviewCommentEvent).pull_request.number
       const runUrl = `/${owner}/${repo}/actions/runs/${runId}`
-      const shareBaseUrl = isMock ? "https://dev.ironcode.ai" : "https://ironcode.ai"
+      const shareBaseUrl = isMock ? "https://dev.ironcode.cloud" : "https://ironcode.cloud"
 
       let appToken: string
       let octoRest: Octokit
@@ -675,7 +675,7 @@ export const GithubRunCommand = cmd({
 
       function normalizeOidcBaseUrl(): string {
         const value = process.env["OIDC_BASE_URL"]
-        if (!value) return "https://api.ironcode.ai"
+        if (!value) return "https://api.ironcode.cloud"
         return value.replace(/\/+$/, "")
       }
 

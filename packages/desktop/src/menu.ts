@@ -159,7 +159,7 @@ export async function createMenu(trigger: (id: string) => void) {
         items: [
           // missing native macos search
           await MenuItem.new({
-            action: () => openUrl("https://ironcode.ai/docs"),
+            action: () => openUrl("https://ironcode.cloud/docs"),
             text: "IronCode Documentation",
           }),
           await MenuItem.new({

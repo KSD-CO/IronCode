@@ -109,8 +109,8 @@ export namespace Server {
               if (input.startsWith("http://127.0.0.1:")) return input
               if (input === "tauri://localhost" || input === "http://tauri.localhost") return input
 
-              // *.ironcode.ai (https only, adjust if needed)
-              if (/^https:\/\/([a-z0-9-]+\.)*ironcode\.ai$/.test(input)) {
+              // *.ironcode.cloud (https only, adjust if needed)
+              if (/^https:\/\/([a-z0-9-]+\.)*ironcode\.cloud$/.test(input)) {
                 return input
               }
               if (_corsWhitelist.includes(input)) {
@@ -531,11 +531,11 @@ export namespace Server {
         .all("/*", async (c) => {
           const path = c.req.path
 
-          const response = await proxy(`https://app.ironcode.ai${path}`, {
+          const response = await proxy(`https://app.ironcode.cloud${path}`, {
             ...c.req,
             headers: {
               ...c.req.raw.headers,
-              host: "app.ironcode.ai",
+              host: "app.ironcode.cloud",
             },
           })
           response.headers.set(

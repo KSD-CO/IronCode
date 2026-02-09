@@ -3,7 +3,7 @@
  */
 export const config = {
   // Base URL
-  baseUrl: "https://ironcode.ai",
+  baseUrl: "https://ironcode.cloud",
 
   // GitHub
   github: {

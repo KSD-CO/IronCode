@@ -131,7 +131,7 @@ export const dict = {
   "provider.connect.ironcodeZen.line1": "IronCode Zen 为你提供一组精选的可靠优化模型，用于代码智能体。",
   "provider.connect.ironcodeZen.line2": "只需一个 API 密钥，你就能使用 Claude、GPT、Gemini、GLM 等模型。",
   "provider.connect.ironcodeZen.visit.prefix": "访问 ",
-  "provider.connect.ironcodeZen.visit.link": "ironcode.ai/zen",
+  "provider.connect.ironcodeZen.visit.link": "ironcode.cloud/zen",
   "provider.connect.ironcodeZen.visit.suffix": " 获取你的 API 密钥。",
   "provider.connect.oauth.code.visit.prefix": "访问 ",
   "provider.connect.oauth.code.visit.link": "此链接",

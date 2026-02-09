@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://ironcode.ai">
+  <a href="https://ironcode.cloud">
     <picture>
       <source srcset="packages/console/app/src/asset/logo-ornate-dark.svg" media="(prefers-color-scheme: dark)">
       <source srcset="packages/console/app/src/asset/logo-ornate-light.svg" media="(prefers-color-scheme: light)">
@@ -13,7 +13,7 @@
   <a href="https://github.com/anomalyco/ironcode/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/ironcode/publish.yml?style=flat-square&branch=dev" /></a>
 </p>
 
-[![IronCode Terminal UI](packages/web/src/assets/lander/screenshot.png)](https://ironcode.ai)
+[![IronCode Terminal UI](packages/web/src/assets/lander/screenshot.png)](https://ironcode.cloud)
 
 ---
 
@@ -97,7 +97,7 @@ IronCode includes two built-in agents you can switch between with the `Tab` key.
 Also included is a **general** subagent for complex searches and multistep tasks.
 This is used internally and can be invoked using `@general` in messages.
 
-Learn more about [agents](https://ironcode.ai/docs/agents) in the upstream documentation.
+Learn more about [agents](https://ironcode.cloud/docs/agents) in the upstream documentation.
 
 ---
 
@@ -140,5 +140,5 @@ This project maintains the same license as [OpenCode](https://github.com/anomaly
 **Links**
 
 - [Upstream OpenCode](https://github.com/anomalyco/opencode)
-- [OpenCode Documentation](https://ironcode.ai/docs)
+- [OpenCode Documentation](https://ironcode.cloud/docs)
 - [OpenCode Discord](https://discord.gg/ironcode)
