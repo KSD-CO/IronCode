@@ -140,7 +140,7 @@ Configure agents in your `ironcode.json` config file:
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "agent": {
     "build": {
       "mode": "primary",
@@ -369,7 +369,7 @@ Control which tools are available in this agent with the `tools` config. You can
 
 ```json title="ironcode.json" {3-6,9-12}
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "tools": {
     "write": true,
     "bash": true
@@ -393,7 +393,7 @@ You can also use wildcards to control multiple tools at once. For example, to di
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "agent": {
     "readonly": {
       "tools": {
@@ -420,7 +420,7 @@ You can configure permissions to manage what actions an agent can take. Currentl
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "permission": {
     "edit": "deny"
   }
@@ -431,7 +431,7 @@ You can override these permissions per agent.
 
 ```json title="ironcode.json" {3-5,8-10}
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "permission": {
     "edit": "deny"
   },
@@ -468,7 +468,7 @@ You can set permissions for specific bash commands.
 
 ```json title="ironcode.json" {7}
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "agent": {
     "build": {
       "permission": {
@@ -486,7 +486,7 @@ This can take a glob pattern.
 
 ```json title="ironcode.json" {7}
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "agent": {
     "build": {
       "permission": {
@@ -504,7 +504,7 @@ Since the last matching rule takes precedence, put the `*` wildcard first and sp
 
 ```json title="ironcode.json" {8}
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "agent": {
     "build": {
       "permission": {

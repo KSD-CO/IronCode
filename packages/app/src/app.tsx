@@ -98,7 +98,7 @@ export function AppInterface(props: { defaultUrl?: string; children?: JSX.Elemen
   const defaultServerUrl = () => {
     if (props.defaultUrl) return props.defaultUrl
     if (stored) return stored
-    if (location.hostname.includes("ironcode.ai")) return "http://localhost:4096"
+    if (location.hostname.includes("ironcode.cloud")) return "http://localhost:4096"
     if (import.meta.env.DEV)
       return `http://${import.meta.env.VITE_IRONCODE_SERVER_HOST ?? "localhost"}:${import.meta.env.VITE_IRONCODE_SERVER_PORT ?? "4096"}`
 

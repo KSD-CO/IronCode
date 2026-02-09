@@ -53,7 +53,7 @@ test("headers are passed to transports when oauth is enabled (default)", async (
       await Bun.write(
         `${dir}/ironcode.json`,
         JSON.stringify({
-          $schema: "https://ironcode.ai/config.json",
+          $schema: "https://ironcode.cloud/config.json",
           mcp: {
             "test-server": {
               type: "remote",

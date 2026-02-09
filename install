@@ -20,8 +20,8 @@ Options:
         --no-modify-path    Don't modify shell config files (.zshrc, .bashrc, etc.)
 
 Examples:
-    curl -fsSL https://ironcode.ai/install | bash
-    curl -fsSL https://ironcode.ai/install | bash -s -- --version 1.0.180
+    curl -fsSL https://ironcode.cloud/install | bash
+    curl -fsSL https://ironcode.cloud/install | bash -s -- --version 1.0.180
     ./install --binary /path/to/ironcode
 EOF
 }
@@ -441,6 +441,6 @@ echo -e ""
 echo -e "cd <project>  ${MUTED}# Open directory${NC}"
 echo -e "ironcode      ${MUTED}# Run command${NC}"
 echo -e ""
-echo -e "${MUTED}For more information visit ${NC}https://ironcode.ai/docs"
+echo -e "${MUTED}For more information visit ${NC}https://ironcode.cloud/docs"
 echo -e ""
 echo -e ""

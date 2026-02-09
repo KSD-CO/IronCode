@@ -1,5 +1,5 @@
 {
-  "$schema": "https://ironcode.ai/theme.json",
+  "$schema": "https://ironcode.cloud/theme.json",
   "defs": {
     "frappeRosewater": "#f2d5cf",
     "frappeFlamingo": "#eebebe",

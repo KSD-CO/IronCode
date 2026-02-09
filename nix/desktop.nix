@@ -92,7 +92,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   meta = {
     description = "IronCode Desktop App";
-    homepage = "https://ironcode.ai";
+    homepage = "https://ironcode.cloud";
     license = lib.licenses.mit;
     mainProgram = "ironcode-desktop";
     inherit (ironcode.meta) platforms;

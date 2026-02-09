@@ -1106,7 +1106,7 @@ describe("ProviderTransform.message - strip openai metadata when store=false", (
       providerID: "ironcode",
       api: {
         id: "ironcode-test",
-        url: "https://api.ironcode.ai",
+        url: "https://api.ironcode.cloud",
         npm: "@ai-sdk/openai-compatible",
       },
     }
@@ -1140,7 +1140,7 @@ describe("ProviderTransform.message - strip openai metadata when store=false", (
       providerID: "ironcode",
       api: {
         id: "ironcode-test",
-        url: "https://api.ironcode.ai",
+        url: "https://api.ironcode.cloud",
         npm: "@ai-sdk/openai-compatible",
       },
     }

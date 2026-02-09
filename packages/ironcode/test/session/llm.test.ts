@@ -245,7 +245,7 @@ describe("session.llm.stream", () => {
         await Bun.write(
           path.join(dir, "ironcode.json"),
           JSON.stringify({
-            $schema: "https://ironcode.ai/config.json",
+            $schema: "https://ironcode.cloud/config.json",
             enabled_providers: [providerID],
             provider: {
               [providerID]: {
@@ -374,7 +374,7 @@ describe("session.llm.stream", () => {
         await Bun.write(
           path.join(dir, "ironcode.json"),
           JSON.stringify({
-            $schema: "https://ironcode.ai/config.json",
+            $schema: "https://ironcode.cloud/config.json",
             enabled_providers: ["openai"],
             provider: {
               openai: {
@@ -508,7 +508,7 @@ describe("session.llm.stream", () => {
         await Bun.write(
           path.join(dir, "ironcode.json"),
           JSON.stringify({
-            $schema: "https://ironcode.ai/config.json",
+            $schema: "https://ironcode.cloud/config.json",
             enabled_providers: [providerID],
             provider: {
               [providerID]: {
@@ -616,7 +616,7 @@ describe("session.llm.stream", () => {
         await Bun.write(
           path.join(dir, "ironcode.json"),
           JSON.stringify({
-            $schema: "https://ironcode.ai/config.json",
+            $schema: "https://ironcode.cloud/config.json",
             enabled_providers: [providerID],
             provider: {
               [providerID]: {

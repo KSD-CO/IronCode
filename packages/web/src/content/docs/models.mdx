@@ -53,7 +53,7 @@ IronCode config.
 
 ```json title="ironcode.json" {3}
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "model": "lmstudio/google/gemma-3n-e4b"
 }
 ```
@@ -70,7 +70,7 @@ You can globally configure a model's options through the config.
 
 ```jsonc title="ironcode.jsonc" {7-12,19-24}
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "provider": {
     "openai": {
       "models": {
@@ -109,7 +109,7 @@ You can also define custom variants that extend built-in ones. Variants let you 
 
 ```jsonc title="ironcode.jsonc" {6-21}
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "provider": {
     "ironcode": {
       "models": {
@@ -174,7 +174,7 @@ You can override existing variants or add your own:
 
 ```jsonc title="ironcode.jsonc" {7-18}
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "provider": {
     "openai": {
       "models": {
@@ -211,7 +211,7 @@ When IronCode starts up, it checks for models in the following priority order:
 
    ```json title="ironcode.json"
    {
-     "$schema": "https://ironcode.ai/config.json",
+     "$schema": "https://ironcode.cloud/config.json",
      "model": "anthropic/claude-sonnet-4-20250514"
    }
    ```

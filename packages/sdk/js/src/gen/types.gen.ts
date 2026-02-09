@@ -1209,7 +1209,7 @@ export type Config = {
     diff_style?: "auto" | "stacked"
   }
   /**
-   * Command configuration, see https://ironcode.ai/docs/commands
+   * Command configuration, see https://ironcode.cloud/docs/commands
    */
   command?: {
     [key: string]: {
@@ -1266,7 +1266,7 @@ export type Config = {
     [key: string]: AgentConfig | undefined
   }
   /**
-   * Agent configuration, see https://ironcode.ai/docs/agent
+   * Agent configuration, see https://ironcode.cloud/docs/agent
    */
   agent?: {
     plan?: AgentConfig

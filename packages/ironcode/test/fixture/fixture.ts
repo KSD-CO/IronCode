@@ -26,7 +26,7 @@ export async function tmpdir<T>(options?: TmpDirOptions<T>) {
     await Bun.write(
       path.join(dirpath, "ironcode.json"),
       JSON.stringify({
-        $schema: "https://ironcode.ai/config.json",
+        $schema: "https://ironcode.cloud/config.json",
         ...options.config,
       }),
     )

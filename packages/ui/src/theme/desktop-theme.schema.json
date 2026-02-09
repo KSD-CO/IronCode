@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://ironcode.ai/desktop-theme.json",
+  "$id": "https://ironcode.cloud/desktop-theme.json",
   "title": "IronCode Desktop Theme",
   "description": "A theme definition for the IronCode desktop application",
   "type": "object",

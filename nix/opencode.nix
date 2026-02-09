@@ -88,7 +88,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
   meta = {
     description = "The open source coding agent";
-    homepage = "https://ironcode.ai/";
+    homepage = "https://ironcode.cloud/";
     license = lib.licenses.mit;
     mainProgram = "ironcode";
     inherit (node_modules.meta) platforms;

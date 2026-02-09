@@ -1,5 +1,5 @@
 {
-  "$schema": "https://ironcode.ai/theme.json",
+  "$schema": "https://ironcode.cloud/theme.json",
   "defs": {
     "black": "#000000",
     "white": "#FFFFFF",

@@ -12,7 +12,7 @@ test("agent color parsed from project config", async () => {
       await Bun.write(
         path.join(dir, "ironcode.json"),
         JSON.stringify({
-          $schema: "https://ironcode.ai/config.json",
+          $schema: "https://ironcode.cloud/config.json",
           agent: {
             build: { color: "#FFA500" },
             plan: { color: "primary" },
@@ -37,7 +37,7 @@ test("Agent.get includes color from config", async () => {
       await Bun.write(
         path.join(dir, "ironcode.json"),
         JSON.stringify({
-          $schema: "https://ironcode.ai/config.json",
+          $schema: "https://ironcode.cloud/config.json",
           agent: {
             plan: { color: "#A855F7" },
             build: { color: "accent" },

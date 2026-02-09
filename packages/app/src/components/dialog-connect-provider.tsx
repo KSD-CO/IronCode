@@ -275,7 +275,7 @@ export function DialogConnectProvider(props: { provider: string }) {
                           </div>
                           <div class="text-14-regular text-text-base">
                             {language.t("provider.connect.ironcodeZen.visit.prefix")}
-                            <Link href="https://ironcode.ai/zen" tabIndex={-1}>
+                            <Link href="https://ironcode.cloud/zen" tabIndex={-1}>
                               {language.t("provider.connect.ironcodeZen.visit.link")}
                             </Link>
                             {language.t("provider.connect.ironcodeZen.visit.suffix")}

@@ -35,7 +35,7 @@ You can customize the base URL for any provider by setting the `baseURL` option.
 
 ```json title="ironcode.json" {6}
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "provider": {
     "anthropic": {
       "options": {
@@ -57,7 +57,7 @@ tested and verified to work well with IronCode. [Learn more](/docs/zen).
 If you are new, we recommend starting with IronCode Zen.
 :::
 
-1. Run the `/connect` command in the TUI, select ironcode, and head to [ironcode.ai/auth](https://ironcode.ai/auth).
+1. Run the `/connect` command in the TUI, select ironcode, and head to [ironcode.cloud/auth](https://ironcode.cloud/auth).
 
    ```txt
    /connect
@@ -163,7 +163,7 @@ To use Amazon Bedrock with IronCode:
 
    ```json title="ironcode.json"
    {
-     "$schema": "https://ironcode.ai/config.json",
+     "$schema": "https://ironcode.cloud/config.json",
      "provider": {
        "amazon-bedrock": {
          "options": {
@@ -190,7 +190,7 @@ To use Amazon Bedrock with IronCode:
 
    ```json title="ironcode.json"
    {
-     "$schema": "https://ironcode.ai/config.json",
+     "$schema": "https://ironcode.cloud/config.json",
      "provider": {
        "amazon-bedrock": {
          "options": {
@@ -234,7 +234,7 @@ For custom inference profiles, use the model and provider name in the key and se
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "provider": {
     "amazon-bedrock": {
       // ...
@@ -486,7 +486,7 @@ Cloudflare AI Gateway lets you access models from OpenAI, Anthropic, Workers AI,
 
    ```json title="ironcode.json"
    {
-     "$schema": "https://ironcode.ai/config.json",
+     "$schema": "https://ironcode.cloud/config.json",
      "provider": {
        "cloudflare-ai-gateway": {
          "models": {
@@ -692,7 +692,7 @@ to only use your own GitLab-hosted instance, add the following to your
 
 ```json
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "small_model": "gitlab/duo-chat-haiku-4-5",
   "share": "disabled"
 }
@@ -754,7 +754,7 @@ Customize through `ironcode.json`:
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "provider": {
     "gitlab": {
       "options": {
@@ -775,7 +775,7 @@ To access GitLab tools (merge requests, issues, pipelines, CI/CD, etc.):
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "plugin": ["@gitlab/ironcode-gitlab-plugin"]
 }
 ```
@@ -958,7 +958,7 @@ Here's [Helicone's Model Directory](https://helicone.ai/models), you'll need thi
 
 ```jsonc title="~/.config/ironcode/ironcode.jsonc"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "provider": {
     "helicone": {
       "npm": "@ai-sdk/openai-compatible",
@@ -986,7 +986,7 @@ Helicone supports custom headers for features like caching, user tracking, and s
 
 ```jsonc title="~/.config/ironcode/ironcode.jsonc"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "provider": {
     "helicone": {
       "npm": "@ai-sdk/openai-compatible",
@@ -1040,7 +1040,7 @@ You can configure ironcode to use local models through [llama.cpp's](https://git
 
 ```json title="ironcode.json" "llama.cpp" {5, 6, 8, 10-15}
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "provider": {
     "llama.cpp": {
       "npm": "@ai-sdk/openai-compatible",
@@ -1107,7 +1107,7 @@ You can configure ironcode to use local models through LM Studio.
 
 ```json title="ironcode.json" "lmstudio" {5, 6, 8, 10-14}
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "provider": {
     "lmstudio": {
       "npm": "@ai-sdk/openai-compatible",
@@ -1228,7 +1228,7 @@ Ollama can automatically configure itself for IronCode. See the [Ollama integrat
 
 ```json title="ironcode.json" "ollama" {5, 6, 8, 10-14}
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "provider": {
     "ollama": {
       "npm": "@ai-sdk/openai-compatible",
@@ -1390,7 +1390,7 @@ IronCode Zen is a list of tested and verified models provided by the IronCode te
 
    ```json title="ironcode.json" {6}
    {
-     "$schema": "https://ironcode.ai/config.json",
+     "$schema": "https://ironcode.cloud/config.json",
      "provider": {
        "openrouter": {
          "models": {
@@ -1405,7 +1405,7 @@ IronCode Zen is a list of tested and verified models provided by the IronCode te
 
    ```json title="ironcode.json"
    {
-     "$schema": "https://ironcode.ai/config.json",
+     "$schema": "https://ironcode.cloud/config.json",
      "provider": {
        "openrouter": {
          "models": {
@@ -1621,7 +1621,7 @@ You can also customize models through your ironcode config. Here's an example of
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "provider": {
     "vercel": {
       "models": {
@@ -1731,7 +1731,7 @@ Some useful routing options:
 
    ```json title="ironcode.json" {6}
    {
-     "$schema": "https://ironcode.ai/config.json",
+     "$schema": "https://ironcode.cloud/config.json",
      "provider": {
        "zenmux": {
          "models": {
@@ -1799,7 +1799,7 @@ You can use any OpenAI-compatible provider with ironcode. Most modern AI provide
 
    ```json title="ironcode.json" ""myprovider"" {5-15}
    {
-     "$schema": "https://ironcode.ai/config.json",
+     "$schema": "https://ironcode.cloud/config.json",
      "provider": {
        "myprovider": {
          "npm": "@ai-sdk/openai-compatible",
@@ -1837,7 +1837,7 @@ Here's an example setting the `apiKey`, `headers`, and model `limit` options.
 
 ```json title="ironcode.json" {9,11,17-20}
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "provider": {
     "myprovider": {
       "npm": "@ai-sdk/openai-compatible",

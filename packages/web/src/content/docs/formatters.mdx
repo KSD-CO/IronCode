@@ -60,7 +60,7 @@ You can customize formatters through the `formatter` section in your IronCode co
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "formatter": {}
 }
 ```
@@ -84,7 +84,7 @@ To disable **all** formatters globally, set `formatter` to `false`:
 
 ```json title="ironcode.json" {3}
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "formatter": false
 }
 ```
@@ -93,7 +93,7 @@ To disable a **specific** formatter, set `disabled` to `true`:
 
 ```json title="ironcode.json" {5}
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "formatter": {
     "prettier": {
       "disabled": true
@@ -110,7 +110,7 @@ You can override the built-in formatters or add new ones by specifying the comma
 
 ```json title="ironcode.json" {4-14}
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "formatter": {
     "prettier": {
       "command": ["npx", "prettier", "--write", "$FILE"],

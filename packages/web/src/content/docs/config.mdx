@@ -13,7 +13,7 @@ IronCode supports both **JSON** and **JSONC** (JSON with Comments) formats.
 
 ```jsonc title="ironcode.jsonc"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   // Theme configuration
   "theme": "ironcode",
   "model": "anthropic/claude-sonnet-4-5",
@@ -146,7 +146,7 @@ The custom directory is loaded after the global config and `.ironcode` directori
 
 ## Schema
 
-The config file has a schema that's defined in [**`ironcode.ai/config.json`**](https://ironcode.ai/config.json).
+The config file has a schema that's defined in [**`ironcode.cloud/config.json`**](https://ironcode.cloud/config.json).
 
 Your editor should be able to validate and autocomplete based on the schema.
 
@@ -158,7 +158,7 @@ You can configure TUI-specific settings through the `tui` option.
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "tui": {
     "scroll_speed": 3,
     "scroll_acceleration": {
@@ -185,7 +185,7 @@ You can configure server settings for the `ironcode serve` and `ironcode web` co
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "server": {
     "port": 4096,
     "hostname": "0.0.0.0",
@@ -214,7 +214,7 @@ You can manage the tools an LLM can use through the `tools` option.
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "tools": {
     "write": false,
     "bash": false
@@ -232,7 +232,7 @@ You can configure the providers and models you want to use in your IronCode conf
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "provider": {},
   "model": "anthropic/claude-sonnet-4-5",
   "small_model": "anthropic/claude-haiku-4-5"
@@ -245,7 +245,7 @@ Provider options can include `timeout` and `setCacheKey`:
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "provider": {
     "anthropic": {
       "options": {
@@ -274,7 +274,7 @@ Amazon Bedrock supports AWS-specific configuration:
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "provider": {
     "amazon-bedrock": {
       "options": {
@@ -305,7 +305,7 @@ You can configure the theme you want to use in your IronCode config through the 
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "theme": ""
 }
 ```
@@ -320,7 +320,7 @@ You can configure specialized agents for specific tasks through the `agent` opti
 
 ```jsonc title="ironcode.jsonc"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "agent": {
     "code-reviewer": {
       "description": "Reviews code for best practices and potential issues",
@@ -346,7 +346,7 @@ You can set the default agent using the `default_agent` option. This determines 
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "default_agent": "plan"
 }
 ```
@@ -363,7 +363,7 @@ You can configure the [share](/docs/share) feature through the `share` option.
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "share": "manual"
 }
 ```
@@ -384,7 +384,7 @@ You can configure custom commands for repetitive tasks through the `command` opt
 
 ```jsonc title="ironcode.jsonc"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "command": {
     "test": {
       "template": "Run the full test suite with coverage report and show any failures.\nFocus on the failing tests and suggest fixes.",
@@ -410,7 +410,7 @@ You can customize your keybinds through the `keybinds` option.
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "keybinds": {}
 }
 ```
@@ -425,7 +425,7 @@ IronCode will automatically download any new updates when it starts up. You can 
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "autoupdate": false
 }
 ```
@@ -441,7 +441,7 @@ You can configure code formatters through the `formatter` option.
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "formatter": {
     "prettier": {
       "disabled": true
@@ -469,7 +469,7 @@ For example, to ensure that the `edit` and `bash` tools require user approval:
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "permission": {
     "edit": "ask",
     "bash": "ask"
@@ -487,7 +487,7 @@ You can control context compaction behavior through the `compaction` option.
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "compaction": {
     "auto": true,
     "prune": true
@@ -506,7 +506,7 @@ You can configure file watcher ignore patterns through the `watcher` option.
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "watcher": {
     "ignore": ["node_modules/**", "dist/**", ".git/**"]
   }
@@ -523,7 +523,7 @@ You can configure MCP servers you want to use through the `mcp` option.
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "mcp": {}
 }
 ```
@@ -540,7 +540,7 @@ Place plugin files in `.ironcode/plugins/` or `~/.config/ironcode/plugins/`. You
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "plugin": ["ironcode-helicone-session", "@my-org/custom-plugin"]
 }
 ```
@@ -555,7 +555,7 @@ You can configure the instructions for the model you're using through the `instr
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "instructions": ["CONTRIBUTING.md", "docs/guidelines.md", ".cursor/rules/*.md"]
 }
 ```
@@ -571,7 +571,7 @@ You can disable providers that are loaded automatically through the `disabled_pr
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "disabled_providers": ["openai", "gemini"]
 }
 ```
@@ -594,7 +594,7 @@ You can specify an allowlist of providers through the `enabled_providers` option
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "enabled_providers": ["anthropic", "openai"]
 }
 ```
@@ -615,7 +615,7 @@ The `experimental` key contains options that are under active development.
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "experimental": {}
 }
 ```
@@ -638,7 +638,7 @@ Use `{env:VARIABLE_NAME}` to substitute environment variables:
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "model": "{env:IRONCODE_MODEL}",
   "provider": {
     "anthropic": {
@@ -661,7 +661,7 @@ Use `{file:path/to/file}` to substitute the contents of a file:
 
 ```json title="ironcode.json"
 {
-  "$schema": "https://ironcode.ai/config.json",
+  "$schema": "https://ironcode.cloud/config.json",
   "instructions": ["./custom-instructions.md"],
   "provider": {
     "openai": {

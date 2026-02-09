@@ -16,7 +16,7 @@
           {
             "group": "Getting started",
             "pages": ["index", "quickstart", "development"],
-            "openapi": "https://ironcode.ai/openapi.json"
+            "openapi": "https://ironcode.cloud/openapi.json"
           }
         ]
       }
