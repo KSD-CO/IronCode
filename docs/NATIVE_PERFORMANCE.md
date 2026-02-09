@@ -26,7 +26,7 @@ Based on comprehensive benchmarking, here's when to use each approach:
    - Read 1K lines ~49µs vs Bun 34µs (1.4x slower)
    - Write 1K lines: Bun 4x faster even with optimization
    - **We use native Rust for consistency** despite performance trade-off
-   - **Optimization**: Use `readRawFFI`/`writeRawFFI`  instead of `readFFI`/`writeFFI`
+   - **Optimization**: Use `readRawFFI`/`writeRawFFI` instead of `readFFI`/`writeFFI`
 
 2. **Operations < 1ms** (FFI cost too high)
    - Quick lookups, simple transformations
