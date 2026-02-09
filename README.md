@@ -48,16 +48,17 @@ IronCode rewrites key operations in native Rust with **measured real-world perfo
 | **File Glob (100 files)** | 9.74 ms         | 3.55 ms     | **2.74x faster** | Zero spawn overhead      |
 | **Grep Search**           | 34.84 ms        | 19.35 ms    | **1.80x faster** | Pattern: "function"      |
 | **VCS Info (git)**        | 55.59 ms        | 0.037 ms    | **1502x faster** | libgit2 vs git commands  |
-| **Read (small files)**    | 0.02 ms         | 0.05 ms     | 0.40x            | Node.js optimized for fs |
-| **Write (small files)**   | 0.05 ms         | 0.09 ms     | 0.56x            | Node.js optimized for fs |
+| **Read (small files)**    | 14.26 µs        | 57.42 µs    | 0.25x            | Bun/Node fs faster + FFI |
+| **Write (small files)**   | 30.24 µs        | 85.49 µs    | 0.35x            | Bun/Node fs faster + FFI |
 
 **Key Insights:**
 
 - ✅ **Edit Tool**: Wins on large files (5K+ lines) where FFI cost amortizes
 - ✅ **Glob/Grep**: 1.8-2.7x faster by eliminating process spawn overhead
 - ✅ **VCS Info**: 1500x faster using libgit2 instead of shelling out to git
-- ⚠️ **File I/O**: Node.js/Bun is faster for small files due to highly optimized fs APIs and FFI overhead
-- 📊 **Trade-off**: Rust excels at compute-heavy operations; Node.js excels at simple I/O
+- ⚠️ **File I/O**: Bun/Node is **2.5-4x faster** for simple read/write (highly optimized fs + FFI overhead)
+- 📊 **Memory**: Equivalent peak heap usage between Rust and Node.js for file I/O
+- 🎯 **Trade-off**: Rust excels at compute-heavy operations; Node.js excels at simple I/O
 
 **Native Rust Components:**
 
