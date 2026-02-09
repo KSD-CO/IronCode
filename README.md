@@ -1,11 +1,15 @@
-<p align="center">
-  <img src="packages/app/public/favicon.svg" alt="IronCode logo" width="120">
-</p>
-<p align="center"><strong>IronCode</strong></p>
-<p align="center">Lightweight, local-first AI coding agent</p>
+```
+  ___                 ____          _
+ |_ _|_ __ ___  _ __ / ___|___   __| | ___
+  | || '__/ _ \| '_ \| |   / _ \ / _` |/ _ \
+  | || | | (_) | | | | |__| (_) | (_| |  __/
+ |___|_|  \___/|_| |_|\____\___/ \__,_|\___|
+```
+
+<p align="center"><strong>Lightweight, local-first AI coding agent</strong></p>
 <p align="center">
   <a href="https://github.com/anomalyco/opencode"><img alt="Upstream" src="https://img.shields.io/badge/upstream-opencode-blue?style=flat-square" /></a>
-  <a href="https://github.com/anomalyco/ironcode/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/ironcode/publish.yml?style=flat-square&branch=dev" /></a>
+  <a href="https://github.com/KSD-CO/IronCode/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/KSD-CO/IronCode/publish.yml?style=flat-square&branch=dev" /></a>
 </p>
 
 ---
