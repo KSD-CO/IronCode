@@ -1,59 +1,116 @@
 <p align="center">
-  <a href="https://ironcode.cloud">
-    <picture>
-      <source srcset="packages/console/app/src/asset/logo-ornate-dark.svg" media="(prefers-color-scheme: dark)">
-      <source srcset="packages/console/app/src/asset/logo-ornate-light.svg" media="(prefers-color-scheme: light)">
-      <img src="packages/console/app/src/asset/logo-ornate-light.svg" alt="IronCode logo">
-    </picture>
-  </a>
+  <img src="packages/app/public/favicon.svg" alt="IronCode logo" width="120">
 </p>
-<p align="center">Performance-optimized AI coding agent fork of OpenCode</p>
+<p align="center"><strong>IronCode</strong></p>
+<p align="center">Lightweight, local-first AI coding agent</p>
 <p align="center">
   <a href="https://github.com/anomalyco/opencode"><img alt="Upstream" src="https://img.shields.io/badge/upstream-opencode-blue?style=flat-square" /></a>
   <a href="https://github.com/anomalyco/ironcode/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/ironcode/publish.yml?style=flat-square&branch=dev" /></a>
 </p>
 
-[![IronCode Terminal UI](packages/web/src/assets/lander/screenshot.png)](https://ironcode.cloud)
+---
+
+## What is IronCode?
+
+IronCode is a simplified, local-first fork of [OpenCode](https://github.com/anomalyco/opencode) - an AI coding agent that runs entirely on your machine. This fork removes cloud dependencies and focuses on core functionality: a powerful CLI and desktop app for AI-assisted coding.
+
+### Key Features
+
+- 🖥️ **Desktop App**: Native desktop application built with Tauri
+- ⌨️ **CLI Interface**: Terminal UI for command-line workflows
+- 🏠 **100% Local**: No cloud services, works completely offline
+- 🔒 **Privacy First**: Your code never leaves your machine
+- 🎯 **Lightweight**: Removed all cloud infrastructure dependencies
+- ⚡ **Fast**: No network latency, instant responses
+
+### What Changed from OpenCode?
+
+**Removed:**
+
+- ❌ Cloud infrastructure (Cloudflare Workers, R2 storage)
+- ❌ Web-based deployment
+- ❌ GitHub Action integration
+- ❌ Billing/subscription system
+- ❌ Authentication services
+- ❌ Session sharing features
+
+**Kept:**
+
+- ✅ Full desktop application
+- ✅ Complete CLI experience
+- ✅ All AI agent capabilities
+- ✅ Local session management
+- ✅ Plugin system
+- ✅ Multiple AI model support
 
 ---
 
-## About This Fork
+## Installation
 
-IronCode is a performance-focused fork of [OpenCode](https://github.com/anomalyco/opencode), the open-source AI coding agent. This fork aims to optimize critical performance bottlenecks by migrating core features from TypeScript/Node.js to Rust.
+### Desktop App
 
-### Goals
+Download the latest release for your platform:
 
-- **Performance Optimization**: Migrate performance-critical components to Rust for faster execution
-- **Lower Resource Usage**: Reduce memory footprint and CPU utilization
-- **Maintain Compatibility**: Keep API compatibility with upstream OpenCode where possible
-- **Upstream Contributions**: Contribute improvements back to the original OpenCode project when applicable
+- [macOS (Apple Silicon)](https://github.com/KSD-CO/IronCode/releases)
+- [macOS (Intel)](https://github.com/KSD-CO/IronCode/releases)
+- [Windows](https://github.com/KSD-CO/IronCode/releases)
+- [Linux (AppImage)](https://github.com/KSD-CO/IronCode/releases)
 
-### Rust Migration Status
+### CLI
 
-🚧 **In Progress**: Currently identifying and profiling core features for migration
+```bash
+# Using npm
+npm install -g ironcode-ai
 
-Planned migrations:
-
-- [ ] File system operations and glob matching
-- [ ] Content search and pattern matching (grep functionality)
-- [ ] Code parsing and AST operations
-- [ ] LSP client optimizations
-- [ ] Terminal UI rendering performance
-
-### Why Rust?
-
-- **Speed**: 10-100x faster execution for I/O and compute-intensive tasks
-- **Memory Safety**: Eliminate entire classes of bugs without garbage collection overhead
-- **Concurrency**: Fearless concurrency for parallel file operations
-- **Native Performance**: Zero-cost abstractions and direct system calls
+# Using bun
+bun install -g ironcode-ai
+```
 
 ---
+
+## Usage
+
+### Desktop App
+
+Simply launch the IronCode desktop app from your applications folder or start menu.
+
+### CLI
+
+```bash
+# Start interactive session in current directory
+ironcode
+
+# Run with specific model
+ironcode --model anthropic/claude-sonnet-4
+
+# Open desktop app
+ironcode web
+```
+
+---
+
+## Agents
+
+IronCode includes built-in agents you can switch between with the `Tab` key:
+
+- **build** - Full-access agent for development work (default)
+- **plan** - Read-only agent for analysis and code exploration
+  - Denies file edits by default
+  - Asks permission before running bash commands
+  - Ideal for exploring unfamiliar codebases
+
+Also included is a **general** subagent for complex searches and multistep tasks.
+Invoke it with `@general` in your messages.
+
+---
+
+## Development
 
 ### Building From Source
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/ironcode.git
+git clone https://github.com/KSD-CO/IronCode.git
 cd ironcode
 
 # Install dependencies
@@ -62,14 +119,14 @@ bun install
 # Build TypeScript components
 bun run build
 
-# Build Rust components (when available)
-cd rust && cargo build --release
-
-# Run locally
+# Run CLI locally
 bun run dev
+
+# Run desktop app
+bun run dev:desktop
 ```
 
-### Development
+### Development Commands
 
 ```bash
 # Run tests
@@ -78,43 +135,57 @@ bun test
 # Type checking
 bun run typecheck
 
-# Format code
+# Format code (using prettier)
 bun run format
 ```
 
 ---
 
-### Agents
+## Architecture
 
-IronCode includes two built-in agents you can switch between with the `Tab` key.
+IronCode is built with:
 
-- **build** - Default, full-access agent for development work
-- **plan** - Read-only agent for analysis and code exploration
-  - Denies file edits by default
-  - Asks permission before running bash commands
-  - Ideal for exploring unfamiliar codebases or planning changes
+- **CLI/TUI**: TypeScript + Bun runtime
+- **Desktop App**: Tauri (Rust) + SolidJS
+- **Web Frontend**: SolidJS (embedded in desktop app)
+- **Plugins**: TypeScript plugin system
+- **Native Tools**: Rust for performance-critical operations
 
-Also included is a **general** subagent for complex searches and multistep tasks.
-This is used internally and can be invoked using `@general` in messages.
+### Project Structure
 
-Learn more about [agents](https://ironcode.cloud/docs/agents) in the upstream documentation.
+```
+ironcode/
+├── packages/
+│   ├── ironcode/      # CLI and core agent
+│   ├── desktop/       # Tauri desktop application
+│   ├── app/           # Web frontend (SolidJS)
+│   ├── ui/            # Shared UI components
+│   ├── plugin/        # Plugin system
+│   ├── sdk/           # TypeScript SDK
+│   └── ...
+├── sdks/
+│   └── vscode/        # VS Code extension
+└── ...
+```
 
 ---
 
-### Contributing
+## Contributing
 
-Contributions are welcome! Please read our [contributing guidelines](./CONTRIBUTING.md) before submitting pull requests.
+Contributions are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) before submitting pull requests.
 
 **Areas we're looking for help:**
 
-- Rust migration of core features
-- Performance profiling and benchmarking
-- Testing and bug reports
+- Performance optimizations
+- Bug fixes and testing
 - Documentation improvements
+- New plugin development
 
-### Upstream Sync
+---
 
-This fork regularly syncs with [upstream OpenCode](https://github.com/anomalyco/opencode) to incorporate new features and bug fixes. We aim to contribute performance improvements back to the upstream project.
+## Upstream Sync
+
+This fork periodically syncs with [upstream OpenCode](https://github.com/anomalyco/opencode) to incorporate new features and bug fixes.
 
 ```bash
 # To sync with upstream
@@ -125,20 +196,20 @@ git merge upstream/dev
 
 ---
 
-### License
+## License
 
 This project maintains the same license as [OpenCode](https://github.com/anomalyco/opencode).
 
-### Acknowledgments
+---
+
+## Acknowledgments
 
 - **OpenCode Team**: For creating the original open-source AI coding agent
-- **Rust Community**: For providing excellent tools and libraries
 - All contributors to this fork
 
 ---
 
-**Links**
+## Links
 
 - [Upstream OpenCode](https://github.com/anomalyco/opencode)
-- [OpenCode Documentation](https://ironcode.cloud/docs)
-- [OpenCode Discord](https://discord.gg/ironcode)
+- [OpenCode Documentation](https://docs.opencode.ai)
