@@ -17,7 +17,7 @@ import { type Message, type Session, type TextPart } from "@ironcode-ai/sdk/v2/c
 import { For, Match, Show, Switch, createMemo, onCleanup, type Accessor, type JSX } from "solid-js"
 import { agentColor } from "@/utils/agent"
 
-const OPENCODE_PROJECT_ID = "4b0ea68d7af9a6031a7ffda7ad66e0cb83315750"
+const IRONCODE_PROJECT_ID = "4b0ea68d7af9a6031a7ffda7ad66e0cb83315750"
 
 export const ProjectIcon = (props: { project: LocalProject; class?: string; notify?: boolean }): JSX.Element => {
   const notification = useNotification()
@@ -30,7 +30,7 @@ export const ProjectIcon = (props: { project: LocalProject; class?: string; noti
         <Avatar
           fallback={name()}
           src={
-            props.project.id === OPENCODE_PROJECT_ID ? "https://ironcode.ai/favicon.svg" : props.project.icon?.override
+            props.project.id === IRONCODE_PROJECT_ID ? "https://ironcode.ai/favicon.svg" : props.project.icon?.override
           }
           {...getAvatarColors(props.project.icon?.color)}
           class="size-full rounded"

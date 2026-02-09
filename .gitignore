@@ -17,13 +17,13 @@ ts-dist
 /result
 refs
 Session.vim
-opencode.json
+ironcode.json
 a.out
 target
 .scripts
 .direnv/
 
 # Local dev files
-opencode-dev
+ironcode-dev
 logs/
 *.bun-build

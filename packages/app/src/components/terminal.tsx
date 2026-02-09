@@ -163,9 +163,9 @@ export const Terminal = (props: TerminalProps) => {
 
       const url = new URL(sdk.url + `/pty/${local.pty.id}/connect?directory=${encodeURIComponent(sdk.directory)}`)
       url.protocol = url.protocol === "https:" ? "wss:" : "ws:"
-      if (window.__OPENCODE__?.serverPassword) {
+      if (window.__IRONCODE__?.serverPassword) {
         url.username = "ironcode"
-        url.password = window.__OPENCODE__?.serverPassword
+        url.password = window.__IRONCODE__?.serverPassword
       }
       const socket = new WebSocket(url)
       cleanups.push(() => {

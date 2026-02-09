@@ -1,5 +1,5 @@
 #!/bin/bash
-PACKAGE_DIR="/Users/jamesvu/Documents/Personals/opencode/packages/ironcode"
+PACKAGE_DIR="/Users/jamesvu/Documents/Personals/ironcode/packages/ironcode"
 CURRENT_DIR="$PWD"
 cd "$PACKAGE_DIR"
 exec bun run --conditions=browser src/index.ts "$CURRENT_DIR" "$@"

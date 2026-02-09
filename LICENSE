@@ -1,12 +1,13 @@
-
 MIT License
 
-Copyright (c) 2025 ironcode
+Copyright (c) 2025 Anomaly
+Copyright (c) 2026 ironcode
 
-This project has been renamed to IronCode. The original project (IronCode / ironcode)
-remains the upstream source and is licensed under the MIT License above. This repository
-includes modifications and rebranding; the original copyright and license texts are
-preserved to respect the IronCode authors.
+This project is a renamed and modified version of:
+https://github.com/anomalyco/opencode
+
+Modifications and rebranding have been made by ironcode.
+The original MIT License and copyright notice are preserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

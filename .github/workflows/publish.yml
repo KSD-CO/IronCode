@@ -183,7 +183,7 @@ jobs:
           releaseId: ${{ needs.version.outputs.release }}
           tagName: ${{ needs.version.outputs.tag }}
           releaseDraft: true
-          releaseAssetNamePattern: opencode-desktop-[platform]-[arch][ext]
+          releaseAssetNamePattern: ironcode-desktop-[platform]-[arch][ext]
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_BUNDLER_NEW_APPIMAGE_FORMAT: true
