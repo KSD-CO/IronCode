@@ -162,22 +162,6 @@ IronCode is built with:
 - **Plugins**: TypeScript plugin system
 - **Native Tools**: Rust for performance-critical operations
 
-### Project Structure
-
-```
-ironcode/
-├── packages/
-│   ├── ironcode/      # CLI and core agent
-│   ├── desktop/       # Tauri desktop application
-│   ├── app/           # Web frontend (SolidJS)
-│   ├── ui/            # Shared UI components
-│   ├── plugin/        # Plugin system
-│   ├── sdk/           # TypeScript SDK
-│   └── ...
-├── sdks/
-│   └── vscode/        # VS Code extension
-└── ...
-```
 
 ---
 
