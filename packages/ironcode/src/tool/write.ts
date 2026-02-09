@@ -12,6 +12,7 @@ import { Filesystem } from "../util/filesystem"
 import { Instance } from "../project/instance"
 import { trimDiff } from "./edit"
 import { assertExternalDirectory } from "./external-directory"
+import { writeRawFFI, readRawFFI } from "./ffi"
 
 const MAX_DIAGNOSTICS_PER_FILE = 20
 const MAX_PROJECT_DIAGNOSTICS_FILES = 5
@@ -28,7 +29,7 @@ export const WriteTool = Tool.define("write", {
 
     const file = Bun.file(filepath)
     const exists = await file.exists()
-    const contentOld = exists ? await file.text() : ""
+    const contentOld = exists ? readRawFFI(filepath) : ""
     if (exists) await FileTime.assert(ctx.sessionID, filepath)
 
     const diff = trimDiff(createTwoFilesPatch(filepath, filepath, contentOld, params.content))
@@ -42,7 +43,7 @@ export const WriteTool = Tool.define("write", {
       },
     })
 
-    await Bun.write(filepath, params.content)
+    writeRawFFI(filepath, params.content)
     await Bus.publish(File.Event.Edited, {
       file: filepath,
     })

@@ -22,9 +22,17 @@ const lib = dlopen(libPath, {
     args: [FFIType.cstring, FFIType.i32, FFIType.i32],
     returns: FFIType.ptr,
   },
+  read_raw_ffi: {
+    args: [FFIType.cstring],
+    returns: FFIType.ptr,
+  },
   write_ffi: {
     args: [FFIType.cstring, FFIType.cstring],
     returns: FFIType.ptr,
+  },
+  write_raw_ffi: {
+    args: [FFIType.cstring, FFIType.cstring],
+    returns: FFIType.i32,
   },
   stats_ffi: {
     args: [],
@@ -86,6 +94,17 @@ export function readFFI(filepath: string, offset: number = 0, limit: number = 20
   return JSON.parse(jsonStr)
 }
 
+// Optimized read that skips JSON serialization - returns raw string content
+export function readRawFFI(filepath: string): string {
+  const ptr = lib.symbols.read_raw_ffi(Buffer.from(filepath + "\0"))
+  if (!ptr) throw new Error("read_raw_ffi returned null")
+
+  const content = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  return content
+}
+
 export function writeFFI(filepath: string, content: string) {
   const ptr = lib.symbols.write_ffi(Buffer.from(filepath + "\0"), Buffer.from(content + "\0"))
   if (!ptr) throw new Error("write_ffi returned null")
@@ -94,6 +113,15 @@ export function writeFFI(filepath: string, content: string) {
   lib.symbols.free_string(ptr)
 
   return JSON.parse(jsonStr)
+}
+
+// Optimized write that skips JSON serialization - returns success code
+export function writeRawFFI(filepath: string, content: string): boolean {
+  const result = lib.symbols.write_raw_ffi(Buffer.from(filepath + "\0"), Buffer.from(content + "\0"))
+  if (result !== 0) {
+    throw new Error(`Failed to write file: ${filepath}`)
+  }
+  return true
 }
 
 export interface SystemStats {

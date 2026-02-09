@@ -8,7 +8,7 @@ import { Instance } from "../project/instance"
 import { Identifier } from "../id/id"
 import { assertExternalDirectory } from "./external-directory"
 import { InstructionPrompt } from "../session/instruction"
-import { readFFI } from "./ffi"
+import { readRawFFI } from "./ffi"
 
 const DEFAULT_READ_LIMIT = 2000
 const MAX_LINE_LENGTH = 2000
@@ -76,12 +76,30 @@ export const ReadTool = Tool.define("read", {
     const offset = params.offset || 0
     const limit = params.limit || DEFAULT_READ_LIMIT
 
-    const result = readFFI(filepath, offset, limit)
+    const content = readRawFFI(filepath)
+    const lines = content.split("\n")
+
+    const startLine = offset
+    const endLine = Math.min(startLine + limit, lines.length)
+    const selectedLines = lines.slice(startLine, endLine)
+
+    const truncated =
+      endLine < lines.length ||
+      content.length > MAX_BYTES ||
+      selectedLines.some((line) => line.length > MAX_LINE_LENGTH)
+
+    const numberedLines = selectedLines
+      .map((line, index) => {
+        const lineNumber = startLine + index + 1
+        const truncatedLine = line.length > MAX_LINE_LENGTH ? line.slice(0, MAX_LINE_LENGTH) : line
+        return `${String(lineNumber).padStart(5, "0")}| ${truncatedLine}`
+      })
+      .join("\n")
 
     LSP.touchFile(filepath, false)
     FileTime.read(ctx.sessionID, filepath)
 
-    let output = result.output
+    let output = numberedLines
     if (instructions.length > 0) {
       output += `\n\n<system-reminder>\n${instructions.map((i) => i.content).join("\n\n")}\n</system-reminder>`
     }
@@ -90,8 +108,8 @@ export const ReadTool = Tool.define("read", {
       title,
       output,
       metadata: {
-        preview: result.output.split("\n").slice(1, 21).join("\n"),
-        truncated: result.metadata.truncated,
+        preview: numberedLines.split("\n").slice(0, 20).join("\n"),
+        truncated,
         ...(instructions.length > 0 && { loaded: instructions.map((i) => i.filepath) }),
       },
     }

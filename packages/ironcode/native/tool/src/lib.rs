@@ -95,6 +95,25 @@ pub extern "C" fn read_ffi(filepath: *const c_char, offset: i32, limit: i32) -> 
     }
 }
 
+// Optimized read that returns raw content without JSON serialization
+#[no_mangle]
+pub extern "C" fn read_raw_ffi(filepath: *const c_char) -> *mut c_char {
+    let filepath_str = unsafe {
+        if filepath.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(filepath).to_str().unwrap_or("")
+    };
+
+    match std::fs::read_to_string(filepath_str) {
+        Ok(content) => match CString::new(content) {
+            Ok(cstring) => cstring.into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        },
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn grep_ffi(
     pattern: *const c_char,
@@ -154,6 +173,29 @@ pub extern "C" fn write_ffi(filepath: *const c_char, content: *const c_char) -> 
             Err(_) => std::ptr::null_mut(),
         },
         Err(_) => std::ptr::null_mut(),
+    }
+}
+
+// Optimized write that returns success code instead of JSON
+#[no_mangle]
+pub extern "C" fn write_raw_ffi(filepath: *const c_char, content: *const c_char) -> i32 {
+    let filepath_str = unsafe {
+        if filepath.is_null() {
+            return -1;
+        }
+        CStr::from_ptr(filepath).to_str().unwrap_or("")
+    };
+
+    let content_str = unsafe {
+        if content.is_null() {
+            return -1;
+        }
+        CStr::from_ptr(content).to_str().unwrap_or("")
+    };
+
+    match std::fs::write(filepath_str, content_str) {
+        Ok(_) => 0,   // Success
+        Err(_) => -1, // Error
     }
 }
 
