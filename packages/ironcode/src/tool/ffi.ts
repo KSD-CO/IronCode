@@ -5,12 +5,10 @@ import fs from "fs"
 // Resolve library path based on whether we're running from source or compiled binary
 function resolveLibPath(): string {
   // Check if running from compiled binary by looking for bunfs in the path
-  // On Windows, Bun uses paths like "B:/~BUN/" or contains "/$bunfs/"
+  // On Windows, Bun uses paths like "B:/~BUN/" or "B:\~BUN\" (with backslash)
   // On Unix, it uses "/$bunfs/"
-  const isCompiled =
-    import.meta.path?.includes("/$bunfs/") ||
-    import.meta.path?.includes("/~BUN/") ||
-    import.meta.path?.includes("\\~BUN\\")
+  const metaPath = import.meta.path || ""
+  const isCompiled = metaPath.includes("/$bunfs/") || metaPath.includes("~BUN")
 
   if (isCompiled) {
     // Running from compiled binary - library should be next to executable
