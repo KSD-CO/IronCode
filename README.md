@@ -38,28 +38,28 @@ IronCode is a **high-performance fork** of [OpenCode](https://github.com/anomaly
 
 IronCode rewrites key operations in native Rust with **measured real-world performance gains**:
 
-| Operation                 | TypeScript/Node | Rust Native | **Speedup**      | Notes                 |
-| ------------------------- | --------------- | ----------- | ---------------- | --------------------- |
-| **Edit Tool (10 lines)**  | 147 µs          | 171 µs      | 0.86x            | FFI overhead on small |
-| **Edit Tool (100 lines)** | 2.12 ms         | 1.95 ms     | **1.09x faster** | Break-even point      |
-| **Edit Tool (1K lines)**  | 25.50 ms        | 34.07 ms    | 0.75x            | FFI overhead          |
-| **Edit Tool (5K lines)**  | 215.52 ms       | 105.37 ms   | **2.05x faster** | 87% less memory       |
-| **Edit Tool (10K lines)** | 728.47 ms       | 438.15 ms   | **1.66x faster** | 78% less memory       |
-| **File Glob (100 files)** | 9.74 ms         | 3.55 ms     | **2.74x faster** | Zero spawn overhead   |
-| **Grep Search**           | 34.84 ms        | 19.35 ms    | **1.80x faster** | Pattern: "function"   |
-| **VCS Info (git)**        | 17.25 ms        | 9.43 ms     | **1.83x faster** | libgit2, no spawning  |
-| **Archive (small, 10)**   | 5.48 ms         | 1.93 ms     | **2.8x faster**  | s-zip vs unzip        |
-| **Archive (medium, 100)** | 90.43 ms        | 18.07 ms    | **5.0x faster**  | s-zip vs unzip        |
-| **Archive (large, 500)**  | 740.29 ms       | 142.88 ms   | **5.2x faster**  | s-zip vs unzip        |
-| **Read (500 lines)**      | 18 µs           | 27 µs       | 0.67x            | Raw FFI               |
-| **Read (1K lines)**       | 29 µs           | 47 µs       | 0.62x            | Raw FFI               |
-| **Read (5K lines)**       | 120 µs          | 194 µs      | 0.62x            | Raw FFI               |
-| **Write (1K lines)**      | 49 µs           | 139 µs      | 0.35x            | Raw FFI               |
-| **Write (5K lines)**      | 135 µs          | 408 µs      | 0.33x            | Raw FFI               |
+| Operation                 | TypeScript/Node | Rust Native | **Speedup**      | Notes                  |
+| ------------------------- | --------------- | ----------- | ---------------- | ---------------------- |
+| **Edit Tool (10 lines)**  | 61.57 µs        | 30.06 µs    | **2.05x faster** | All 9 strategies       |
+| **Edit Tool (100 lines)** | 419.84 µs       | 250.86 µs   | **1.67x faster** | Consistent performance |
+| **Edit Tool (1K lines)**  | 6.17 ms         | 2.78 ms     | **2.22x faster** | Scales well            |
+| **Edit Tool (5K lines)**  | 126.06 ms       | 29.67 ms    | **4.25x faster** | 76.5% reduction        |
+| **Edit Tool (10K lines)** | 451.59 ms       | 74.88 ms    | **6.03x faster** | 83.4% reduction        |
+| **File Glob (100 files)** | 9.74 ms         | 3.55 ms     | **2.74x faster** | Zero spawn overhead    |
+| **Grep Search**           | 34.84 ms        | 19.35 ms    | **1.80x faster** | Pattern: "function"    |
+| **VCS Info (git)**        | 17.25 ms        | 9.43 ms     | **1.83x faster** | libgit2, no spawning   |
+| **Archive (small, 10)**   | 5.48 ms         | 1.93 ms     | **2.8x faster**  | s-zip vs unzip         |
+| **Archive (medium, 100)** | 90.43 ms        | 18.07 ms    | **5.0x faster**  | s-zip vs unzip         |
+| **Archive (large, 500)**  | 740.29 ms       | 142.88 ms   | **5.2x faster**  | s-zip vs unzip         |
+| **Read (500 lines)**      | 18 µs           | 27 µs       | 0.67x            | Raw FFI                |
+| **Read (1K lines)**       | 29 µs           | 47 µs       | 0.62x            | Raw FFI                |
+| **Read (5K lines)**       | 120 µs          | 194 µs      | 0.62x            | Raw FFI                |
+| **Write (1K lines)**      | 49 µs           | 139 µs      | 0.35x            | Raw FFI                |
+| **Write (5K lines)**      | 135 µs          | 408 µs      | 0.33x            | Raw FFI                |
 
 **Key Insights:**
 
-- ✅ **Edit Tool**: Wins on large files (5K+ lines) where complex compute amortizes FFI cost
+- ✅ **Edit Tool**: 2-6x faster across all file sizes with all 9 smart replacement strategies
 - ✅ **Glob/Grep**: 1.8-2.7x faster by eliminating process spawn overhead
 - ✅ **VCS Info**: 1.83x faster using libgit2 directly (no process spawning, 45% latency reduction)
 - ✅ **Archive Extraction**: 3-5x faster using s-zip vs shell commands (unzip/PowerShell)
@@ -81,9 +81,9 @@ IronCode rewrites key operations in native Rust with **measured real-world perfo
 
 **Benefits:**
 
+- 🚀 **Up to 6x faster** text editing with 9 smart replacement strategies (Levenshtein, fuzzy matching)
 - 🚀 **Up to 5x faster** archive extraction (ZIP files) with cross-platform native code
-- 🚀 **Up to 2x faster** for large file editing (5K+ lines) with complex transformations
-- 💚 **78-87% less memory** usage on large file edits
+- 💚 **83% less time** on large file edits (10K lines: 451ms → 75ms)
 - ⚡ **1.83x faster** git operations using libgit2 (no process spawning)
 - 🎯 **2-3x faster** glob/grep by eliminating process spawn overhead
 - 📊 **Optimized I/O**: Raw FFI implementation for consistent performance
@@ -112,10 +112,10 @@ IronCode rewrites key operations in native Rust with **measured real-world perfo
 
 **Enhanced:**
 
-- 🚀 **Native Rust performance** for compute-heavy operations (2-1500x faster)
+- 🚀 **Native Rust performance** for compute-heavy operations (2-6x faster)
 - ⚡ **Eliminated process spawns** for glob/grep (2-3x speedup)
 - 🗜️ **Fast archive extraction** with s-zip (3-5x faster, cross-platform native)
-- 💚 **Reduced memory** (78-87% less on large file edits)
+- 💚 **Faster edits** (2-6x improvement, scales with file size)
 - 🔥 **Smart edit strategies** with fuzzy matching and Levenshtein similarity
 - 📊 **Optimized I/O**: Raw FFI implementation for consistent performance
 - 🔧 **Consistent native tooling**: All file operations use Rust for predictable performance
@@ -223,6 +223,9 @@ bun run format
 # Benchmark native Rust components
 cd packages/ironcode/native/tool
 cargo bench
+
+# Edit tool performance comparison (TS vs Rust)
+bun ./script/bench-edit.ts
 
 # VCS performance comparison (TS vs Rust)
 bun ./script/bench-vcs.ts
