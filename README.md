@@ -13,26 +13,27 @@
 
 ```
 
-<p align="center"><strong>Lightweight, local-first AI coding agent</strong></p>
+<p align="center"><strong>High-performance CLI AI coding agent</strong></p>
 <p align="center">
-  <a href="https://github.com/anomalyco/opencode"><img alt="Upstream" src="https://img.shields.io/badge/upstream-ironcode-blue?style=flat-square" /></a>
+  <a href="https://github.com/anomalyco/opencode"><img alt="Upstream" src="https://img.shields.io/badge/upstream-opencode-blue?style=flat-square" /></a>
   <a href="https://github.com/KSD-CO/IronCode/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/KSD-CO/IronCode/publish.yml?style=flat-square&branch=dev" /></a>
+  <a href="https://www.npmjs.com/package/ironcode-ai"><img alt="npm version" src="https://img.shields.io/npm/v/ironcode-ai?style=flat-square" /></a>
 </p>
 
 ---
 
 ## What is IronCode?
 
-IronCode is a **high-performance fork** of [OpenCode](https://github.com/anomalyco/opencode) - an AI coding agent that runs entirely on your machine. This fork removes cloud dependencies, focuses on core functionality, and **rewrites performance-critical components in Rust** for dramatically improved speed and efficiency.
+IronCode is a **high-performance CLI fork** of [OpenCode](https://github.com/anomalyco/opencode) - an AI coding agent that runs entirely on your machine. This fork focuses on the command-line experience, removes cloud dependencies, and **rewrites performance-critical components in Rust** for dramatically improved speed and efficiency.
 
 ### Key Features
 
-- 🖥️ **Desktop App**: Native desktop application built with Tauri
-- ⌨️ **CLI Interface**: Terminal UI for command-line workflows
+- ⌨️ **CLI-First**: Powerful terminal UI optimized for command-line workflows
 - 🏠 **100% Local**: No cloud services, works completely offline
 - 🔒 **Privacy First**: Your code never leaves your machine
-- 🎯 **Lightweight**: Removed all cloud infrastructure dependencies
+- 🎯 **Lightweight**: Stripped down to core functionality - CLI only
 - ⚡ **Blazing Fast**: Native Rust implementation for performance-critical operations
+- 📦 **Easy Installation**: Available via npm, Homebrew, or direct download
 
 ### 🚀 Performance Improvements
 
@@ -108,6 +109,7 @@ IronCode rewrites key operations in native Rust with **measured real-world perfo
 
 - ❌ Cloud infrastructure (Cloudflare Workers, R2 storage)
 - ❌ Web-based deployment
+- ❌ Desktop application (Tauri/GUI)
 - ❌ GitHub Action integration
 - ❌ Billing/subscription system
 - ❌ Authentication services
@@ -115,7 +117,6 @@ IronCode rewrites key operations in native Rust with **measured real-world perfo
 
 **Kept:**
 
-- ✅ Full desktop application
 - ✅ Complete CLI experience
 - ✅ All AI agent capabilities
 - ✅ Local session management
@@ -136,34 +137,93 @@ IronCode rewrites key operations in native Rust with **measured real-world perfo
 
 ## Installation
 
-### Desktop App
+IronCode is distributed as a CLI tool available through multiple package managers:
 
-Download the latest release for your platform:
-
-- [macOS (Apple Silicon)](https://github.com/KSD-CO/IronCode/releases)
-- [macOS (Intel)](https://github.com/KSD-CO/IronCode/releases)
-- [Windows](https://github.com/KSD-CO/IronCode/releases)
-- [Linux (AppImage)](https://github.com/KSD-CO/IronCode/releases)
-
-### CLI
+### NPM (Recommended)
 
 ```bash
-# Using npm
+# Install globally
 npm install -g ironcode-ai
 
-# Using bun
-bun install -g ironcode-ai
+# Or use with npx (no installation)
+npx ironcode-ai
 ```
+
+### Homebrew (macOS/Linux)
+
+```bash
+# Add the tap
+brew tap KSD-CO/tap
+
+# Install IronCode
+brew install ironcode
+
+# Update to latest version
+brew upgrade ironcode
+```
+
+### Direct Download
+
+Download pre-built binaries for your platform from [GitHub Releases](https://github.com/KSD-CO/IronCode/releases):
+
+**Linux (x64):**
+
+```bash
+# Download and extract
+curl -L https://github.com/KSD-CO/IronCode/releases/latest/download/ironcode-linux-x64.tar.gz | tar xz
+
+# Move to PATH
+sudo mv ironcode /usr/local/bin/
+
+# Verify installation
+ironcode --version
+```
+
+**macOS (Apple Silicon):**
+
+```bash
+# Download and extract
+curl -L https://github.com/KSD-CO/IronCode/releases/latest/download/ironcode-darwin-arm64.tar.gz | tar xz
+
+# Move to PATH
+sudo mv ironcode /usr/local/bin/
+
+# Verify installation
+ironcode --version
+```
+
+**macOS (Intel):**
+
+```bash
+# Download and extract
+curl -L https://github.com/KSD-CO/IronCode/releases/latest/download/ironcode-darwin-x64.tar.gz | tar xz
+
+# Move to PATH
+sudo mv ironcode /usr/local/bin/
+
+# Verify installation
+ironcode --version
+```
+
+**Windows:**
+
+```powershell
+# Download from releases page
+# https://github.com/KSD-CO/IronCode/releases/latest
+
+# Extract ironcode.exe and add to PATH
+# Or run directly from download location
+```
+
+### Arch Linux (AUR)
+
+_Coming soon - AUR package will be available in the future_
 
 ---
 
 ## Usage
 
-### Desktop App
-
-Simply launch the IronCode desktop app from your applications folder or start menu.
-
-### CLI
+### Quick Start
 
 ```bash
 # Start interactive session in current directory
@@ -172,9 +232,36 @@ ironcode
 # Run with specific model
 ironcode --model anthropic/claude-sonnet-4
 
-# Open desktop app
-ironcode web
+# Show version
+ironcode --version
+
+# Show help
+ironcode --help
 ```
+
+### Configuration
+
+IronCode requires API keys for the AI models you want to use. Set them as environment variables:
+
+```bash
+# Anthropic Claude (recommended)
+export ANTHROPIC_API_KEY="your-key-here"
+
+# OpenAI
+export OPENAI_API_KEY="your-key-here"
+
+# Add to your shell profile (~/.bashrc, ~/.zshrc, etc.)
+echo 'export ANTHROPIC_API_KEY="your-key-here"' >> ~/.bashrc
+```
+
+### Interactive Mode
+
+Once started, IronCode provides an interactive terminal UI:
+
+- Type your requests naturally in English
+- Switch between agents with `Tab` key
+- Use `Ctrl+C` to cancel operations
+- Use `Ctrl+D` or type `exit` to quit
 
 ---
 
@@ -195,12 +282,18 @@ Invoke it with `@general` in your messages.
 
 ## Development
 
+### Prerequisites
+
+- **Bun 1.3.8** (exact version required)
+- **Rust** (latest stable)
+- **Git**
+
 ### Building From Source
 
 ```bash
 # Clone the repository
 git clone https://github.com/KSD-CO/IronCode.git
-cd ironcode
+cd IronCode
 
 # Install dependencies
 bun install
@@ -210,15 +303,15 @@ cd packages/ironcode/native/tool
 cargo build --release
 cd ../../../..
 
-# Build TypeScript components
+# Run CLI locally (development mode)
+bun dev
+
+# Build standalone executable
+cd packages/ironcode
 bun run build
-
-# Run CLI locally
-bun run dev
-
-# Run desktop app
-bun run dev:desktop
 ```
+
+The compiled binary will be in `packages/ironcode/dist/ironcode/bin/ironcode`
 
 ### Development Commands
 
@@ -259,10 +352,9 @@ bun --expose-gc ./script/bench-edit-memory.ts
 IronCode is built with:
 
 - **CLI/TUI**: TypeScript + Bun runtime
-- **Desktop App**: Tauri (Rust) + SolidJS
-- **Web Frontend**: SolidJS (embedded in desktop app)
 - **Plugins**: TypeScript plugin system
 - **Native Performance Layer**: Rust (via FFI) for critical operations
+  - PTY/Terminal management with 15x speedup
   - Edit operations with 9 smart replacement strategies
   - Archive extraction with s-zip streaming reader
   - File I/O with zero-copy optimization
