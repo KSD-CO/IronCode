@@ -30,12 +30,15 @@ if (!Script.preview) {
   let releases: { id: number; tag_name: string } | null = null
   for (let i = 0; i < 5; i++) {
     try {
+      // Get first matching release (jq may return multiple if there are duplicate tags)
       const jqQuery = `.[] | select(.tag_name == "v${Script.version}") | {id, tag_name}`
       const result = await $`gh api repos/${Script.repository}/releases --jq ${jqQuery}`.text()
 
-      // Parse the result - jq may return empty string if no match
+      // Parse the result - jq may return empty string if no match, or multiple lines if duplicates
       if (result.trim()) {
-        releases = JSON.parse(result.trim())
+        // Take first line only (latest release with this tag)
+        const firstLine = result.trim().split("\n")[0]
+        releases = JSON.parse(firstLine)
         break
       }
     } catch (error) {
