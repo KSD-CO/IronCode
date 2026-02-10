@@ -194,14 +194,24 @@ for (const item of targets) {
 }
 
 if (Script.release) {
+  const archives: string[] = []
+
   for (const key of Object.keys(binaries)) {
     if (key.includes("linux")) {
-      await $`tar -czf ../../${key}.tar.gz *`.cwd(`dist/${key}/bin`)
+      const archivePath = `../../${key}.tar.gz`
+      await $`tar -czf ${archivePath} *`.cwd(`dist/${key}/bin`)
+      archives.push(`./dist/${key}.tar.gz`)
     } else {
-      await $`zip -r ../../${key}.zip *`.cwd(`dist/${key}/bin`)
+      const archivePath = `../../${key}.zip`
+      await $`zip -r ${archivePath} *`.cwd(`dist/${key}/bin`)
+      archives.push(`./dist/${key}.zip`)
     }
   }
-  await $`gh release upload v${Script.version} ./dist/*.zip ./dist/*.tar.gz --clobber`
+
+  // Only upload archives that were actually created
+  if (archives.length > 0) {
+    await $`gh release upload v${Script.version} ${archives} --clobber`
+  }
 }
 
 export { binaries }
