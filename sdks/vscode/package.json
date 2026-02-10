@@ -1,12 +1,12 @@
 {
   "name": "ironcode",
   "displayName": "ironcode",
-  "description": "ironcode for VS Code",
+  "description": "IronCode is a high-performance CLI fork of OpenCode - an AI coding agent that runs entirely on your machine. This fork focuses on the command-line experience, removes cloud dependencies, and rewrites performance-critical components in Rust for dramatically improved speed and efficiency.",
   "version": "1.5.2",
-  "publisher": "sst-dev",
+  "publisher": "tonthatvu",
   "repository": {
     "type": "git",
-    "url": "https://github.com/anomalyco/ironcode"
+    "url": "https://github.com/KSD-CO/IronCode"
   },
   "license": "MIT",
   "icon": "images/icon.png",
