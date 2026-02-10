@@ -167,7 +167,7 @@ for (const item of targets) {
 
   // Copy Rust native library to dist (must be built beforehand for target platform)
   const libExt = item.os === "win32" ? "dll" : item.os === "darwin" ? "dylib" : "so"
-  const libName = item.os === "win32" ? "ironcode_tool.dll" : `libironcode_tool.${libExt}`
+  const libName = item.os === "win32" ? "libironcode_tool.dll" : `ironcode_tool.${libExt}`
   const nativeLibPath = path.join(dir, `native/tool/target/release/${libName}`)
 
   if (fs.existsSync(nativeLibPath)) {
