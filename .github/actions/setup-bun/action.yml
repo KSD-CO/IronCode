@@ -8,13 +8,23 @@ runs:
       with:
         bun-version-file: package.json
 
-    - name: Cache Bun install
+    - name: Cache Bun install (Unix)
+      if: runner.os != 'Windows'
       uses: actions/cache@v4
       with:
         path: |
           ~/.bun/install/cache
           node_modules
           **/node_modules
+        key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+        restore-keys: |
+          ${{ runner.os }}-bun-
+
+    - name: Cache Bun install (Windows)
+      if: runner.os == 'Windows'
+      uses: actions/cache@v4
+      with:
+        path: ~/.bun/install/cache
         key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
         restore-keys: |
           ${{ runner.os }}-bun-
