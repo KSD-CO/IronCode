@@ -5,6 +5,7 @@ import z from "zod"
 import { Identifier } from "../id/id"
 import { MessageV2 } from "./message-v2"
 import { Log } from "../util/log"
+import { Resource } from "../util/resource"
 import { SessionRevert } from "./revert"
 import { Session } from "."
 import { Agent } from "../agent/agent"
@@ -296,9 +297,12 @@ export namespace SessionPrompt {
         if (!lastFinished && msg.info.role === "assistant" && msg.info.finish)
           lastFinished = msg.info as MessageV2.Assistant
         if (lastUser && lastFinished) break
-        const task = msg.parts.filter((part) => part.type === "compaction" || part.type === "subtask")
-        if (task && !lastFinished) {
-          tasks.push(...task)
+        if (!lastFinished) {
+          for (const part of msg.parts) {
+            if (part.type === "compaction" || part.type === "subtask") {
+              tasks.push(part)
+            }
+          }
         }
       }
 
@@ -608,6 +612,15 @@ export namespace SessionPrompt {
       }
 
       await Plugin.trigger("experimental.chat.messages.transform", {}, { messages: sessionMessages })
+
+      // Check resource usage and add delay if throttled
+      if (Resource.shouldThrottle()) {
+        log.warn("Resource throttling active, adding delay before processing", {
+          sessionID,
+          step,
+        })
+        await Resource.delay(500)
+      }
 
       const result = await processor.process({
         user: lastUser,
@@ -1722,7 +1735,11 @@ NOTE: At any point in time through this workflow you should feel free to ask the
     }
     const agent = await Agent.get(agentName)
     if (!agent) {
-      const available = await Agent.list().then((agents) => agents.filter((a) => !a.hidden).map((a) => a.name))
+      const agents = await Agent.list()
+      const available: string[] = []
+      for (const agent of agents) {
+        if (!agent.hidden) available.push(agent.name)
+      }
       const hint = available.length ? ` Available agents: ${available.join(", ")}` : ""
       const error = new NamedError.Unknown({ message: `Agent not found: "${agentName}".${hint}` })
       Bus.publish(Session.Event.Error, {

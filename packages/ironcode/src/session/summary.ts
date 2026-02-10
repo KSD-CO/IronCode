@@ -91,13 +91,16 @@ export namespace SessionSummary {
   )
 
   async function summarizeSession(input: { sessionID: string; messages: MessageV2.WithParts[] }) {
-    const files = new Set(
-      input.messages
-        .flatMap((x) => x.parts)
-        .filter((x) => x.type === "patch")
-        .flatMap((x) => x.files)
-        .map((x) => path.relative(Instance.worktree, x).replaceAll("\\", "/")),
-    )
+    const files = new Set<string>()
+    for (const msg of input.messages) {
+      for (const part of msg.parts) {
+        if (part.type === "patch") {
+          for (const file of part.files) {
+            files.add(path.relative(Instance.worktree, file).replaceAll("\\", "/"))
+          }
+        }
+      }
+    }
     const diffs = await computeDiff({ messages: input.messages }).then((x) =>
       x.filter((x) => {
         return files.has(x.file)

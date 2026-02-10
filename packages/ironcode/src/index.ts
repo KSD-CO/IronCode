@@ -3,6 +3,7 @@ import { hideBin } from "yargs/helpers"
 import { RunCommand } from "./cli/cmd/run"
 import { GenerateCommand } from "./cli/cmd/generate"
 import { Log } from "./util/log"
+import { Resource } from "./util/resource"
 import { AuthCommand } from "./cli/cmd/auth"
 import { AgentCommand } from "./cli/cmd/agent"
 import { UpgradeCommand } from "./cli/cmd/upgrade"
@@ -55,6 +56,16 @@ const cli = yargs(hideBin(process.argv))
     type: "string",
     choices: ["DEBUG", "INFO", "WARN", "ERROR"],
   })
+  .option("max-memory", {
+    describe: "max memory limit in MB (default: 300)",
+    type: "number",
+    default: 300,
+  })
+  .option("enable-resource-monitor", {
+    describe: "enable resource monitoring and throttling",
+    type: "boolean",
+    default: true,
+  })
   .middleware(async (opts) => {
     await Log.init({
       print: process.argv.includes("--print-logs"),
@@ -65,6 +76,17 @@ const cli = yargs(hideBin(process.argv))
         return "INFO"
       })(),
     })
+
+    // Initialize resource monitor if enabled
+    if (opts.enableResourceMonitor) {
+      Resource.configure({
+        maxMemoryMB: opts.maxMemory as number,
+      })
+      Resource.start()
+      Log.Default.info("Resource monitor enabled", {
+        maxMemoryMB: opts.maxMemory,
+      })
+    }
 
     process.env.AGENT = "1"
     process.env.IRONCODE = "1"
@@ -149,6 +171,9 @@ try {
   }
   process.exitCode = 1
 } finally {
+  // Stop resource monitor
+  Resource.stop()
+
   // Some subprocesses don't react properly to SIGTERM and similar signals.
   // Most notably, some docker-container-based MCP servers don't handle such signals unless
   // run using `docker run --init`.

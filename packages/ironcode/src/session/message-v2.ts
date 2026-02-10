@@ -570,10 +570,15 @@ export namespace MessageV2 {
 
               // For providers that don't support media in tool results, extract media files
               // (images, PDFs) to be sent as a separate user message
-              const isMediaAttachment = (a: { mime: string }) =>
-                a.mime.startsWith("image/") || a.mime === "application/pdf"
-              const mediaAttachments = attachments.filter(isMediaAttachment)
-              const nonMediaAttachments = attachments.filter((a) => !isMediaAttachment(a))
+              const mediaAttachments: Array<{ mime: string; url: string }> = []
+              const nonMediaAttachments: Array<{ mime: string; url: string }> = []
+              for (const attachment of attachments) {
+                if (attachment.mime.startsWith("image/") || attachment.mime === "application/pdf") {
+                  mediaAttachments.push(attachment)
+                } else {
+                  nonMediaAttachments.push(attachment)
+                }
+              }
               if (!supportsMediaInToolResults && mediaAttachments.length > 0) {
                 media.push(...mediaAttachments)
               }
@@ -630,27 +635,34 @@ export namespace MessageV2 {
           // Inject pending media as a user message for providers that don't support
           // media (images, PDFs) in tool results
           if (media.length > 0) {
-            result.push({
+            const userMessage: UIMessage = {
               id: Identifier.ascending("message"),
               role: "user",
               parts: [
                 {
-                  type: "text" as const,
+                  type: "text",
                   text: "Attached image(s) from tool result:",
                 },
-                ...media.map((attachment) => ({
-                  type: "file" as const,
-                  url: attachment.url,
-                  mediaType: attachment.mime,
-                })),
               ],
-            })
+            }
+            for (const attachment of media) {
+              userMessage.parts.push({
+                type: "file",
+                url: attachment.url,
+                mediaType: attachment.mime,
+              })
+            }
+            result.push(userMessage)
           }
         }
       }
     }
 
-    const tools = Object.fromEntries(Array.from(toolNames).map((toolName) => [toolName, { toModelOutput }]))
+    const toolsArray: Array<[string, { toModelOutput: typeof toModelOutput }]> = []
+    for (const toolName of toolNames) {
+      toolsArray.push([toolName, { toModelOutput }])
+    }
+    const tools = Object.fromEntries(toolsArray)
 
     return convertToModelMessages(
       result.filter((msg) => msg.parts.some((part) => part.type !== "step-start")),
@@ -698,7 +710,7 @@ export namespace MessageV2 {
     const result = [] as MessageV2.WithParts[]
     const completed = new Set<string>()
     for await (const msg of stream) {
-      result.push(msg)
+      result.unshift(msg)
       if (
         msg.info.role === "user" &&
         completed.has(msg.info.id) &&
@@ -707,7 +719,6 @@ export namespace MessageV2 {
         break
       if (msg.info.role === "assistant" && msg.info.summary && msg.info.finish) completed.add(msg.info.parentID)
     }
-    result.reverse()
     return result
   }
 
