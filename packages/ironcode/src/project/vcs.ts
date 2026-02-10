@@ -1,7 +1,5 @@
 import { BusEvent } from "@/bus/bus-event"
 import { Bus } from "@/bus"
-import { $ } from "bun"
-import path from "path"
 import z from "zod"
 import { Log } from "@/util/log"
 import { Instance } from "./instance"
@@ -32,56 +30,25 @@ export namespace Vcs {
     })
   export type Info = z.infer<typeof Info>
 
-  async function currentBranch() {
-    return $`git rev-parse --abbrev-ref HEAD`
-      .quiet()
-      .nothrow()
-      .cwd(Instance.worktree)
-      .text()
-      .then((x) => x.trim())
-      .catch(() => undefined)
-  }
-
-  async function getStatus() {
-    try {
-      const output = await $`git status --porcelain`.quiet().nothrow().cwd(Instance.worktree).text()
-      const lines = output
-        .trim()
-        .split("\n")
-        .filter((line) => line.trim())
-
-      let added = 0
-      let modified = 0
-      let deleted = 0
-
-      for (const line of lines) {
-        const status = line.substring(0, 2)
-        if (status.includes("?") || status.includes("A")) added++
-        else if (status.includes("M")) modified++
-        else if (status.includes("D")) deleted++
-      }
-
-      return { added, modified, deleted }
-    } catch {
-      return { added: 0, modified: 0, deleted: 0 }
-    }
+  function currentBranch() {
+    const info = getVcsInfoFFI(Instance.worktree)
+    return info?.branch
   }
 
   const state = Instance.state(
     async () => {
       if (Instance.project.vcs !== "git") {
         return {
-          branch: async () => undefined,
-          status: async () => ({ added: 0, modified: 0, deleted: 0 }),
+          branch: () => undefined,
           unsubscribe: undefined,
         }
       }
-      let current = await currentBranch()
+      let current = currentBranch()
       log.info("initialized", { branch: current })
 
-      const unsubscribe = Bus.subscribe(FileWatcher.Event.Updated, async (evt) => {
+      const unsubscribe = Bus.subscribe(FileWatcher.Event.Updated, (evt) => {
         if (evt.properties.file.endsWith("HEAD")) return
-        const next = await currentBranch()
+        const next = currentBranch()
         if (next !== current) {
           log.info("branch changed", { from: current, to: next })
           current = next
@@ -90,8 +57,7 @@ export namespace Vcs {
       })
 
       return {
-        branch: async () => current,
-        status: getStatus,
+        branch: () => current,
         unsubscribe,
       }
     },
@@ -105,12 +71,13 @@ export namespace Vcs {
   }
 
   export async function branch() {
-    return await state().then((s) => s.branch())
+    const s = await state()
+    return s.branch()
   }
 
   export async function info(): Promise<Info | undefined> {
     const s = await state()
-    const branch = await s.branch()
+    const branch = s.branch()
     if (!branch) return undefined
 
     // Use native Rust implementation for better performance
