@@ -94,8 +94,9 @@ jobs:
             target: x86_64-pc-windows-msvc
           - host: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-          - host: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
+          # TODO: Re-enable after setting up proper cross-compilation environment or using native ARM64 runner
+          # - host: ubuntu-latest
+          #   target: aarch64-unknown-linux-gnu
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@v4
