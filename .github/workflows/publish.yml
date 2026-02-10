@@ -35,10 +35,6 @@ jobs:
 
       - uses: ./.github/actions/setup-bun
 
-      - name: Install IronCode
-        if: inputs.bump || inputs.version
-        run: bun i -g ironcode-ai
-
       - id: version
         run: |
           ./script/version.ts
