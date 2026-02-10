@@ -44,10 +44,23 @@ const tasks = Object.entries(binaries).map(async ([name]) => {
     await $`chmod -R 755 .`.cwd(`./dist/${name}`)
   }
   await $`bun pm pack`.cwd(`./dist/${name}`)
+
+  // Skip npm publish if no token configured
+  if (!process.env.NPM_TOKEN && !process.env.NODE_AUTH_TOKEN) {
+    console.log(`Skipping npm publish for ${name} (no NPM_TOKEN configured)`)
+    return
+  }
+
   await $`npm publish *.tgz --access public --tag ${Script.channel}`.cwd(`./dist/${name}`)
 })
 await Promise.all(tasks)
-await $`cd ./dist/${pkg.name} && bun pm pack && npm publish *.tgz --access public --tag ${Script.channel}`
+
+// Skip main package publish if no token
+if (!process.env.NPM_TOKEN && !process.env.NODE_AUTH_TOKEN) {
+  console.log("Skipping main package npm publish (no NPM_TOKEN configured)")
+} else {
+  await $`cd ./dist/${pkg.name} && bun pm pack && npm publish *.tgz --access public --tag ${Script.channel}`
+}
 
 const image = `ghcr.io/${Script.repository.toLowerCase()}`
 const platforms = "linux/amd64,linux/arm64"
