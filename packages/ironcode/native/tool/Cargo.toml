@@ -43,6 +43,7 @@ s-zip = "0.10.1"
 nucleo-matcher = "0.3"  # Keep for future optimization attempts (closest to fuzzysort performance)
 tree-sitter = "0.24"
 tree-sitter-bash = "0.23"
+notify = "6.1"  # Cross-platform file system watching
 
 # Webfetch dependencies (experimental - NOT recommended for production)
 # Benchmark results show TypeScript is better for this use case

@@ -40,6 +40,11 @@ IronCode rewrites key operations in native Rust with **measured real-world perfo
 
 | Operation                 | TypeScript/Node | Rust Native | **Speedup**        | Notes                  |
 | ------------------------- | --------------- | ----------- | ------------------ | ---------------------- |
+| **PTY I/O (full)**        | 58.15 ms        | 3.80 ms     | **15.29x faster**  | ✅ 93.5% reduction     |
+| **PTY Create**            | ~50 ms          | 1.66 ms     | **30x faster**     | Setup session          |
+| **PTY Write**             | ~1 ms           | 0.06 ms     | **16.7x faster**   | Send data              |
+| **PTY Read**              | ~5 ms           | 0.03 ms     | **166x faster**    | Non-blocking I/O       |
+| **PTY Close**             | ~2 ms           | 0.02 ms     | **100x faster**    | Cleanup                |
 | **Edit Tool (10 lines)**  | 61.57 µs        | 30.06 µs    | **2.05x faster**   | All 9 strategies       |
 | **Edit Tool (100 lines)** | 419.84 µs       | 250.86 µs   | **1.67x faster**   | Consistent performance |
 | **Edit Tool (1K lines)**  | 6.17 ms         | 2.78 ms     | **2.22x faster**   | Scales well            |
@@ -61,6 +66,7 @@ IronCode rewrites key operations in native Rust with **measured real-world perfo
 
 **Key Insights:**
 
+- 🎯 **PTY/Terminal**: **15.29x faster** (exceeded 10x target!) - Native ring buffer, zero-copy reads
 - ✅ **Edit Tool**: 2-6x faster across all file sizes with all 9 smart replacement strategies
 - ✅ **Bash Parser**: 50-100x faster using native tree-sitter vs WASM (0.020ms per command, no initialization overhead)
 - ✅ **Glob/Grep**: 1.8-2.7x faster by eliminating process spawn overhead
@@ -73,6 +79,7 @@ IronCode rewrites key operations in native Rust with **measured real-world perfo
 
 **Native Rust Components:**
 
+- ✅ **PTY/Terminal**: Full terminal session management with 2MB ring buffer, zero-copy streaming (15.29x faster) - Powers all Bash tool operations
 - ✅ **Edit Tool**: 9 smart replacement strategies with fuzzy matching (complex compute justifies FFI)
 - ✅ **File Listing**: Native ignore crate for fast directory traversal (eliminates process spawn)
 - ✅ **File Search (Glob)**: Pattern matching with gitignore support (eliminates process spawn)
@@ -311,7 +318,9 @@ Contributions are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) befo
 
 **Recent Contributions:**
 
+- ✅ **Native PTY/Terminal deployed to production** (15.29x speedup, powers Bash tool - Feb 2026)
 - ✅ Native Rust edit tool with 9 strategies (3-4x speedup)
+- ✅ File Watcher Rust infrastructure (ready but not integrated - @parcel/watcher already native)
 - ✅ Comprehensive benchmarking suite
 - ✅ Memory profiling and optimization
 - ✅ Correctness testing framework (32 test cases)
@@ -342,6 +351,9 @@ bun ./script/test-integration.ts         # Integration tests
 ### Performance Benchmarks
 
 ```bash
+# PTY/Terminal benchmark (15.29x speedup)
+bun script/bench-pty.ts
+
 # Rust micro-benchmarks
 cd packages/ironcode/native/tool
 cargo bench --bench edit_bench

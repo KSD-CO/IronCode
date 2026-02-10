@@ -70,6 +70,90 @@ const lib = dlopen(libPath, {
     args: [FFIType.cstring, FFIType.cstring, FFIType.bool, FFIType.bool, FFIType.i32],
     returns: FFIType.ptr,
   },
+  terminal_create: {
+    args: [FFIType.cstring, FFIType.cstring, FFIType.u16, FFIType.u16],
+    returns: FFIType.ptr,
+  },
+  terminal_write: {
+    args: [FFIType.cstring, FFIType.cstring],
+    returns: FFIType.bool,
+  },
+  terminal_read: {
+    args: [FFIType.cstring],
+    returns: FFIType.ptr,
+  },
+  terminal_resize: {
+    args: [FFIType.cstring, FFIType.u16, FFIType.u16],
+    returns: FFIType.bool,
+  },
+  terminal_close: {
+    args: [FFIType.cstring],
+    returns: FFIType.bool,
+  },
+  terminal_get_info: {
+    args: [FFIType.cstring],
+    returns: FFIType.ptr,
+  },
+  terminal_update_title: {
+    args: [FFIType.cstring, FFIType.cstring],
+    returns: FFIType.bool,
+  },
+  terminal_check_status: {
+    args: [FFIType.cstring],
+    returns: FFIType.ptr,
+  },
+  terminal_mark_exited: {
+    args: [FFIType.cstring],
+    returns: FFIType.bool,
+  },
+  terminal_get_buffer: {
+    args: [FFIType.cstring],
+    returns: FFIType.ptr,
+  },
+  terminal_drain_buffer: {
+    args: [FFIType.cstring],
+    returns: FFIType.ptr,
+  },
+  terminal_clear_buffer: {
+    args: [FFIType.cstring],
+    returns: FFIType.bool,
+  },
+  terminal_get_buffer_info: {
+    args: [FFIType.cstring],
+    returns: FFIType.ptr,
+  },
+  terminal_list: {
+    args: [],
+    returns: FFIType.ptr,
+  },
+  terminal_cleanup_idle: {
+    args: [FFIType.u64],
+    returns: FFIType.ptr,
+  },
+  watcher_create_ffi: {
+    args: [FFIType.cstring, FFIType.cstring, FFIType.cstring, FFIType.u64],
+    returns: FFIType.ptr,
+  },
+  watcher_poll_events_ffi: {
+    args: [FFIType.cstring],
+    returns: FFIType.ptr,
+  },
+  watcher_pending_count_ffi: {
+    args: [FFIType.cstring],
+    returns: FFIType.i32,
+  },
+  watcher_remove_ffi: {
+    args: [FFIType.cstring],
+    returns: FFIType.ptr,
+  },
+  watcher_list_ffi: {
+    args: [],
+    returns: FFIType.ptr,
+  },
+  watcher_get_info_ffi: {
+    args: [FFIType.cstring],
+    returns: FFIType.ptr,
+  },
   free_string: {
     args: [FFIType.ptr],
     returns: FFIType.void,
@@ -309,4 +393,271 @@ export function fileListFFI(
   }
 
   return result
+}
+
+// Terminal FFI Wrappers
+
+export interface TerminalInfo {
+  id: string
+  pid: number
+  cwd: string
+  status: "running" | "exited"
+  title: string
+  command: string
+  args: string[]
+}
+
+export interface TerminalOutput {
+  data: Uint8Array
+  buffered_size: number
+}
+
+export interface BufferInfo {
+  size: number
+  limit: number
+  chunks: number
+}
+
+export function terminalCreateFFI(id: string, cwd: string | null, rows: number, cols: number): TerminalInfo {
+  const cwdPtr = cwd ? Buffer.from(cwd + "\0") : null
+  const ptr = lib.symbols.terminal_create(Buffer.from(id + "\0"), cwdPtr, rows, cols)
+  if (!ptr) throw new Error("terminal_create returned null")
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  return JSON.parse(jsonStr)
+}
+
+export function terminalWriteFFI(id: string, data: string): boolean {
+  return lib.symbols.terminal_write(Buffer.from(id + "\0"), Buffer.from(data + "\0"))
+}
+
+export function terminalReadFFI(id: string): TerminalOutput {
+  const ptr = lib.symbols.terminal_read(Buffer.from(id + "\0"))
+  if (!ptr) throw new Error("terminal_read returned null")
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  const result = JSON.parse(jsonStr)
+  // Convert data array back to Uint8Array
+  return {
+    data: new Uint8Array(result.data),
+    buffered_size: result.buffered_size,
+  }
+}
+
+export function terminalResizeFFI(id: string, rows: number, cols: number): boolean {
+  return lib.symbols.terminal_resize(Buffer.from(id + "\0"), rows, cols)
+}
+
+export function terminalCloseFFI(id: string): boolean {
+  return lib.symbols.terminal_close(Buffer.from(id + "\0"))
+}
+
+export function terminalGetInfoFFI(id: string): TerminalInfo {
+  const ptr = lib.symbols.terminal_get_info(Buffer.from(id + "\0"))
+  if (!ptr) throw new Error("terminal_get_info returned null")
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  return JSON.parse(jsonStr)
+}
+
+export function terminalUpdateTitleFFI(id: string, title: string): boolean {
+  return lib.symbols.terminal_update_title(Buffer.from(id + "\0"), Buffer.from(title + "\0"))
+}
+
+export function terminalCheckStatusFFI(id: string): "running" | "exited" {
+  const ptr = lib.symbols.terminal_check_status(Buffer.from(id + "\0"))
+  if (!ptr) throw new Error("terminal_check_status returned null")
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  return JSON.parse(jsonStr)
+}
+
+export function terminalMarkExitedFFI(id: string): boolean {
+  return lib.symbols.terminal_mark_exited(Buffer.from(id + "\0"))
+}
+
+export function terminalGetBufferFFI(id: string): Uint8Array {
+  const ptr = lib.symbols.terminal_get_buffer(Buffer.from(id + "\0"))
+  if (!ptr) throw new Error("terminal_get_buffer returned null")
+
+  const base64Str = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  // Decode base64 to bytes
+  return base64Decode(base64Str)
+}
+
+export function terminalDrainBufferFFI(id: string): Uint8Array {
+  const ptr = lib.symbols.terminal_drain_buffer(Buffer.from(id + "\0"))
+  if (!ptr) throw new Error("terminal_drain_buffer returned null")
+
+  const base64Str = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  // Decode base64 to bytes
+  return base64Decode(base64Str)
+}
+
+export function terminalClearBufferFFI(id: string): boolean {
+  return lib.symbols.terminal_clear_buffer(Buffer.from(id + "\0"))
+}
+
+export function terminalGetBufferInfoFFI(id: string): BufferInfo {
+  const ptr = lib.symbols.terminal_get_buffer_info(Buffer.from(id + "\0"))
+  if (!ptr) throw new Error("terminal_get_buffer_info returned null")
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  return JSON.parse(jsonStr)
+}
+
+export function terminalListFFI(): TerminalInfo[] {
+  const ptr = lib.symbols.terminal_list()
+  if (!ptr) throw new Error("terminal_list returned null")
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  return JSON.parse(jsonStr)
+}
+
+export function terminalCleanupIdleFFI(timeoutSecs: number): string[] {
+  const ptr = lib.symbols.terminal_cleanup_idle(BigInt(timeoutSecs))
+  if (!ptr) throw new Error("terminal_cleanup_idle returned null")
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  return JSON.parse(jsonStr)
+}
+
+// Helper: Decode base64 string to Uint8Array
+function base64Decode(base64: string): Uint8Array {
+  if (!base64) return new Uint8Array(0)
+
+  // Use Bun's built-in base64 decoder if available, otherwise manual
+  if (typeof Buffer !== "undefined" && Buffer.from) {
+    return new Uint8Array(Buffer.from(base64, "base64"))
+  }
+
+  // Manual base64 decode (fallback)
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+  const lookup = new Uint8Array(256)
+  for (let i = 0; i < chars.length; i++) {
+    lookup[chars.charCodeAt(i)] = i
+  }
+
+  const len = base64.length
+  const paddingCount = base64.endsWith("==") ? 2 : base64.endsWith("=") ? 1 : 0
+  const outputLen = (len * 3) / 4 - paddingCount
+  const output = new Uint8Array(outputLen)
+
+  let outputIndex = 0
+  for (let i = 0; i < len; i += 4) {
+    const a = lookup[base64.charCodeAt(i)]
+    const b = lookup[base64.charCodeAt(i + 1)]
+    const c = lookup[base64.charCodeAt(i + 2) || 0]
+    const d = lookup[base64.charCodeAt(i + 3) || 0]
+
+    output[outputIndex++] = (a << 2) | (b >> 4)
+    if (outputIndex < outputLen) output[outputIndex++] = ((b & 15) << 4) | (c >> 2)
+    if (outputIndex < outputLen) output[outputIndex++] = ((c & 3) << 6) | d
+  }
+
+  return output
+}
+
+// =====================
+// File Watcher FFI
+// =====================
+
+export interface WatcherEvent {
+  path: string
+  event_type: "add" | "change" | "unlink"
+  timestamp: number
+}
+
+export interface WatcherInfo {
+  id: string
+  path: string
+  ignore_patterns: string[]
+  max_queue_size: number
+  event_count: number
+}
+
+export function watcherCreateFFI(
+  id: string,
+  path: string,
+  ignorePatterns: string[] = [],
+  maxQueueSize: number = 1000,
+): void {
+  const ignorePatternsJson = JSON.stringify(ignorePatterns)
+  const ptr = lib.symbols.watcher_create_ffi(
+    Buffer.from(id + "\0"),
+    Buffer.from(path + "\0"),
+    Buffer.from(ignorePatternsJson + "\0"),
+    BigInt(maxQueueSize),
+  )
+
+  if (ptr) {
+    const errorStr = new CString(ptr).toString()
+    lib.symbols.free_string(ptr)
+    throw new Error(errorStr)
+  }
+  // Success: ptr is null
+}
+
+export function watcherPollEventsFFI(id: string): WatcherEvent[] {
+  const ptr = lib.symbols.watcher_poll_events_ffi(Buffer.from(id + "\0"))
+  if (!ptr) throw new Error("watcher_poll_events_ffi returned null")
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  return JSON.parse(jsonStr)
+}
+
+export function watcherPendingCountFFI(id: string): number {
+  const count = lib.symbols.watcher_pending_count_ffi(Buffer.from(id + "\0"))
+  if (count < 0) throw new Error(`Watcher not found: ${id}`)
+  return count
+}
+
+export function watcherRemoveFFI(id: string): void {
+  const ptr = lib.symbols.watcher_remove_ffi(Buffer.from(id + "\0"))
+  if (ptr) {
+    const errorStr = new CString(ptr).toString()
+    lib.symbols.free_string(ptr)
+    throw new Error(errorStr)
+  }
+  // Success: ptr is null
+}
+
+export function watcherListFFI(): string[] {
+  const ptr = lib.symbols.watcher_list_ffi()
+  if (!ptr) throw new Error("watcher_list_ffi returned null")
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  return JSON.parse(jsonStr)
+}
+
+export function watcherGetInfoFFI(id: string): WatcherInfo {
+  const ptr = lib.symbols.watcher_get_info_ffi(Buffer.from(id + "\0"))
+  if (!ptr) throw new Error("watcher_get_info_ffi returned null")
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  return JSON.parse(jsonStr)
 }

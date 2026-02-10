@@ -14,6 +14,7 @@ pub mod stats;
 pub mod terminal;
 pub mod types;
 pub mod vcs;
+pub mod watcher;
 #[cfg(feature = "webfetch")]
 pub mod webfetch;
 
@@ -230,7 +231,7 @@ pub extern "C" fn terminal_create(
         }
     };
 
-    match terminal::create(id_str, cwd_str, rows, cols) {
+    match terminal::create(id_str, None, vec![], cwd_str, None, rows, cols) {
         Ok(info) => match serde_json::to_string(&info) {
             Ok(json) => CString::new(json).unwrap().into_raw(),
             Err(_) => std::ptr::null_mut(),
@@ -298,6 +299,200 @@ pub extern "C" fn terminal_close(id: *const c_char) -> bool {
     };
 
     terminal::close(id_str).is_ok()
+}
+
+#[no_mangle]
+pub extern "C" fn terminal_get_info(id: *const c_char) -> *mut c_char {
+    let id_str = unsafe {
+        if id.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(id).to_str().unwrap_or("")
+    };
+
+    match terminal::get_info(id_str) {
+        Ok(info) => match serde_json::to_string(&info) {
+            Ok(json) => CString::new(json).unwrap().into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        },
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn terminal_update_title(id: *const c_char, title: *const c_char) -> bool {
+    let id_str = unsafe {
+        if id.is_null() {
+            return false;
+        }
+        CStr::from_ptr(id).to_str().unwrap_or("")
+    };
+
+    let title_str = unsafe {
+        if title.is_null() {
+            return false;
+        }
+        CStr::from_ptr(title).to_str().unwrap_or("")
+    };
+
+    terminal::update_title(id_str, title_str).is_ok()
+}
+
+#[no_mangle]
+pub extern "C" fn terminal_check_status(id: *const c_char) -> *mut c_char {
+    let id_str = unsafe {
+        if id.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(id).to_str().unwrap_or("")
+    };
+
+    match terminal::check_status(id_str) {
+        Ok(status) => match serde_json::to_string(&status) {
+            Ok(json) => CString::new(json).unwrap().into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        },
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn terminal_mark_exited(id: *const c_char) -> bool {
+    let id_str = unsafe {
+        if id.is_null() {
+            return false;
+        }
+        CStr::from_ptr(id).to_str().unwrap_or("")
+    };
+
+    terminal::mark_exited(id_str).is_ok()
+}
+
+#[no_mangle]
+pub extern "C" fn terminal_get_buffer(id: *const c_char) -> *mut c_char {
+    let id_str = unsafe {
+        if id.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(id).to_str().unwrap_or("")
+    };
+
+    match terminal::get_buffer(id_str) {
+        Ok(buffer) => {
+            // Return buffer as base64 encoded string for binary safety
+            let base64 = base64_encode(&buffer);
+            match CString::new(base64) {
+                Ok(cstring) => cstring.into_raw(),
+                Err(_) => std::ptr::null_mut(),
+            }
+        }
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn terminal_drain_buffer(id: *const c_char) -> *mut c_char {
+    let id_str = unsafe {
+        if id.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(id).to_str().unwrap_or("")
+    };
+
+    match terminal::drain_buffer(id_str) {
+        Ok(buffer) => {
+            // Return buffer as base64 encoded string for binary safety
+            let base64 = base64_encode(&buffer);
+            match CString::new(base64) {
+                Ok(cstring) => cstring.into_raw(),
+                Err(_) => std::ptr::null_mut(),
+            }
+        }
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn terminal_clear_buffer(id: *const c_char) -> bool {
+    let id_str = unsafe {
+        if id.is_null() {
+            return false;
+        }
+        CStr::from_ptr(id).to_str().unwrap_or("")
+    };
+
+    terminal::clear_buffer(id_str).is_ok()
+}
+
+#[no_mangle]
+pub extern "C" fn terminal_get_buffer_info(id: *const c_char) -> *mut c_char {
+    let id_str = unsafe {
+        if id.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(id).to_str().unwrap_or("")
+    };
+
+    match terminal::get_buffer_info(id_str) {
+        Ok(info) => match serde_json::to_string(&info) {
+            Ok(json) => CString::new(json).unwrap().into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        },
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn terminal_list() -> *mut c_char {
+    let sessions = terminal::list();
+    match serde_json::to_string(&sessions) {
+        Ok(json) => match CString::new(json) {
+            Ok(cstring) => cstring.into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        },
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn terminal_cleanup_idle(timeout_secs: u64) -> *mut c_char {
+    let removed = terminal::cleanup_idle(timeout_secs);
+    match serde_json::to_string(&removed) {
+        Ok(json) => match CString::new(json) {
+            Ok(cstring) => cstring.into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        },
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+// Helper function for base64 encoding (simple implementation)
+fn base64_encode(data: &[u8]) -> String {
+    const CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut result = String::new();
+
+    for chunk in data.chunks(3) {
+        let b1 = chunk[0];
+        let b2 = chunk.get(1).copied().unwrap_or(0);
+        let b3 = chunk.get(2).copied().unwrap_or(0);
+
+        result.push(CHARS[((b1 >> 2) & 0x3F) as usize] as char);
+        result.push(CHARS[(((b1 << 4) | (b2 >> 4)) & 0x3F) as usize] as char);
+
+        if chunk.len() > 1 {
+            result.push(CHARS[(((b2 << 2) | (b3 >> 6)) & 0x3F) as usize] as char);
+        } else {
+            result.push('=');
+        }
+
+        if chunk.len() > 2 {
+            result.push(CHARS[(b3 & 0x3F) as usize] as char);
+        } else {
+            result.push('=');
+        }
+    }
+
+    result
 }
 
 // VCS FFI function
@@ -731,5 +926,152 @@ pub extern "C" fn webfetch_ffi(
             }
         }
         Err(_) => std::ptr::null_mut(),
+    }
+}
+
+// =====================
+// File Watcher FFI
+// =====================
+
+/// Create a file watcher with event queue
+/// Returns error string on failure, null on success
+#[no_mangle]
+pub extern "C" fn watcher_create_ffi(
+    id: *const c_char,
+    path: *const c_char,
+    ignore_patterns_json: *const c_char,
+    max_queue_size: u64,
+) -> *mut c_char {
+    let id_str = unsafe {
+        if id.is_null() {
+            return CString::new("id is null").unwrap().into_raw();
+        }
+        CStr::from_ptr(id).to_str().unwrap_or("")
+    };
+
+    let path_str = unsafe {
+        if path.is_null() {
+            return CString::new("path is null").unwrap().into_raw();
+        }
+        CStr::from_ptr(path).to_str().unwrap_or("")
+    };
+
+    let ignore_patterns_str = unsafe {
+        if ignore_patterns_json.is_null() {
+            "[]"
+        } else {
+            CStr::from_ptr(ignore_patterns_json)
+                .to_str()
+                .unwrap_or("[]")
+        }
+    };
+
+    let ignore_patterns: Vec<String> = match serde_json::from_str(ignore_patterns_str) {
+        Ok(p) => p,
+        Err(e) => {
+            return CString::new(format!("Invalid JSON: {}", e))
+                .unwrap()
+                .into_raw()
+        }
+    };
+
+    match watcher::create(
+        id_str.to_string(),
+        path_str.to_string(),
+        ignore_patterns,
+        max_queue_size as usize,
+    ) {
+        Ok(_) => std::ptr::null_mut(), // Success
+        Err(e) => CString::new(e).unwrap().into_raw(),
+    }
+}
+
+/// Poll events from watcher (non-blocking)
+/// Returns JSON array of events
+#[no_mangle]
+pub extern "C" fn watcher_poll_events_ffi(id: *const c_char) -> *mut c_char {
+    let id_str = unsafe {
+        if id.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(id).to_str().unwrap_or("")
+    };
+
+    match watcher::poll_events(id_str) {
+        Ok(events) => match serde_json::to_string(&events) {
+            Ok(json) => CString::new(json).unwrap().into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        },
+        Err(e) => {
+            let error_obj = serde_json::json!({ "error": e });
+            match serde_json::to_string(&error_obj) {
+                Ok(json) => CString::new(json).unwrap().into_raw(),
+                Err(_) => std::ptr::null_mut(),
+            }
+        }
+    }
+}
+
+/// Get pending event count
+/// Returns count as i32, or -1 on error
+#[no_mangle]
+pub extern "C" fn watcher_pending_count_ffi(id: *const c_char) -> i32 {
+    let id_str = unsafe {
+        if id.is_null() {
+            return -1;
+        }
+        CStr::from_ptr(id).to_str().unwrap_or("")
+    };
+
+    match watcher::pending_count(id_str) {
+        Ok(count) => count as i32,
+        Err(_) => -1,
+    }
+}
+
+/// Remove a file watcher
+/// Returns error string on failure, null on success
+#[no_mangle]
+pub extern "C" fn watcher_remove_ffi(id: *const c_char) -> *mut c_char {
+    let id_str = unsafe {
+        if id.is_null() {
+            return CString::new("id is null").unwrap().into_raw();
+        }
+        CStr::from_ptr(id).to_str().unwrap_or("")
+    };
+
+    match watcher::remove(id_str.to_string()) {
+        Ok(_) => std::ptr::null_mut(), // Success
+        Err(e) => CString::new(e).unwrap().into_raw(),
+    }
+}
+
+/// List all active watchers
+/// Returns JSON array of watcher IDs
+#[no_mangle]
+pub extern "C" fn watcher_list_ffi() -> *mut c_char {
+    let ids = watcher::list();
+    match serde_json::to_string(&ids) {
+        Ok(json) => CString::new(json).unwrap().into_raw(),
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// Get watcher info
+/// Returns JSON object with watcher details, or error string
+#[no_mangle]
+pub extern "C" fn watcher_get_info_ffi(id: *const c_char) -> *mut c_char {
+    let id_str = unsafe {
+        if id.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(id).to_str().unwrap_or("")
+    };
+
+    match watcher::get_info(id_str.to_string()) {
+        Ok(json) => CString::new(json).unwrap().into_raw(),
+        Err(e) => CString::new(format!("{{\"error\":\"{}\"}}", e))
+            .unwrap()
+            .into_raw(),
     }
 }
