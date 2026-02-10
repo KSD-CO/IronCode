@@ -1,6 +1,6 @@
 {
   "name": "@ironcode-ai/util",
-  "version": "1.5.7",
+  "version": "1.6.0",
   "private": true,
   "type": "module",
   "license": "MIT",
