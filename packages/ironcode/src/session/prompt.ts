@@ -590,23 +590,38 @@ export namespace SessionPrompt {
         })
       }
 
-      const sessionMessages = clone(msgs)
+      // Shallow copy array - only clone messages that need modification
+      const sessionMessages: typeof msgs = step > 1 && lastFinished ? [] : msgs
 
       // Ephemerally wrap queued user messages with a reminder to stay on track
       if (step > 1 && lastFinished) {
-        for (const msg of sessionMessages) {
-          if (msg.info.role !== "user" || msg.info.id <= lastFinished.id) continue
-          for (const part of msg.parts) {
-            if (part.type !== "text" || part.ignored || part.synthetic) continue
-            if (!part.text.trim()) continue
-            part.text = [
-              "<system-reminder>",
-              "The user sent the following message:",
-              part.text,
-              "",
-              "Please address this message and continue with your tasks.",
-              "</system-reminder>",
-            ].join("\n")
+        for (const msg of msgs) {
+          // Only clone messages that will be modified
+          if (msg.info.role === "user" && msg.info.id > lastFinished.id) {
+            const clonedMsg = { ...msg, parts: [...msg.parts] }
+            let hasModification = false
+
+            for (let i = 0; i < clonedMsg.parts.length; i++) {
+              const part = clonedMsg.parts[i]
+              if (part.type === "text" && !part.ignored && !part.synthetic && part.text.trim()) {
+                hasModification = true
+                clonedMsg.parts[i] = {
+                  ...part,
+                  text: [
+                    "<system-reminder>",
+                    "The user sent the following message:",
+                    part.text,
+                    "",
+                    "Please address this message and continue with your tasks.",
+                    "</system-reminder>",
+                  ].join("\n"),
+                }
+              }
+            }
+
+            sessionMessages.push(hasModification ? clonedMsg : msg)
+          } else {
+            sessionMessages.push(msg)
           }
         }
       }
