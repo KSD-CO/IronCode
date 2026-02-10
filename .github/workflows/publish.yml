@@ -60,6 +60,14 @@ jobs:
 
       - uses: ./.github/actions/setup-bun
 
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build native Rust library
+        run: |
+          cd packages/ironcode/native/tool
+          cargo build --release
+
       - name: Build
         id: build
         run: |
