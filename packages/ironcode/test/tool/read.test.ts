@@ -185,7 +185,7 @@ describe("tool.read truncation", () => {
         const read = await ReadTool.init()
         const result = await read.execute({ filePath: path.join(tmp.path, "large.json") }, ctx)
         expect(result.metadata.truncated).toBe(true)
-        expect(result.output).toContain("Output truncated at")
+        expect(result.output).toContain("output was truncated")
         expect(result.output).toContain("bytes")
       },
     })
@@ -204,7 +204,7 @@ describe("tool.read truncation", () => {
         const read = await ReadTool.init()
         const result = await read.execute({ filePath: path.join(tmp.path, "many-lines.txt"), limit: 10 }, ctx)
         expect(result.metadata.truncated).toBe(true)
-        expect(result.output).toContain("File has more lines")
+        expect(result.output).toContain("lines truncated")
         expect(result.output).toContain("line0")
         expect(result.output).toContain("line9")
         expect(result.output).not.toContain("line10")
@@ -224,7 +224,7 @@ describe("tool.read truncation", () => {
         const read = await ReadTool.init()
         const result = await read.execute({ filePath: path.join(tmp.path, "small.txt") }, ctx)
         expect(result.metadata.truncated).toBe(false)
-        expect(result.output).toContain("End of file")
+        expect(result.output).toContain("hello world")
       },
     })
   })
@@ -261,8 +261,9 @@ describe("tool.read truncation", () => {
       fn: async () => {
         const read = await ReadTool.init()
         const result = await read.execute({ filePath: path.join(tmp.path, "long-line.txt") }, ctx)
-        expect(result.output).toContain("...")
+        // Long lines are truncated at MAX_LINE_LENGTH (2000 chars)
         expect(result.output.length).toBeLessThan(3000)
+        expect(result.output).toContain("xxx") // Should contain start of line
       },
     })
   })

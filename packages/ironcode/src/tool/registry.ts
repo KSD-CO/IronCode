@@ -41,9 +41,26 @@ export namespace ToolRegistry {
     if (matches.length) await Config.waitForDependencies()
     for (const match of matches) {
       const namespace = path.basename(match, path.extname(match))
-      const mod = await import(match)
-      for (const [id, def] of Object.entries<ToolDefinition>(mod)) {
-        custom.push(fromPlugin(id === "default" ? namespace : `${namespace}_${id}`, def))
+      try {
+        const mod = await import(match)
+        for (const [id, def] of Object.entries<ToolDefinition>(mod)) {
+          custom.push(fromPlugin(id === "default" ? namespace : `${namespace}_${id}`, def))
+        }
+      } catch (error) {
+        log.error(`Failed to load custom tool from ${match}`, { error })
+        // Still register the tool with a placeholder definition so it appears in ids()
+        custom.push({
+          id: namespace,
+          init: async () => ({
+            parameters: z.object({}),
+            description: `Failed to load: ${error instanceof Error ? error.message : String(error)}`,
+            execute: async () => ({
+              title: "Error",
+              output: `This tool failed to load: ${error instanceof Error ? error.message : String(error)}`,
+              metadata: {},
+            }),
+          }),
+        })
       }
     }
 

@@ -9,6 +9,7 @@ import { Identifier } from "../id/id"
 import { assertExternalDirectory } from "./external-directory"
 import { InstructionPrompt } from "../session/instruction"
 import { readRawFFI, fileExistsFFI } from "./ffi"
+import { Truncate } from "./truncation"
 
 const DEFAULT_READ_LIMIT = 2000
 const MAX_LINE_LENGTH = 2000
@@ -102,6 +103,40 @@ export const ReadTool = Tool.define("read", {
     FileTime.read(ctx.sessionID, filepath)
 
     let output = numberedLines
+
+    // Apply truncation message if content was truncated
+    if (truncated) {
+      // Create full numbered content starting from offset for Truncate.output to properly calculate what was removed
+      const fullNumberedContent = lines
+        .slice(startLine) // Start from offset
+        .map((line, index) => {
+          const lineNumber = startLine + index + 1
+          const truncatedLine = line.length > MAX_LINE_LENGTH ? line.slice(0, MAX_LINE_LENGTH) : line
+          return `${String(lineNumber).padStart(5, "0")}| ${truncatedLine}`
+        })
+        .join("\n")
+
+      const truncateResult = await Truncate.output(fullNumberedContent, {
+        maxLines: limit,
+        maxBytes: MAX_BYTES,
+      })
+      output = truncateResult.content
+    }
+
+    if (instructions.length > 0) {
+      output += `\n\n<system-reminder>\n${instructions.map((i) => i.content).join("\n\n")}\n</system-reminder>`
+    }
+
+    return {
+      title,
+      output,
+      metadata: {
+        preview: numberedLines.split("\n").slice(0, 20).join("\n"),
+        truncated,
+        ...(instructions.length > 0 && { loaded: instructions.map((i) => i.filepath) }),
+      },
+    }
+
     if (instructions.length > 0) {
       output += `\n\n<system-reminder>\n${instructions.map((i) => i.content).join("\n\n")}\n</system-reminder>`
     }

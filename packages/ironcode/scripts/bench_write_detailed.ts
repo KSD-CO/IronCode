@@ -1,4 +1,4 @@
-import { writeFFI } from "../src/tool/ffi"
+import { writeRawFFI } from "../src/tool/ffi"
 import { writeFileSync, existsSync, unlinkSync } from "fs"
 import { join } from "path"
 
@@ -14,7 +14,7 @@ async function benchmark(content: string, label: string, iterations = 50) {
 
   // Warm up
   for (let i = 0; i < 3; i++) {
-    writeFFI(testFile, content)
+    writeRawFFI(testFile, content)
     writeFileSync(testFile, content)
   }
 
@@ -22,7 +22,7 @@ async function benchmark(content: string, label: string, iterations = 50) {
   for (let i = 0; i < iterations; i++) {
     const memBefore = process.memoryUsage().heapUsed
     const start = performance.now()
-    writeFFI(testFile, content)
+    writeRawFFI(testFile, content)
     const end = performance.now()
     const memAfter = process.memoryUsage().heapUsed
     ffiTimes.push(end - start)

@@ -14,6 +14,14 @@ const lib = dlopen(libPath, {
     args: [FFIType.cstring, FFIType.cstring, FFIType.cstring],
     returns: FFIType.ptr,
   },
+  fuzzy_search_ffi: {
+    args: [FFIType.cstring, FFIType.cstring, FFIType.i32],
+    returns: FFIType.ptr,
+  },
+  fuzzy_search_raw_ffi: {
+    args: [FFIType.cstring, FFIType.cstring, FFIType.i32],
+    returns: FFIType.ptr,
+  },
   ls_ffi: {
     args: [FFIType.cstring, FFIType.cstring],
     returns: FFIType.ptr,
@@ -24,10 +32,6 @@ const lib = dlopen(libPath, {
   },
   read_raw_ffi: {
     args: [FFIType.cstring],
-    returns: FFIType.ptr,
-  },
-  write_ffi: {
-    args: [FFIType.cstring, FFIType.cstring],
     returns: FFIType.ptr,
   },
   write_raw_ffi: {
@@ -58,6 +62,14 @@ const lib = dlopen(libPath, {
     args: [FFIType.cstring, FFIType.cstring],
     returns: FFIType.i32,
   },
+  parse_bash_command_ffi: {
+    args: [FFIType.cstring, FFIType.cstring],
+    returns: FFIType.ptr,
+  },
+  file_list_ffi: {
+    args: [FFIType.cstring, FFIType.cstring, FFIType.bool, FFIType.bool, FFIType.i32],
+    returns: FFIType.ptr,
+  },
   free_string: {
     args: [FFIType.ptr],
     returns: FFIType.void,
@@ -83,6 +95,37 @@ export function grepFFI(pattern: string, searchPath: string = ".", includeGlob?:
   lib.symbols.free_string(ptr)
 
   return JSON.parse(jsonStr)
+}
+
+export function fuzzySearchFFI(query: string, items: string[], limit?: number): string[] {
+  const itemsJson = JSON.stringify(items)
+  const limitValue = limit ?? -1 // -1 means no limit in Rust
+  const ptr = lib.symbols.fuzzy_search_ffi(Buffer.from(query + "\0"), Buffer.from(itemsJson + "\0"), limitValue)
+  if (!ptr) throw new Error("fuzzy_search_ffi returned null")
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  return JSON.parse(jsonStr)
+}
+
+export function fuzzySearchRawFFI(query: string, items: string[], limit?: number): string[] {
+  // Join items with newlines (avoid JSON serialization)
+  const itemsNewlineSeparated = items.join("\n")
+  const limitValue = limit ?? -1 // -1 means no limit in Rust
+
+  const ptr = lib.symbols.fuzzy_search_raw_ffi(
+    Buffer.from(query + "\0"),
+    Buffer.from(itemsNewlineSeparated + "\0"),
+    limitValue,
+  )
+  if (!ptr) throw new Error("fuzzy_search_raw_ffi returned null")
+
+  const resultStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  // Parse newline-separated results (much faster than JSON)
+  return resultStr ? resultStr.split("\n") : []
 }
 
 export function lsFFI(searchPath: string, ignorePatterns: string[] = []) {
@@ -117,17 +160,7 @@ export function readRawFFI(filepath: string): string {
   return content
 }
 
-export function writeFFI(filepath: string, content: string) {
-  const ptr = lib.symbols.write_ffi(Buffer.from(filepath + "\0"), Buffer.from(content + "\0"))
-  if (!ptr) throw new Error("write_ffi returned null")
-
-  const jsonStr = new CString(ptr).toString()
-  lib.symbols.free_string(ptr)
-
-  return JSON.parse(jsonStr)
-}
-
-// Optimized write that skips JSON serialization - returns success code
+// Write file with automatic parent directory creation
 export function writeRawFFI(filepath: string, content: string): boolean {
   const result = lib.symbols.write_raw_ffi(Buffer.from(filepath + "\0"), Buffer.from(content + "\0"))
   if (result !== 0) {
@@ -227,4 +260,53 @@ export function extractZipFFI(zipPath: string, destDir: string): void {
   if (result !== 0) {
     throw new Error(`Failed to extract zip: ${zipPath} to ${destDir}`)
   }
+}
+
+// Parse bash command using tree-sitter
+export interface BashParseResult {
+  directories: string[]
+  patterns: string[]
+  always: string[]
+}
+
+export function parseBashCommandFFI(command: string, cwd: string): BashParseResult {
+  const ptr = lib.symbols.parse_bash_command_ffi(Buffer.from(command + "\0"), Buffer.from(cwd + "\0"))
+  if (!ptr) throw new Error("parse_bash_command_ffi returned null")
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  return JSON.parse(jsonStr)
+}
+
+// List files using ignore crate (replacement for ripgrep --files)
+export function fileListFFI(
+  cwd: string,
+  globs: string[] = [],
+  hidden: boolean = false,
+  follow: boolean = false,
+  maxDepth?: number,
+): string[] {
+  const globsJson = JSON.stringify(globs)
+  const maxDepthValue = maxDepth ?? -1 // -1 means no limit
+  const ptr = lib.symbols.file_list_ffi(
+    Buffer.from(cwd + "\0"),
+    Buffer.from(globsJson + "\0"),
+    hidden,
+    follow,
+    maxDepthValue,
+  )
+  if (!ptr) throw new Error("file_list_ffi returned null")
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  const result = JSON.parse(jsonStr)
+
+  // Check if result contains an error
+  if (result.error) {
+    throw new Error(result.error)
+  }
+
+  return result
 }

@@ -1,4 +1,4 @@
-import { writeFFI } from "../src/tool/ffi"
+import { writeRawFFI } from "../src/tool/ffi"
 import { existsSync, readFileSync, unlinkSync } from "fs"
 import { join } from "path"
 
@@ -11,13 +11,13 @@ try {
   }
 
   console.log("Test 1: Write new file")
-  const result1 = writeFFI(testFile, "Hello, World!\nLine 2\nLine 3")
+  const result1 = writeRawFFI(testFile, "Hello, World!\nLine 2\nLine 3")
   console.log("Result:", result1)
   console.log("File exists:", existsSync(testFile))
   console.log("Content:", readFileSync(testFile, "utf-8"))
 
   console.log("\nTest 2: Overwrite existing file")
-  const result2 = writeFFI(testFile, "Updated content\nNew line")
+  const result2 = writeRawFFI(testFile, "Updated content\nNew line")
   console.log("Result:", result2)
   console.log("Content:", readFileSync(testFile, "utf-8"))
 
@@ -26,7 +26,7 @@ try {
     .fill(0)
     .map((_, i) => `Line ${i + 1}`)
     .join("\n")
-  const result3 = writeFFI(testFile, largeContent)
+  const result3 = writeRawFFI(testFile, largeContent)
   console.log("Result:", result3)
   console.log("File size:", readFileSync(testFile, "utf-8").length, "bytes")
 

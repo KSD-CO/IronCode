@@ -38,28 +38,31 @@ IronCode is a **high-performance fork** of [OpenCode](https://github.com/anomaly
 
 IronCode rewrites key operations in native Rust with **measured real-world performance gains**:
 
-| Operation                 | TypeScript/Node | Rust Native | **Speedup**      | Notes                  |
-| ------------------------- | --------------- | ----------- | ---------------- | ---------------------- |
-| **Edit Tool (10 lines)**  | 61.57 µs        | 30.06 µs    | **2.05x faster** | All 9 strategies       |
-| **Edit Tool (100 lines)** | 419.84 µs       | 250.86 µs   | **1.67x faster** | Consistent performance |
-| **Edit Tool (1K lines)**  | 6.17 ms         | 2.78 ms     | **2.22x faster** | Scales well            |
-| **Edit Tool (5K lines)**  | 126.06 ms       | 29.67 ms    | **4.25x faster** | 76.5% reduction        |
-| **Edit Tool (10K lines)** | 451.59 ms       | 74.88 ms    | **6.03x faster** | 83.4% reduction        |
-| **File Glob (100 files)** | 9.74 ms         | 3.55 ms     | **2.74x faster** | Zero spawn overhead    |
-| **Grep Search**           | 34.84 ms        | 19.35 ms    | **1.80x faster** | Pattern: "function"    |
-| **VCS Info (git)**        | 17.25 ms        | 9.43 ms     | **1.83x faster** | libgit2, no spawning   |
-| **Archive (small, 10)**   | 5.48 ms         | 1.93 ms     | **2.8x faster**  | s-zip vs unzip         |
-| **Archive (medium, 100)** | 90.43 ms        | 18.07 ms    | **5.0x faster**  | s-zip vs unzip         |
-| **Archive (large, 500)**  | 740.29 ms       | 142.88 ms   | **5.2x faster**  | s-zip vs unzip         |
-| **Read (500 lines)**      | 18 µs           | 27 µs       | 0.67x            | Raw FFI                |
-| **Read (1K lines)**       | 29 µs           | 47 µs       | 0.62x            | Raw FFI                |
-| **Read (5K lines)**       | 120 µs          | 194 µs      | 0.62x            | Raw FFI                |
-| **Write (1K lines)**      | 49 µs           | 139 µs      | 0.35x            | Raw FFI                |
-| **Write (5K lines)**      | 135 µs          | 408 µs      | 0.33x            | Raw FFI                |
+| Operation                 | TypeScript/Node | Rust Native | **Speedup**        | Notes                  |
+| ------------------------- | --------------- | ----------- | ------------------ | ---------------------- |
+| **Edit Tool (10 lines)**  | 61.57 µs        | 30.06 µs    | **2.05x faster**   | All 9 strategies       |
+| **Edit Tool (100 lines)** | 419.84 µs       | 250.86 µs   | **1.67x faster**   | Consistent performance |
+| **Edit Tool (1K lines)**  | 6.17 ms         | 2.78 ms     | **2.22x faster**   | Scales well            |
+| **Edit Tool (5K lines)**  | 126.06 ms       | 29.67 ms    | **4.25x faster**   | 76.5% reduction        |
+| **Edit Tool (10K lines)** | 451.59 ms       | 74.88 ms    | **6.03x faster**   | 83.4% reduction        |
+| **Bash Parser**           | ~1-2 ms (WASM)  | 0.020 ms    | **50-100x faster** | Native tree-sitter     |
+| **File Listing**          | 15.80 ms        | 11.50 ms    | **1.37x faster**   | Native ignore crate    |
+| **File Glob (100 files)** | 9.74 ms         | 3.55 ms     | **2.74x faster**   | Zero spawn overhead    |
+| **Grep Search**           | 34.84 ms        | 19.35 ms    | **1.80x faster**   | Pattern: "function"    |
+| **VCS Info (git)**        | 17.25 ms        | 9.43 ms     | **1.83x faster**   | libgit2, no spawning   |
+| **Archive (small, 10)**   | 5.48 ms         | 1.93 ms     | **2.8x faster**    | s-zip vs unzip         |
+| **Archive (medium, 100)** | 90.43 ms        | 18.07 ms    | **5.0x faster**    | s-zip vs unzip         |
+| **Archive (large, 500)**  | 740.29 ms       | 142.88 ms   | **5.2x faster**    | s-zip vs unzip         |
+| **Read (500 lines)**      | 18 µs           | 27 µs       | 0.67x              | Raw FFI                |
+| **Read (1K lines)**       | 29 µs           | 47 µs       | 0.62x              | Raw FFI                |
+| **Read (5K lines)**       | 120 µs          | 194 µs      | 0.62x              | Raw FFI                |
+| **Write (1K lines)**      | 49 µs           | 139 µs      | 0.35x              | Raw FFI                |
+| **Write (5K lines)**      | 135 µs          | 408 µs      | 0.33x              | Raw FFI                |
 
 **Key Insights:**
 
 - ✅ **Edit Tool**: 2-6x faster across all file sizes with all 9 smart replacement strategies
+- ✅ **Bash Parser**: 50-100x faster using native tree-sitter vs WASM (0.020ms per command, no initialization overhead)
 - ✅ **Glob/Grep**: 1.8-2.7x faster by eliminating process spawn overhead
 - ✅ **VCS Info**: 1.83x faster using libgit2 directly (no process spawning, 45% latency reduction)
 - ✅ **Archive Extraction**: 3-5x faster using s-zip vs shell commands (unzip/PowerShell)
@@ -71,9 +74,11 @@ IronCode rewrites key operations in native Rust with **measured real-world perfo
 **Native Rust Components:**
 
 - ✅ **Edit Tool**: 9 smart replacement strategies with fuzzy matching (complex compute justifies FFI)
+- ✅ **File Listing**: Native ignore crate for fast directory traversal (eliminates process spawn)
 - ✅ **File Search (Glob)**: Pattern matching with gitignore support (eliminates process spawn)
 - ✅ **Code Search (Grep)**: Regex search across large codebases (eliminates process spawn)
 - ✅ **Archive Extraction**: ZIP file extraction using s-zip streaming reader (3-5x faster, cross-platform)
+- ✅ **Bash Parser**: Native tree-sitter bash command parsing (50-100x faster than WASM, 0.020ms per command)
 - ✅ **File I/O**: Native read/write with optimized raw FFI
 - ✅ **Directory Listing**: Fast recursive directory traversal
 - ✅ **VCS Info**: Lightning-fast git repository information (libgit2 vs subprocess)
@@ -227,6 +232,9 @@ cargo bench
 # Edit tool performance comparison (TS vs Rust)
 bun ./script/bench-edit.ts
 
+# Bash parser performance (Native Rust tree-sitter)
+bun --expose-gc ./script/bench-bash-parse-simple.ts
+
 # VCS performance comparison (TS vs Rust)
 bun ./script/bench-vcs.ts
 
@@ -267,6 +275,7 @@ IronCode is built with:
 │  ┌────────────▼────────────────────┐   │
 │  │     Native Rust Library         │   │
 │  │  • Edit strategies (9 types)    │   │
+│  │  • Bash parser (tree-sitter)    │   │
 │  │  • Archive extraction (s-zip)   │   │
 │  │  • File I/O (zero-copy)         │   │
 │  │  • Glob/Grep (optimized)        │   │

@@ -9,6 +9,7 @@ import { $ } from "bun"
 
 import { ZipReader, BlobReader, BlobWriter } from "@zip.js/zip.js"
 import { Log } from "@/util/log"
+import { fileListFFI } from "@/tool/ffi"
 
 export namespace Ripgrep {
   const log = Log.create({ service: "ripgrep" })
@@ -213,59 +214,34 @@ export namespace Ripgrep {
   }) {
     input.signal?.throwIfAborted()
 
-    const args = [await filepath(), "--files", "--glob=!.git/*"]
-    if (input.follow) args.push("--follow")
-    if (input.hidden !== false) args.push("--hidden")
-    if (input.maxDepth !== undefined) args.push(`--max-depth=${input.maxDepth}`)
-    if (input.glob) {
-      for (const g of input.glob) {
-        args.push(`--glob=${g}`)
-      }
-    }
-
-    // Bun.spawn should throw this, but it incorrectly reports that the executable does not exist.
-    // See https://github.com/oven-sh/bun/issues/24012
-    if (!(await fs.stat(input.cwd).catch(() => undefined))?.isDirectory()) {
-      throw Object.assign(new Error(`No such file or directory: '${input.cwd}'`), {
-        code: "ENOENT",
-        errno: -2,
-        path: input.cwd,
-      })
-    }
-
-    const proc = Bun.spawn(args, {
-      cwd: input.cwd,
-      stdout: "pipe",
-      stderr: "ignore",
-      maxBuffer: 1024 * 1024 * 20,
-      signal: input.signal,
-    })
-
-    const reader = proc.stdout.getReader()
-    const decoder = new TextDecoder()
-    let buffer = ""
+    // Convert glob patterns to include .git exclusion
+    const globs = input.glob ? [...input.glob, "!.git/*"] : ["!.git/*"]
 
     try {
-      while (true) {
+      // Use native Rust FFI for file listing (faster than spawning ripgrep)
+      const files = fileListFFI(
+        input.cwd,
+        globs,
+        input.hidden ?? true, // Default to showing hidden files (matches ripgrep --hidden)
+        input.follow ?? false,
+        input.maxDepth,
+      )
+
+      // Yield files one by one to maintain generator interface
+      for (const file of files) {
         input.signal?.throwIfAborted()
-
-        const { done, value } = await reader.read()
-        if (done) break
-
-        buffer += decoder.decode(value, { stream: true })
-        // Handle both Unix (\n) and Windows (\r\n) line endings
-        const lines = buffer.split(/\r?\n/)
-        buffer = lines.pop() || ""
-
-        for (const line of lines) {
-          if (line) yield line
-        }
+        yield file
       }
-
-      if (buffer) yield buffer
-    } finally {
-      reader.releaseLock()
-      await proc.exited
+    } catch (error: any) {
+      // Convert native errors to match Bun.spawn error format
+      if (error.message && error.message.includes("No such file or directory")) {
+        throw Object.assign(new Error(`No such file or directory: '${input.cwd}'`), {
+          code: "ENOENT",
+          errno: -2,
+          path: input.cwd,
+        })
+      }
+      throw error
     }
 
     input.signal?.throwIfAborted()

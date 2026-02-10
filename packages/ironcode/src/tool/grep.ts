@@ -35,6 +35,15 @@ export const GrepTool = Tool.define("grep", {
     searchPath = path.isAbsolute(searchPath) ? searchPath : path.resolve(Instance.directory, searchPath)
     await assertExternalDirectory(ctx, searchPath, { kind: "directory" })
 
-    return grepFFI(params.pattern, searchPath, params.include)
+    const result = grepFFI(params.pattern, searchPath, params.include)
+
+    // Map Rust's 'count' field to 'matches' for compatibility
+    return {
+      ...result,
+      metadata: {
+        ...result.metadata,
+        matches: result.metadata.count,
+      },
+    }
   },
 })

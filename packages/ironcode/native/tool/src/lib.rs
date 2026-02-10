@@ -3,17 +3,19 @@ use std::os::raw::c_char;
 
 pub mod archive;
 pub mod edit;
+pub mod file_list;
+pub mod fuzzy;
 pub mod glob;
 pub mod grep;
 pub mod ls;
 pub mod read;
+pub mod shell;
 pub mod stats;
 pub mod terminal;
 pub mod types;
 pub mod vcs;
 #[cfg(feature = "webfetch")]
 pub mod webfetch;
-pub mod write;
 
 #[no_mangle]
 pub extern "C" fn glob_ffi(pattern: *const c_char, search: *const c_char) -> *mut c_char {
@@ -154,32 +156,8 @@ pub extern "C" fn grep_ffi(
     }
 }
 
-#[no_mangle]
-pub extern "C" fn write_ffi(filepath: *const c_char, content: *const c_char) -> *mut c_char {
-    let filepath_str = unsafe {
-        if filepath.is_null() {
-            return std::ptr::null_mut();
-        }
-        CStr::from_ptr(filepath).to_str().unwrap_or("")
-    };
-
-    let content_str = unsafe {
-        if content.is_null() {
-            return std::ptr::null_mut();
-        }
-        CStr::from_ptr(content).to_str().unwrap_or("")
-    };
-
-    match write::execute(filepath_str, content_str) {
-        Ok(output) => match serde_json::to_string(&output) {
-            Ok(json) => CString::new(json).unwrap().into_raw(),
-            Err(_) => std::ptr::null_mut(),
-        },
-        Err(_) => std::ptr::null_mut(),
-    }
-}
-
-// Optimized write that returns success code instead of JSON
+// Write file with automatic parent directory creation
+// Returns 0 on success, -1 on error
 #[no_mangle]
 pub extern "C" fn write_raw_ffi(filepath: *const c_char, content: *const c_char) -> i32 {
     let filepath_str = unsafe {
@@ -195,6 +173,13 @@ pub extern "C" fn write_raw_ffi(filepath: *const c_char, content: *const c_char)
         }
         CStr::from_ptr(content).to_str().unwrap_or("")
     };
+
+    // Create parent directories if they don't exist
+    if let Some(parent) = std::path::Path::new(filepath_str).parent() {
+        if let Err(_) = std::fs::create_dir_all(parent) {
+            return -1;
+        }
+    }
 
     match std::fs::write(filepath_str, content_str) {
         Ok(_) => 0,   // Success
@@ -489,6 +474,210 @@ pub extern "C" fn extract_zip_ffi(zip_path: *const c_char, dest_dir: *const c_ch
     match archive::extract_zip(zip_path_str, dest_dir_str) {
         Ok(_) => 0,   // Success
         Err(_) => -1, // Error
+    }
+}
+
+// Fuzzy search FFI
+#[no_mangle]
+pub extern "C" fn fuzzy_search_ffi(
+    query: *const c_char,
+    items_json: *const c_char,
+    limit: i32,
+) -> *mut c_char {
+    let query_str = unsafe {
+        if query.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(query).to_str().unwrap_or("")
+    };
+
+    let items_str = unsafe {
+        if items_json.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(items_json).to_str().unwrap_or("[]")
+    };
+
+    // Parse JSON array of strings
+    let items: Vec<String> = match serde_json::from_str(items_str) {
+        Ok(items) => items,
+        Err(_) => return std::ptr::null_mut(),
+    };
+
+    // Convert limit (-1 means no limit)
+    let limit_opt = if limit < 0 {
+        None
+    } else {
+        Some(limit as usize)
+    };
+
+    // Perform fuzzy search
+    let results = fuzzy::search(query_str, &items, limit_opt);
+
+    // Serialize results back to JSON
+    match serde_json::to_string(&results) {
+        Ok(json) => CString::new(json).unwrap().into_raw(),
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+// Optimized fuzzy search FFI - uses newline-separated input/output to avoid JSON overhead
+// NOTE: Currently NOT used in production - fuzzysort (JavaScript) is faster
+// Kept for future optimization attempts. See RUST_MIGRATION_PLAN.md section 2.1
+#[no_mangle]
+pub extern "C" fn fuzzy_search_raw_ffi(
+    query: *const c_char,
+    items_newline_separated: *const c_char,
+    limit: i32,
+) -> *mut c_char {
+    let query_str = unsafe {
+        if query.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(query).to_str().unwrap_or("")
+    };
+
+    let items_str = unsafe {
+        if items_newline_separated.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(items_newline_separated)
+            .to_str()
+            .unwrap_or("")
+    };
+
+    // Parse newline-separated items (much faster than JSON)
+    let items: Vec<String> = items_str.lines().map(|s| s.to_string()).collect();
+
+    // Convert limit (-1 means no limit)
+    let limit_opt = if limit < 0 {
+        None
+    } else {
+        Some(limit as usize)
+    };
+
+    // Perform fuzzy search and return raw newline-separated string
+    let result = fuzzy::search_raw(query_str, &items, limit_opt);
+
+    match CString::new(result) {
+        Ok(cstring) => cstring.into_raw(),
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+// Fuzzy search with nucleo algorithm (Helix editor - closest to fuzzysort performance)
+// NOTE: Currently NOT used in production - kept for future optimization
+#[no_mangle]
+pub extern "C" fn fuzzy_search_nucleo_ffi(
+    query: *const c_char,
+    items_newline_separated: *const c_char,
+    limit: i32,
+) -> *mut c_char {
+    let query_str = unsafe {
+        if query.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(query).to_str().unwrap_or("")
+    };
+
+    let items_str = unsafe {
+        if items_newline_separated.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(items_newline_separated)
+            .to_str()
+            .unwrap_or("")
+    };
+
+    let items: Vec<String> = items_str.lines().map(|s| s.to_string()).collect();
+    let limit_opt = if limit < 0 {
+        None
+    } else {
+        Some(limit as usize)
+    };
+
+    let results = fuzzy::search_nucleo(query_str, &items, limit_opt);
+    let result_str = results.join("\n");
+
+    match CString::new(result_str) {
+        Ok(cstring) => cstring.into_raw(),
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+// Bash command parsing FFI
+#[no_mangle]
+pub extern "C" fn parse_bash_command_ffi(
+    command: *const c_char,
+    cwd: *const c_char,
+) -> *mut c_char {
+    let command_str = unsafe {
+        if command.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(command).to_str().unwrap_or("")
+    };
+
+    let cwd_str = unsafe {
+        if cwd.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(cwd).to_str().unwrap_or(".")
+    };
+
+    match shell::parse_bash_command(command_str, cwd_str) {
+        Ok(result) => match serde_json::to_string(&result) {
+            Ok(json) => CString::new(json).unwrap().into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        },
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+// File listing FFI (replacement for ripgrep --files)
+#[no_mangle]
+pub extern "C" fn file_list_ffi(
+    cwd: *const c_char,
+    globs_json: *const c_char,
+    hidden: bool,
+    follow: bool,
+    max_depth: i32,
+) -> *mut c_char {
+    let cwd_str = unsafe {
+        if cwd.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(cwd).to_str().unwrap_or(".")
+    };
+
+    let globs: Vec<String> = unsafe {
+        if globs_json.is_null() {
+            vec![]
+        } else {
+            let json_str = CStr::from_ptr(globs_json).to_str().unwrap_or("[]");
+            serde_json::from_str(json_str).unwrap_or_else(|_| vec![])
+        }
+    };
+
+    let max_depth_opt = if max_depth < 0 {
+        None
+    } else {
+        Some(max_depth as usize)
+    };
+
+    match file_list::list_files(cwd_str, globs, hidden, follow, max_depth_opt) {
+        Ok(files) => match serde_json::to_string(&files) {
+            Ok(json) => CString::new(json).unwrap().into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        },
+        Err(err) => {
+            // Return error as JSON
+            let error_obj = serde_json::json!({ "error": err });
+            match serde_json::to_string(&error_obj) {
+                Ok(json) => CString::new(json).unwrap().into_raw(),
+                Err(_) => std::ptr::null_mut(),
+            }
+        }
     }
 }
 
