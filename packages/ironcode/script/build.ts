@@ -204,7 +204,16 @@ if (Script.release) {
       archives.push(`./dist/${key}.tar.gz`)
     } else {
       const archivePath = `../../${key}.zip`
-      await $`zip -r ${archivePath} *`.cwd(`dist/${key}/bin`)
+      const binDir = path.resolve(`dist/${key}/bin`)
+      const zipPath = path.resolve(`dist/${key}.zip`)
+
+      if (process.platform === "win32") {
+        // Use PowerShell on Windows
+        await $`powershell -Command "Compress-Archive -Path '${binDir}/*' -DestinationPath '${zipPath}' -Force"`
+      } else {
+        // Use zip on macOS/Linux
+        await $`zip -r ${archivePath} *`.cwd(`dist/${key}/bin`)
+      }
       archives.push(`./dist/${key}.zip`)
     }
   }
