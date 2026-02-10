@@ -198,16 +198,33 @@ if (!Script.preview) {
     "",
   ].join("\n")
 
-  const token = process.env.GITHUB_TOKEN
-  if (!token) {
-    console.error("GITHUB_TOKEN is required to update homebrew tap")
+  // Use HOMEBREW_TAP_TOKEN if available, otherwise fall back to GITHUB_TOKEN
+  const token = process.env.HOMEBREW_TAP_TOKEN || process.env.GITHUB_TOKEN
+
+  // Skip Homebrew tap publishing if SKIP_HOMEBREW is set
+  const skipHomebrew = process.env.SKIP_HOMEBREW === "true"
+
+  if (skipHomebrew) {
+    console.log("Skipping Homebrew tap publishing (SKIP_HOMEBREW=true)")
+  } else if (!token) {
+    console.error("HOMEBREW_TAP_TOKEN or GITHUB_TOKEN is required to update homebrew tap")
+    console.error("Set SKIP_HOMEBREW=true to skip Homebrew publishing")
     process.exit(1)
+  } else {
+    try {
+      const tap = `https://x-access-token:${token}@github.com/KSD-CO/homebrew-tap.git`
+      await $`rm -rf ./dist/homebrew-tap`
+      await $`git clone ${tap} ./dist/homebrew-tap`
+      await Bun.file("./dist/homebrew-tap/ironcode.rb").write(homebrewFormula)
+      await $`cd ./dist/homebrew-tap && git add ironcode.rb`
+      await $`cd ./dist/homebrew-tap && git commit -m "Update to v${Script.version}"`
+      await $`cd ./dist/homebrew-tap && git push`
+      console.log("Successfully published to Homebrew tap")
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      console.error("Failed to publish to Homebrew tap:", message)
+      console.error("You may need to set HOMEBREW_TAP_TOKEN with proper permissions")
+      // Don't fail the entire publish if Homebrew tap fails
+    }
   }
-  const tap = `https://x-access-token:${token}@github.com/KSD-CO/homebrew-tap.git`
-  await $`rm -rf ./dist/homebrew-tap`
-  await $`git clone ${tap} ./dist/homebrew-tap`
-  await Bun.file("./dist/homebrew-tap/ironcode.rb").write(homebrewFormula)
-  await $`cd ./dist/homebrew-tap && git add ironcode.rb`
-  await $`cd ./dist/homebrew-tap && git commit -m "Update to v${Script.version}"`
-  await $`cd ./dist/homebrew-tap && git push`
 }
