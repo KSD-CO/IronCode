@@ -25,14 +25,14 @@
     },
     "packages/gitlab/ironcode-gitlab-auth": {
       "name": "@gitlab/ironcode-gitlab-auth",
-      "version": "1.5.6",
+      "version": "1.5.7",
       "dependencies": {
         "@ironcode-ai/plugin": "workspace:*",
       },
     },
     "packages/ironcode": {
       "name": "ironcode",
-      "version": "1.5.6",
+      "version": "1.5.7",
       "bin": {
         "ironcode": "./bin/ironcode",
       },
@@ -137,7 +137,7 @@
     },
     "packages/plugin": {
       "name": "@ironcode-ai/plugin",
-      "version": "1.5.6",
+      "version": "1.5.7",
       "dependencies": {
         "@ironcode-ai/sdk": "workspace:*",
         "zod": "catalog:",
@@ -157,7 +157,7 @@
     },
     "packages/sdk/js": {
       "name": "@ironcode-ai/sdk",
-      "version": "1.5.6",
+      "version": "1.5.7",
       "devDependencies": {
         "@hey-api/openapi-ts": "0.90.10",
         "@tsconfig/node22": "catalog:",
@@ -168,7 +168,7 @@
     },
     "packages/slack": {
       "name": "@ironcode-ai/slack",
-      "version": "1.5.6",
+      "version": "1.5.7",
       "dependencies": {
         "@ironcode-ai/sdk": "workspace:*",
         "@slack/bolt": "^3.17.1",
@@ -181,7 +181,7 @@
     },
     "packages/util": {
       "name": "@ironcode-ai/util",
-      "version": "1.5.6",
+      "version": "1.5.7",
       "dependencies": {
         "zod": "catalog:",
       },
