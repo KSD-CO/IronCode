@@ -31,8 +31,13 @@ if (!Script.preview) {
   for (let i = 0; i < 5; i++) {
     try {
       const jqQuery = `.[] | select(.tag_name == "v${Script.version}") | {id, tag_name}`
-      releases = await $`gh api repos/${Script.repository}/releases --jq ${jqQuery}`.json()
-      break
+      const result = await $`gh api repos/${Script.repository}/releases --jq ${jqQuery}`.text()
+
+      // Parse the result - jq may return empty string if no match
+      if (result.trim()) {
+        releases = JSON.parse(result.trim())
+        break
+      }
     } catch (error) {
       if (i === 4) throw error
       await new Promise((resolve) => setTimeout(resolve, 1000))
