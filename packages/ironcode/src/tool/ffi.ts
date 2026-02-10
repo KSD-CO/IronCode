@@ -23,6 +23,25 @@ function resolveLibPath(): string {
 
 const libPath = resolveLibPath()
 
+// Debug logging
+if (process.env.DEBUG_FFI || !fs.existsSync(libPath)) {
+  console.log(`[FFI Debug] Looking for native library at: ${libPath}`)
+  console.log(`[FFI Debug] File exists: ${fs.existsSync(libPath)}`)
+  console.log(`[FFI Debug] execPath: ${process.execPath}`)
+  console.log(`[FFI Debug] import.meta.path: ${import.meta.path}`)
+
+  if (!fs.existsSync(libPath)) {
+    const dir = path.dirname(libPath)
+    console.log(`[FFI Debug] Contents of ${dir}:`)
+    try {
+      const files = fs.readdirSync(dir)
+      files.forEach((f) => console.log(`[FFI Debug]   - ${f}`))
+    } catch (e) {
+      console.log(`[FFI Debug] Could not list directory: ${e}`)
+    }
+  }
+}
+
 const lib = dlopen(libPath, {
   glob_ffi: {
     args: [FFIType.cstring, FFIType.cstring],
