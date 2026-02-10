@@ -24,11 +24,12 @@ if (!Script.preview) {
     await Bun.write(file, body)
     await $`gh release create v${Script.version} -d --title "v${Script.version}" --notes-file ${file}`
   }
-  // Get release info - need numeric id for tauri-action
-  const release =
-    await $`gh api repos/${Script.repository}/releases/tags/v${Script.version} --jq '{id, tag_name}'`.json()
-  output.push(`release=${release.id}`)
-  output.push(`tag=${release.tag_name}`)
+
+  // Get release info from the list since draft releases may not be accessible by tag immediately
+  const jqQuery = `.[] | select(.tag_name == "v${Script.version}") | {id, tag_name}`
+  const releases = await $`gh api repos/${Script.repository}/releases --jq ${jqQuery}`.json()
+  output.push(`release=${releases.id}`)
+  output.push(`tag=${releases.tag_name}`)
 }
 
 if (process.env.GITHUB_OUTPUT) {
