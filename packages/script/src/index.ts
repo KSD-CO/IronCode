@@ -36,28 +36,32 @@ const VERSION = await (async () => {
   if (IS_PREVIEW) return `0.0.0-${CHANNEL}-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "")}`
 
   // Try to get version from GitHub releases
-  const version = await fetch(`https://api.github.com/repos/${env.GITHUB_REPOSITORY}/releases?per_page=1`)
-    .then((res) => {
-      if (!res.ok) throw new Error(res.statusText)
-      return res.json()
-    })
-    .then((data: any) => {
-      const releases = data as Array<{ tag_name: string; draft: boolean }>
-      const latestRelease = releases.find((r) => !r.draft)
-      if (latestRelease) {
-        return latestRelease.tag_name.replace(/^v/, "")
-      }
+  let version: string
+  try {
+    const data = await fetch(`https://api.github.com/repos/${env.GITHUB_REPOSITORY}/releases?per_page=1`).then(
+      (res) => {
+        if (!res.ok) throw new Error(res.statusText)
+        return res.json()
+      },
+    )
+
+    const releases = data as Array<{ tag_name: string; draft: boolean }>
+    const latestRelease = releases.find((r) => !r.draft)
+
+    if (latestRelease) {
+      version = latestRelease.tag_name.replace(/^v/, "")
+    } else {
       // No releases found, fallback to package.json version
       const pkgPath = path.resolve(import.meta.dir, "../../../packages/ironcode/package.json")
-      const pkg = Bun.file(pkgPath)
-      return pkg.json().then((data: any) => data.version)
-    })
-    .catch(() => {
-      // On any error, fallback to package.json version
-      const pkgPath = path.resolve(import.meta.dir, "../../../packages/ironcode/package.json")
-      const pkg = Bun.file(pkgPath)
-      return pkg.json().then((data: any) => data.version)
-    })
+      const pkgData = await Bun.file(pkgPath).json()
+      version = pkgData.version
+    }
+  } catch (error) {
+    // On any error, fallback to package.json version
+    const pkgPath = path.resolve(import.meta.dir, "../../../packages/ironcode/package.json")
+    const pkgData = await Bun.file(pkgPath).json()
+    version = pkgData.version
+  }
 
   const [major, minor, patch] = version.split(".").map((x: string) => Number(x) || 0)
   const t = env.IRONCODE_BUMP?.toLowerCase()

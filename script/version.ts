@@ -26,8 +26,23 @@ if (!Script.preview) {
   }
 
   // Get release info from the list since draft releases may not be accessible by tag immediately
-  const jqQuery = `.[] | select(.tag_name == "v${Script.version}") | {id, tag_name}`
-  const releases = await $`gh api repos/${Script.repository}/releases --jq ${jqQuery}`.json()
+  // Add retry logic as the release may take a moment to appear in the API
+  let releases: { id: number; tag_name: string } | null = null
+  for (let i = 0; i < 5; i++) {
+    try {
+      const jqQuery = `.[] | select(.tag_name == "v${Script.version}") | {id, tag_name}`
+      releases = await $`gh api repos/${Script.repository}/releases --jq ${jqQuery}`.json()
+      break
+    } catch (error) {
+      if (i === 4) throw error
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+    }
+  }
+
+  if (!releases) {
+    throw new Error(`Failed to find release v${Script.version}`)
+  }
+
   output.push(`release=${releases.id}`)
   output.push(`tag=${releases.tag_name}`)
 }
