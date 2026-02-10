@@ -34,6 +34,8 @@ const IS_PREVIEW = CHANNEL !== "latest"
 const VERSION = await (async () => {
   if (env.IRONCODE_VERSION) return env.IRONCODE_VERSION
   if (IS_PREVIEW) return `0.0.0-${CHANNEL}-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "")}`
+
+  // Try to get version from GitHub releases
   const version = await fetch(`https://api.github.com/repos/${env.GITHUB_REPOSITORY}/releases?per_page=1`)
     .then((res) => {
       if (!res.ok) throw new Error(res.statusText)
@@ -42,9 +44,21 @@ const VERSION = await (async () => {
     .then((data: any) => {
       const releases = data as Array<{ tag_name: string; draft: boolean }>
       const latestRelease = releases.find((r) => !r.draft)
-      if (!latestRelease) throw new Error("No published releases found")
-      return latestRelease.tag_name.replace(/^v/, "")
+      if (latestRelease) {
+        return latestRelease.tag_name.replace(/^v/, "")
+      }
+      // No releases found, fallback to package.json version
+      const pkgPath = path.resolve(import.meta.dir, "../../../packages/ironcode/package.json")
+      const pkg = Bun.file(pkgPath)
+      return pkg.json().then((data: any) => data.version)
     })
+    .catch(() => {
+      // On any error, fallback to package.json version
+      const pkgPath = path.resolve(import.meta.dir, "../../../packages/ironcode/package.json")
+      const pkg = Bun.file(pkgPath)
+      return pkg.json().then((data: any) => data.version)
+    })
+
   const [major, minor, patch] = version.split(".").map((x: string) => Number(x) || 0)
   const t = env.IRONCODE_BUMP?.toLowerCase()
   if (t === "major") return `${major + 1}.0.0`
