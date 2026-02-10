@@ -3,7 +3,7 @@
   "productName": "IronCode",
   "identifier": "ai.ironcode.desktop",
   "bundle": {
-    "createUpdaterArtifacts": false,
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/prod/32x32.png",
       "icons/prod/128x128.png",
@@ -31,7 +31,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEYwMDM5Nzg5OUMzOUExMDQKUldRRW9UbWNpWmNEOENYT01CV0lhOXR1UFhpaXJsK1Z3aU9lZnNtNzE0TDROWVMwVW9XQnFOelkK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDdENTJDRUMxOURCNTREQzQKUldURVRiV2R3YzVTZmFMK2Qrd3pOMWRkRmpIYVo0OTM4ZDE3eng5WG9Md0JURVdmNTFMVkRWMFUK",
       "endpoints": ["https://github.com/KSD-CO/IronCode/releases/latest/download/latest.json"]
     }
   }
