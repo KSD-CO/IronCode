@@ -1,7 +1,7 @@
 {
   "name": "@ironcode-ai/desktop",
   "private": true,
-  "version": "1.1.53",
+  "version": "1.2.0",
   "type": "module",
   "license": "MIT",
   "scripts": {

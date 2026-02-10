@@ -262,6 +262,7 @@ jobs:
 
       - run: ./script/publish.ts
         env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
           IRONCODE_VERSION: ${{ needs.version.outputs.version }}
           IRONCODE_RELEASE: ${{ needs.version.outputs.release }}
           AUR_KEY: ${{ secrets.AUR_KEY }}
