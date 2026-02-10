@@ -40,6 +40,7 @@ jobs:
           ./script/version.ts
         env:
           GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
           IRONCODE_BUMP: ${{ inputs.bump }}
           IRONCODE_VERSION: ${{ inputs.version }}
           IRONCODE_API_KEY: ${{ secrets.IRONCODE_API_KEY }}

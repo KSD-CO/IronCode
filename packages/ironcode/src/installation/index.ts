@@ -236,7 +236,7 @@ export namespace Installation {
         .then((data: any) => data.version)
     }
 
-    return fetch("https://api.github.com/repos/anomalyco/ironcode/releases/latest")
+    return fetch(`https://api.github.com/repos/${process.env.GITHUB_REPOSITORY || "KSD-CO/IronCode"}/releases/latest`)
       .then((res) => {
         if (!res.ok) throw new Error(res.statusText)
         return res.json()

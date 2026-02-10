@@ -12,7 +12,7 @@ type Release = {
 }
 
 export async function getLatestRelease(skip?: string) {
-  const data = await fetch("https://api.github.com/repos/anomalyco/ironcode/releases?per_page=100").then((res) => {
+  const data = await fetch(`https://api.github.com/repos/${Script.repository}/releases?per_page=100`).then((res) => {
     if (!res.ok) throw new Error(res.statusText)
     return res.json()
   })
@@ -43,7 +43,7 @@ export async function getCommits(from: string, to: string): Promise<Commit[]> {
 
   // Get commit data with GitHub usernames from the API
   const compare =
-    await $`gh api "/repos/anomalyco/ironcode/compare/${fromRef}...${toRef}" --jq '.commits[] | {sha: .sha, login: .author.login, message: .commit.message}'`.text()
+    await $`gh api "/repos/${Script.repository}/compare/${fromRef}...${toRef}" --jq '.commits[] | {sha: .sha, login: .author.login, message: .commit.message}'`.text()
 
   const commitData = new Map<string, { login: string | null; message: string }>()
   for (const line of compare.split("\n").filter(Boolean)) {
@@ -201,7 +201,7 @@ export async function getContributors(from: string, to: string) {
   const fromRef = from.startsWith("v") ? from : `v${from}`
   const toRef = to === "HEAD" ? to : to.startsWith("v") ? to : `v${to}`
   const compare =
-    await $`gh api "/repos/anomalyco/ironcode/compare/${fromRef}...${toRef}" --jq '.commits[] | {login: .author.login, message: .commit.message}'`.text()
+    await $`gh api "/repos/${Script.repository}/compare/${fromRef}...${toRef}" --jq '.commits[] | {login: .author.login, message: .commit.message}'`.text()
   const contributors = new Map<string, Set<string>>()
 
   for (const line of compare.split("\n").filter(Boolean)) {
@@ -240,7 +240,7 @@ export async function buildNotes(from: string, to: string) {
     if (error instanceof Error && error.name === "TimeoutError") {
       console.log("Changelog generation timed out, using raw commits")
       for (const commit of commits) {
-        const attribution = commit.author && !team.includes(commit.author) ? ` (@${commit.author})` : ""
+        const attribution = commit.author && !Script.team.includes(commit.author) ? ` (@${commit.author})` : ""
         notes.push(`- ${commit.message}${attribution}`)
       }
     } else {

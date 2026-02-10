@@ -17,6 +17,7 @@ if (!semver.satisfies(process.versions.bun, expectedBunVersionRange)) {
 }
 
 const env = {
+  GITHUB_REPOSITORY: process.env["GITHUB_REPOSITORY"] || "KSD-CO/IronCode",
   IRONCODE_CHANNEL: process.env["IRONCODE_CHANNEL"],
   IRONCODE_BUMP: process.env["IRONCODE_BUMP"],
   IRONCODE_VERSION: process.env["IRONCODE_VERSION"],
@@ -33,12 +34,17 @@ const IS_PREVIEW = CHANNEL !== "latest"
 const VERSION = await (async () => {
   if (env.IRONCODE_VERSION) return env.IRONCODE_VERSION
   if (IS_PREVIEW) return `0.0.0-${CHANNEL}-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "")}`
-  const version = await fetch("https://registry.npmjs.org/ironcode-ai/latest")
+  const version = await fetch(`https://api.github.com/repos/${env.GITHUB_REPOSITORY}/releases?per_page=1`)
     .then((res) => {
       if (!res.ok) throw new Error(res.statusText)
       return res.json()
     })
-    .then((data: any) => data.version)
+    .then((data: any) => {
+      const releases = data as Array<{ tag_name: string; draft: boolean }>
+      const latestRelease = releases.find((r) => !r.draft)
+      if (!latestRelease) throw new Error("No published releases found")
+      return latestRelease.tag_name.replace(/^v/, "")
+    })
   const [major, minor, patch] = version.split(".").map((x: string) => Number(x) || 0)
   const t = env.IRONCODE_BUMP?.toLowerCase()
   if (t === "major") return `${major + 1}.0.0`
@@ -75,6 +81,9 @@ export const Script = {
   },
   get team() {
     return team
+  },
+  get repository() {
+    return env.GITHUB_REPOSITORY
   },
 }
 console.log(`ironcode script`, JSON.stringify(Script, null, 2))

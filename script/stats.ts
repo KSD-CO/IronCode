@@ -73,7 +73,7 @@ async function fetchReleases(): Promise<Release[]> {
   const per = 100
 
   while (true) {
-    const url = `https://api.github.com/repos/anomalyco/ironcode/releases?page=${page}&per_page=${per}`
+    const url = `https://api.github.com/repos/${process.env.GITHUB_REPOSITORY || "KSD-CO/IronCode"}/releases?page=${page}&per_page=${per}`
 
     const response = await fetch(url)
     if (!response.ok) {
@@ -188,7 +188,7 @@ async function save(githubTotal: number, npmDownloads: number) {
   )
 }
 
-console.log("Fetching GitHub releases for anomalyco/ironcode...\n")
+console.log(`Fetching GitHub releases for ${process.env.GITHUB_REPOSITORY || "KSD-CO/IronCode"}...\n`)
 
 const releases = await fetchReleases()
 console.log(`\nFetched ${releases.length} releases total\n`)
