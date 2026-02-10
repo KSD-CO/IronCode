@@ -7,6 +7,7 @@ pub mod file_list;
 pub mod fuzzy;
 pub mod glob;
 pub mod grep;
+pub mod lock;
 pub mod ls;
 pub mod read;
 pub mod shell;
@@ -1073,5 +1074,195 @@ pub extern "C" fn watcher_get_info_ffi(id: *const c_char) -> *mut c_char {
         Err(e) => CString::new(format!("{{\"error\":\"{}\"}}", e))
             .unwrap()
             .into_raw(),
+    }
+}
+
+// ============================================================================
+// Lock FFI Functions
+// ============================================================================
+
+/// Acquire a read lock for the given key
+/// Returns JSON: {"ticket": number, "acquired": boolean}
+#[no_mangle]
+pub extern "C" fn lock_acquire_read_ffi(key: *const c_char) -> *mut c_char {
+    let key_str = unsafe {
+        if key.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(key).to_str().unwrap_or("")
+    };
+
+    match lock::acquire_read_lock(key_str) {
+        Ok((ticket, acquired)) => {
+            let result = serde_json::json!({
+                "ticket": ticket,
+                "acquired": acquired
+            });
+            match serde_json::to_string(&result) {
+                Ok(json) => CString::new(json).unwrap().into_raw(),
+                Err(_) => std::ptr::null_mut(),
+            }
+        }
+        Err(e) => {
+            let error_obj = serde_json::json!({ "error": e });
+            match serde_json::to_string(&error_obj) {
+                Ok(json) => CString::new(json).unwrap().into_raw(),
+                Err(_) => std::ptr::null_mut(),
+            }
+        }
+    }
+}
+
+/// Acquire a write lock for the given key
+/// Returns JSON: {"ticket": number, "acquired": boolean}
+#[no_mangle]
+pub extern "C" fn lock_acquire_write_ffi(key: *const c_char) -> *mut c_char {
+    let key_str = unsafe {
+        if key.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(key).to_str().unwrap_or("")
+    };
+
+    match lock::acquire_write_lock(key_str) {
+        Ok((ticket, acquired)) => {
+            let result = serde_json::json!({
+                "ticket": ticket,
+                "acquired": acquired
+            });
+            match serde_json::to_string(&result) {
+                Ok(json) => CString::new(json).unwrap().into_raw(),
+                Err(_) => std::ptr::null_mut(),
+            }
+        }
+        Err(e) => {
+            let error_obj = serde_json::json!({ "error": e });
+            match serde_json::to_string(&error_obj) {
+                Ok(json) => CString::new(json).unwrap().into_raw(),
+                Err(_) => std::ptr::null_mut(),
+            }
+        }
+    }
+}
+
+/// Check if a read lock is ready
+/// Returns 1 if ready, 0 if not ready, -1 on error
+#[no_mangle]
+pub extern "C" fn lock_check_read_ffi(key: *const c_char, ticket: u64) -> i32 {
+    let key_str = unsafe {
+        if key.is_null() {
+            return -1;
+        }
+        CStr::from_ptr(key).to_str().unwrap_or("")
+    };
+
+    match lock::check_read_lock(key_str, ticket) {
+        Ok(true) => 1,
+        Ok(false) => 0,
+        Err(_) => -1,
+    }
+}
+
+/// Check if a write lock is ready
+/// Returns 1 if ready, 0 if not ready, -1 on error
+#[no_mangle]
+pub extern "C" fn lock_check_write_ffi(key: *const c_char, ticket: u64) -> i32 {
+    let key_str = unsafe {
+        if key.is_null() {
+            return -1;
+        }
+        CStr::from_ptr(key).to_str().unwrap_or("")
+    };
+
+    match lock::check_write_lock(key_str, ticket) {
+        Ok(true) => 1,
+        Ok(false) => 0,
+        Err(_) => -1,
+    }
+}
+
+/// Finalize acquiring a read lock
+/// Returns 0 on success, -1 on error
+#[no_mangle]
+pub extern "C" fn lock_finalize_read_ffi(key: *const c_char, ticket: u64) -> i32 {
+    let key_str = unsafe {
+        if key.is_null() {
+            return -1;
+        }
+        CStr::from_ptr(key).to_str().unwrap_or("")
+    };
+
+    match lock::finalize_read_lock(key_str, ticket) {
+        Ok(_) => 0,
+        Err(_) => -1,
+    }
+}
+
+/// Finalize acquiring a write lock
+/// Returns 0 on success, -1 on error
+#[no_mangle]
+pub extern "C" fn lock_finalize_write_ffi(key: *const c_char, ticket: u64) -> i32 {
+    let key_str = unsafe {
+        if key.is_null() {
+            return -1;
+        }
+        CStr::from_ptr(key).to_str().unwrap_or("")
+    };
+
+    match lock::finalize_write_lock(key_str, ticket) {
+        Ok(_) => 0,
+        Err(_) => -1,
+    }
+}
+
+/// Release a read lock
+/// Returns 0 on success, -1 on error
+#[no_mangle]
+pub extern "C" fn lock_release_read_ffi(key: *const c_char) -> i32 {
+    let key_str = unsafe {
+        if key.is_null() {
+            return -1;
+        }
+        CStr::from_ptr(key).to_str().unwrap_or("")
+    };
+
+    match lock::release_read_lock(key_str) {
+        Ok(_) => 0,
+        Err(_) => -1,
+    }
+}
+
+/// Release a write lock
+/// Returns 0 on success, -1 on error
+#[no_mangle]
+pub extern "C" fn lock_release_write_ffi(key: *const c_char) -> i32 {
+    let key_str = unsafe {
+        if key.is_null() {
+            return -1;
+        }
+        CStr::from_ptr(key).to_str().unwrap_or("")
+    };
+
+    match lock::release_write_lock(key_str) {
+        Ok(_) => 0,
+        Err(_) => -1,
+    }
+}
+
+/// Get lock statistics
+/// Returns JSON with stats
+#[no_mangle]
+pub extern "C" fn lock_get_stats_ffi() -> *mut c_char {
+    let stats = lock::get_lock_stats();
+    let result = serde_json::json!({
+        "total_locks": stats.total_locks,
+        "active_readers": stats.active_readers,
+        "active_writers": stats.active_writers,
+        "waiting_readers": stats.waiting_readers,
+        "waiting_writers": stats.waiting_writers,
+    });
+    match serde_json::to_string(&result) {
+        Ok(json) => CString::new(json).unwrap().into_raw(),
+        Err(_) => std::ptr::null_mut(),
     }
 }

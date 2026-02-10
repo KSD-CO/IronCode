@@ -154,6 +154,42 @@ const lib = dlopen(libPath, {
     args: [FFIType.cstring],
     returns: FFIType.ptr,
   },
+  lock_acquire_read_ffi: {
+    args: [FFIType.cstring],
+    returns: FFIType.ptr,
+  },
+  lock_acquire_write_ffi: {
+    args: [FFIType.cstring],
+    returns: FFIType.ptr,
+  },
+  lock_check_read_ffi: {
+    args: [FFIType.cstring, FFIType.u64],
+    returns: FFIType.i32,
+  },
+  lock_check_write_ffi: {
+    args: [FFIType.cstring, FFIType.u64],
+    returns: FFIType.i32,
+  },
+  lock_finalize_read_ffi: {
+    args: [FFIType.cstring, FFIType.u64],
+    returns: FFIType.i32,
+  },
+  lock_finalize_write_ffi: {
+    args: [FFIType.cstring, FFIType.u64],
+    returns: FFIType.i32,
+  },
+  lock_release_read_ffi: {
+    args: [FFIType.cstring],
+    returns: FFIType.i32,
+  },
+  lock_release_write_ffi: {
+    args: [FFIType.cstring],
+    returns: FFIType.i32,
+  },
+  lock_get_stats_ffi: {
+    args: [],
+    returns: FFIType.ptr,
+  },
   free_string: {
     args: [FFIType.ptr],
     returns: FFIType.void,
@@ -655,6 +691,85 @@ export function watcherListFFI(): string[] {
 export function watcherGetInfoFFI(id: string): WatcherInfo {
   const ptr = lib.symbols.watcher_get_info_ffi(Buffer.from(id + "\0"))
   if (!ptr) throw new Error("watcher_get_info_ffi returned null")
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  return JSON.parse(jsonStr)
+}
+
+// ============================================================================
+// Lock FFI Functions
+// ============================================================================
+
+export interface LockAcquireResult {
+  ticket: number
+  acquired: boolean
+}
+
+export interface LockStats {
+  total_locks: number
+  active_readers: number
+  active_writers: number
+  waiting_readers: number
+  waiting_writers: number
+}
+
+export function lockAcquireReadFFI(key: string): LockAcquireResult {
+  const ptr = lib.symbols.lock_acquire_read_ffi(Buffer.from(key + "\0"))
+  if (!ptr) throw new Error("lock_acquire_read_ffi returned null")
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  return JSON.parse(jsonStr)
+}
+
+export function lockAcquireWriteFFI(key: string): LockAcquireResult {
+  const ptr = lib.symbols.lock_acquire_write_ffi(Buffer.from(key + "\0"))
+  if (!ptr) throw new Error("lock_acquire_write_ffi returned null")
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  return JSON.parse(jsonStr)
+}
+
+export function lockCheckReadFFI(key: string, ticket: number): boolean {
+  const result = lib.symbols.lock_check_read_ffi(Buffer.from(key + "\0"), ticket)
+  if (result < 0) throw new Error("lock_check_read_ffi failed")
+  return result === 1
+}
+
+export function lockCheckWriteFFI(key: string, ticket: number): boolean {
+  const result = lib.symbols.lock_check_write_ffi(Buffer.from(key + "\0"), ticket)
+  if (result < 0) throw new Error("lock_check_write_ffi failed")
+  return result === 1
+}
+
+export function lockFinalizeReadFFI(key: string, ticket: number): void {
+  const result = lib.symbols.lock_finalize_read_ffi(Buffer.from(key + "\0"), ticket)
+  if (result !== 0) throw new Error("lock_finalize_read_ffi failed")
+}
+
+export function lockFinalizeWriteFFI(key: string, ticket: number): void {
+  const result = lib.symbols.lock_finalize_write_ffi(Buffer.from(key + "\0"), ticket)
+  if (result !== 0) throw new Error("lock_finalize_write_ffi failed")
+}
+
+export function lockReleaseReadFFI(key: string): void {
+  const result = lib.symbols.lock_release_read_ffi(Buffer.from(key + "\0"))
+  if (result !== 0) throw new Error("lock_release_read_ffi failed")
+}
+
+export function lockReleaseWriteFFI(key: string): void {
+  const result = lib.symbols.lock_release_write_ffi(Buffer.from(key + "\0"))
+  if (result !== 0) throw new Error("lock_release_write_ffi failed")
+}
+
+export function lockGetStatsFFI(): LockStats {
+  const ptr = lib.symbols.lock_get_stats_ffi()
+  if (!ptr) throw new Error("lock_get_stats_ffi returned null")
 
   const jsonStr = new CString(ptr).toString()
   lib.symbols.free_string(ptr)

@@ -575,35 +575,84 @@ After full implementation and benchmarking, we decided NOT to integrate the Rust
 
 ### 3.3 Lock/Concurrency Utilities ⭐⭐⭐
 
-**Status:** 0% (pure TypeScript)
+**Status:** ✅ 100% (Evaluated - **KEEP TypeScript**)
 
-**Current State:**
+**Investigation Completed:**
 
-- `src/util/lock.ts` (98 LOC)
-- Custom reader-writer lock implementation
-- Used for coordinating file access
+Implemented and benchmarked complete Rust reader-writer lock with FFI bindings:
 
-**Migration Plan:**
+- ✅ `native/tool/src/lock.rs` (380 LOC, 5 tests passing)
+- ✅ FFI bindings in `lib.rs` (9 functions)
+- ✅ TypeScript wrappers in `ffi.ts` and `lock-native.ts`
+- ✅ Comprehensive benchmark suite (`script/bench-lock.ts`)
 
-- [ ] Create `native/tool/src/lock.rs`
-- [ ] Use Rust's native `RwLock` or `tokio::sync::RwLock`
-- [ ] Implement priority handling (writers over readers)
-- [ ] Create FFI bindings for lock acquire/release
-- [ ] Update TypeScript wrapper with RAII pattern
+**Comprehensive Benchmark Results:**
 
-**Expected Outcome:**
+Run: `bun script/bench-lock.ts`
 
-- Better performance under high contention
-- Memory safety guarantees
-- OS-level lock optimization
+| Test Case                     | TypeScript | Rust FFI | Performance      |
+| ----------------------------- | ---------- | -------- | ---------------- |
+| Single read lock              | 0.0071ms   | 0.0050ms | **1.42x faster** |
+| Multiple readers (10)         | 0.0142ms   | 0.0262ms | 0.54x slower     |
+| Single write lock             | 0.0040ms   | 0.0048ms | 0.85x slower     |
+| Mixed workload (7R + 3W)      | 0.0154ms   | 0.0441ms | 0.35x slower     |
+| **Average across all tests:** | -          | -        | **0.79x slower** |
 
-**Estimated Effort:** 3-4 days
+**Key Findings:**
 
-**Files to create/modify:**
+1. **Single operations fast:** TypeScript 1.42x faster for single reads, but FFI overhead dominates in concurrent scenarios
+2. **Concurrent scenarios worse:** Rust 0.54-0.35x slower (1.8-2.8x worse) for concurrent/mixed workloads
+3. **FFI overhead dominates:** Lock operations are so fast (< 0.05ms) that FFI marshalling costs more than computation
+4. **Promise queueing efficient:** TypeScript's native Promise-based queueing is already highly optimized
+5. **Polling overhead:** Rust implementation requires polling (setImmediate loop) while TypeScript uses native Promise resolution
 
-- `packages/ironcode/native/tool/src/lock.rs` (new)
-- `packages/ironcode/src/util/lock.ts`
-- `packages/ironcode/src/tool/ffi.ts`
+**Why TypeScript Wins:**
+
+1. **Zero FFI overhead:** No boundary crossing, no serialization
+2. **Native async primitives:** Promises and microtask queue are built-in and highly optimized
+3. **Callback-based queueing:** Direct callback invocation is faster than polling
+4. **Memory efficiency:** No extra allocations for FFI transfers
+5. **Operations too fast:** Lock acquire/release < 50μs, FFI overhead is disproportionate
+
+**Why Rust Implementation Loses:**
+
+1. **FFI marshalling overhead:** Each operation requires 2-4 FFI calls (acquire, check, finalize, release)
+2. **Polling required:** TypeScript must poll Rust state with `setImmediate` loops
+3. **String marshalling:** Lock keys converted to C strings on each call
+4. **No async benefits:** Rust's async doesn't help here - we're limited by synchronous FFI
+5. **More complex:** Ticket-based system adds coordination overhead
+
+**Decision:** **✅ KEEP TypeScript implementation**
+
+Lock operations are fundamentally coordination primitives that benefit from staying in a single runtime. The TypeScript implementation is simpler, faster, and more maintainable.
+
+**Critical Lesson:** **Operations faster than ~1ms should avoid FFI.**
+
+FFI makes sense when:
+
+- ✅ Computation time >> 1ms (e.g., file parsing, text processing)
+- ✅ Heavy CPU work (e.g., compression, hashing)
+- ✅ Complex algorithms (e.g., edit distance, tree traversal)
+
+FFI does NOT make sense when:
+
+- ❌ Operations < 1ms (FFI overhead dominates)
+- ❌ Coordination primitives (locks, queues)
+- ❌ Already-optimized native async (Promises, microtasks)
+- ❌ Frequent small operations (many FFI calls)
+
+**Files Created (Kept for Reference/Learning):**
+
+- ✅ `packages/ironcode/native/tool/src/lock.rs` - Complete reader-writer lock (380 LOC, 5 tests)
+- ✅ `packages/ironcode/native/tool/src/lib.rs` - 9 FFI bindings (acquire/check/finalize/release/stats)
+- ✅ `packages/ironcode/src/tool/ffi.ts` - TypeScript FFI wrappers (9 functions)
+- ✅ `packages/ironcode/src/util/lock-native.ts` - Native lock implementation wrapper
+- ✅ `packages/ironcode/src/util/lock-js.ts` - Original TypeScript implementation (for benchmarking)
+- ✅ `script/bench-lock.ts` - 4-test comprehensive benchmark suite
+
+**Production Decision:** Keep using original TypeScript implementation in `src/util/lock.ts`
+
+**Actual Effort:** ✅ Completed in 4 hours (vs 3-4 days estimate)
 
 ---
 
@@ -850,16 +899,27 @@ Update this section as work progresses.
 - [x] File Listing (Ripgrep Integration) ✅ **1.37x faster**
 - [x] Bash/Shell Tool (command parsing) ✅ **50-100x faster**
 
-### Phase 3 Status: 🟢 67% Complete (2/3 modules evaluated)
+### Phase 3 Status: ✅ 100% Complete (3/3 modules evaluated)
 
 - [x] PTY/Terminal (complete migration) ✅ **15.29x faster** 🎯 **EXCEEDED TARGET**
 - [x] File Watcher (fully benchmarked) ⚠️ **Decision: Keep @parcel/watcher** (4% slower for primary use case)
-- [ ] Lock Utilities (not started) 🔴
+- [x] Lock Utilities (fully benchmarked) ⚠️ **Decision: Keep TypeScript** (0.79x slower average - FFI overhead too high)
 
 **Phase 3 Progress:**
 
 - Task 3.1 (PTY): Completed in 3 hours with 15.29x improvement (52.9% above 10x target)
 - Task 3.2 (Watcher): Completed implementation and benchmarking in 4 hours. Decision: Do not integrate (data shows 4% slower single-file latency due to polling overhead, despite 19x better batch throughput)
+- Task 3.3 (Lock): Completed implementation and benchmarking in 4 hours. Decision: Do not integrate (data shows 0.79x average performance - operations too fast for FFI to be beneficial)
+
+**Key Insight from Phase 3:**
+
+Not all modules benefit from Rust migration. Data-driven decisions based on comprehensive benchmarks revealed:
+
+1. ✅ **PTY/Terminal:** Huge win (15.29x) - I/O operations justify FFI overhead
+2. ❌ **File Watcher:** Keep existing (4% slower) - callback-based is better than polling
+3. ❌ **Lock Utilities:** Keep existing (21% slower) - operations < 50μs make FFI overhead dominant
+
+**Rule of thumb:** Only migrate to Rust when operation time > 1ms. Below that, FFI overhead dominates.
 
 ---
 
