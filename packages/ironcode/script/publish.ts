@@ -57,6 +57,23 @@ await $`docker buildx build --platform ${platforms} ${tagFlags} --push .`
 
 // registries
 if (!Script.preview) {
+  // Download archives from GitHub Release to calculate SHA values
+  console.log("Downloading release archives for SHA calculation...")
+  const archiveFiles = [
+    "ironcode-linux-arm64.tar.gz",
+    "ironcode-linux-x64.tar.gz",
+    "ironcode-darwin-x64.zip",
+    "ironcode-darwin-arm64.zip",
+  ]
+
+  for (const file of archiveFiles) {
+    try {
+      await $`gh release download v${Script.version} -p ${file} -D ./dist --clobber`
+    } catch (e) {
+      console.warn(`Warning: Could not download ${file}, it may not exist yet`)
+    }
+  }
+
   // Calculate SHA values
   const arm64Sha = await $`sha256sum ./dist/ironcode-linux-arm64.tar.gz | cut -d' ' -f1`.text().then((x) => x.trim())
   const x64Sha = await $`sha256sum ./dist/ironcode-linux-x64.tar.gz | cut -d' ' -f1`.text().then((x) => x.trim())
