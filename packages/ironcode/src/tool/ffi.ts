@@ -1,9 +1,27 @@
 import { dlopen, FFIType, suffix, CString } from "bun:ffi"
 import path from "path"
+import fs from "fs"
 
-// Resolve from package root (packages/ironcode)
-const packageRoot = import.meta.dir ? path.resolve(import.meta.dir, "../..") : process.cwd()
-const libPath = path.join(packageRoot, `native/tool/target/release/libironcode_tool.${suffix}`)
+// Resolve library path based on whether we're running from source or compiled binary
+function resolveLibPath(): string {
+  // Check if running from compiled binary by looking for bunfs in the path
+  const isCompiled = import.meta.path?.includes("/$bunfs/") || import.meta.path?.includes("B:/~BUN/")
+
+  if (isCompiled) {
+    // Running from compiled binary - library should be next to executable
+    // Use process.execPath which points to the actual binary
+    const execPath = fs.realpathSync(process.execPath)
+    const execDir = path.dirname(execPath)
+    const libName = suffix === "dylib" || suffix === "so" ? `libironcode_tool.${suffix}` : `ironcode_tool.${suffix}`
+    return path.join(execDir, libName)
+  }
+
+  // Running from source - use development path
+  const packageRoot = import.meta.dir ? path.resolve(import.meta.dir, "../..") : process.cwd()
+  return path.join(packageRoot, `native/tool/target/release/libironcode_tool.${suffix}`)
+}
+
+const libPath = resolveLibPath()
 
 const lib = dlopen(libPath, {
   glob_ffi: {

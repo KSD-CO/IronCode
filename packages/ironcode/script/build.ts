@@ -164,6 +164,20 @@ for (const item of targets) {
   })
 
   await $`rm -rf ./dist/${name}/bin/tui`
+
+  // Copy Rust native library to dist (must be built beforehand for target platform)
+  const libExt = item.os === "win32" ? "dll" : item.os === "darwin" ? "dylib" : "so"
+  const libName = item.os === "win32" ? "ironcode_tool.dll" : `libironcode_tool.${libExt}`
+  const nativeLibPath = path.join(dir, `native/tool/target/release/${libName}`)
+
+  if (fs.existsSync(nativeLibPath)) {
+    await $`cp ${nativeLibPath} ./dist/${name}/bin/${libName}`
+    console.log(`Copied ${libName} to ${name}/bin`)
+  } else {
+    console.warn(`Warning: Native library not found at ${nativeLibPath}`)
+    console.warn(`You may need to build the Rust library for ${item.os}-${item.arch} first`)
+  }
+
   await Bun.file(`dist/${name}/package.json`).write(
     JSON.stringify(
       {

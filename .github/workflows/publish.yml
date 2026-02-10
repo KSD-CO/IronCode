@@ -51,7 +51,16 @@ jobs:
 
   build-cli:
     needs: version
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: macos-latest
+            platform: darwin
+          - os: windows-latest
+            platform: win32
+    runs-on: ${{ matrix.os }}
     if: github.repository == 'KSD-CO/IronCode'
     steps:
       - uses: actions/checkout@v4
@@ -71,7 +80,7 @@ jobs:
       - name: Build
         id: build
         run: |
-          ./packages/ironcode/script/build.ts
+          ./packages/ironcode/script/build.ts --single
         env:
           IRONCODE_VERSION: ${{ needs.version.outputs.version }}
           IRONCODE_RELEASE: ${{ needs.version.outputs.release }}
@@ -79,7 +88,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ironcode-cli
+          name: ironcode-cli-${{ matrix.platform }}
           path: packages/ironcode/dist
 
     outputs:
@@ -244,10 +253,12 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - uses: actions/download-artifact@v4
+      - name: Download all CLI artifacts
+        uses: actions/download-artifact@v4
         with:
-          name: ironcode-cli
+          pattern: ironcode-cli-*
           path: packages/ironcode/dist
+          merge-multiple: true
 
       - name: Verify artifacts
         run: |
