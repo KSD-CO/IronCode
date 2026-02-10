@@ -167,13 +167,16 @@ for (const item of targets) {
 
   // Copy Rust native library to dist (must be built beforehand for target platform)
   const libExt = item.os === "win32" ? "dll" : item.os === "darwin" ? "dylib" : "so"
-  const libName = item.os === "win32" ? "libironcode_tool.dll" : `ironcode_tool.${libExt}`
-  const nativeLibPath = path.join(dir, `native/tool/target/release/${libName}`)
+  // Windows: ironcode_tool.dll (no lib prefix)
+  // Unix: libironcode_tool.{dylib|so} (with lib prefix)
+  const sourceName = item.os === "win32" ? "ironcode_tool.dll" : `libironcode_tool.${libExt}`
+  const destName = item.os === "win32" ? "ironcode_tool.dll" : `libironcode_tool.${libExt}`
+  const nativeLibPath = path.join(dir, `native/tool/target/release/${sourceName}`)
 
   if (fs.existsSync(nativeLibPath)) {
-    const destPath = path.join(dir, `dist/${name}/bin/${libName}`)
+    const destPath = path.join(dir, `dist/${name}/bin/${destName}`)
     await Bun.write(destPath, Bun.file(nativeLibPath))
-    console.log(`Copied ${libName} to ${name}/bin`)
+    console.log(`Copied ${destName} to ${name}/bin`)
   } else {
     console.warn(`Warning: Native library not found at ${nativeLibPath}`)
     console.warn(`You may need to build the Rust library for ${item.os}-${item.arch} first`)
