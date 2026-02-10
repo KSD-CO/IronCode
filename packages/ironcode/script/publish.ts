@@ -95,22 +95,29 @@ if (!Script.preview) {
     "",
   ].join("\n")
 
-  for (const [pkg, pkgbuild] of [["ironcode-bin", binaryPkgbuild]]) {
-    for (let i = 0; i < 30; i++) {
-      try {
-        await $`rm -rf ./dist/aur-${pkg}`
-        await $`git clone ssh://aur@aur.archlinux.org/${pkg}.git ./dist/aur-${pkg}`
-        await $`cd ./dist/aur-${pkg} && git checkout master`
-        await Bun.file(`./dist/aur-${pkg}/PKGBUILD`).write(pkgbuild)
-        await $`cd ./dist/aur-${pkg} && makepkg --printsrcinfo > .SRCINFO`
-        await $`cd ./dist/aur-${pkg} && git add PKGBUILD .SRCINFO`
-        await $`cd ./dist/aur-${pkg} && git commit -m "Update to v${Script.version}"`
-        await $`cd ./dist/aur-${pkg} && git push`
-        break
-      } catch (e) {
-        continue
+  // AUR publishing - skip if AUR_KEY is not set or SKIP_AUR is true
+  const skipAUR = process.env.SKIP_AUR === "true" || !process.env.AUR_KEY
+  if (!skipAUR) {
+    console.log("Publishing to AUR...")
+    for (const [pkg, pkgbuild] of [["ironcode-bin", binaryPkgbuild]]) {
+      for (let i = 0; i < 30; i++) {
+        try {
+          await $`rm -rf ./dist/aur-${pkg}`
+          await $`git clone ssh://aur@aur.archlinux.org/${pkg}.git ./dist/aur-${pkg}`
+          await $`cd ./dist/aur-${pkg} && git checkout master`
+          await Bun.file(`./dist/aur-${pkg}/PKGBUILD`).write(pkgbuild)
+          await $`cd ./dist/aur-${pkg} && makepkg --printsrcinfo > .SRCINFO`
+          await $`cd ./dist/aur-${pkg} && git add PKGBUILD .SRCINFO`
+          await $`cd ./dist/aur-${pkg} && git commit -m "Update to v${Script.version}"`
+          await $`cd ./dist/aur-${pkg} && git push`
+          break
+        } catch (e) {
+          continue
+        }
       }
     }
+  } else {
+    console.log("Skipping AUR publishing (SKIP_AUR=true or AUR_KEY not set)")
   }
 
   // Homebrew formula
