@@ -15,8 +15,8 @@ function resolveLibPath(): string {
     // Use process.execPath which points to the actual binary
     const execPath = fs.realpathSync(process.execPath)
     const execDir = path.dirname(execPath)
-    // Rust cdylib always outputs with 'lib' prefix on all platforms
-    const libName = `libironcode_tool.${suffix}`
+    // Rust cdylib naming: Windows = {name}.dll, Unix = lib{name}.{so|dylib}
+    const libName = suffix === "dll" ? `ironcode_tool.${suffix}` : `libironcode_tool.${suffix}`
     return path.join(execDir, libName)
   }
 

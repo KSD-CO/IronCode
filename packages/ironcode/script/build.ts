@@ -167,14 +167,32 @@ for (const item of targets) {
 
   // Copy Rust native library to dist (must be built beforehand for target platform)
   const libExt = item.os === "win32" ? "dll" : item.os === "darwin" ? "dylib" : "so"
-  // Rust cdylib always outputs with 'lib' prefix on all platforms
-  const libName = `libironcode_tool.${libExt}`
-  const nativeLibPath = path.join(dir, `native/tool/target/release/${libName}`)
+
+  // Rust cdylib naming convention:
+  // Windows: ironcode_tool.dll (primary output)
+  // Unix: libironcode_tool.{so|dylib}
+  const primaryLibName = item.os === "win32" ? `ironcode_tool.${libExt}` : `libironcode_tool.${libExt}`
+  const nativeLibPath = path.join(dir, `native/tool/target/release/${primaryLibName}`)
 
   if (fs.existsSync(nativeLibPath)) {
-    const destPath = path.join(dir, `dist/${name}/bin/${libName}`)
-    await Bun.write(destPath, Bun.file(nativeLibPath))
-    console.log(`Copied ${libName} to ${name}/bin`)
+    // For Windows, copy the DLL with both names (with and without 'lib' prefix)
+    // to support different runtime lookup conventions
+    if (item.os === "win32") {
+      // Copy as ironcode_tool.dll
+      const destPath1 = path.join(dir, `dist/${name}/bin/ironcode_tool.dll`)
+      await Bun.write(destPath1, Bun.file(nativeLibPath))
+      console.log(`Copied ironcode_tool.dll to ${name}/bin`)
+
+      // Also copy as libironcode_tool.dll
+      const destPath2 = path.join(dir, `dist/${name}/bin/libironcode_tool.dll`)
+      await Bun.write(destPath2, Bun.file(nativeLibPath))
+      console.log(`Copied libironcode_tool.dll to ${name}/bin`)
+    } else {
+      // Unix: just copy as-is
+      const destPath = path.join(dir, `dist/${name}/bin/${primaryLibName}`)
+      await Bun.write(destPath, Bun.file(nativeLibPath))
+      console.log(`Copied ${primaryLibName} to ${name}/bin`)
+    }
   } else {
     console.warn(`Warning: Native library not found at ${nativeLibPath}`)
     console.warn(`You may need to build the Rust library for ${item.os}-${item.arch} first`)
