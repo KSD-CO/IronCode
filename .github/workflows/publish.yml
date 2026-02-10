@@ -232,20 +232,6 @@ jobs:
 
       - uses: ./.github/actions/setup-bun
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: packages/ironcode/native/tool
-          shared-key: cli-linux
-
-      - name: Build native Rust library
-        run: |
-          cd packages/ironcode/native/tool
-          cargo build --release
-
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
