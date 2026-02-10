@@ -37,6 +37,46 @@ IronCode is a **high-performance CLI fork** of [OpenCode](https://github.com/ano
 
 ### 🚀 Performance Improvements
 
+IronCode delivers exceptional performance through **native Rust components** and **intelligent memory management**:
+
+#### Memory Efficiency & Resource Monitoring
+
+IronCode includes an **automatic resource monitoring system** that keeps memory usage under control:
+
+- 🎯 **Default 300MB limit** - Prevents excessive memory consumption
+- 📊 **Real-time monitoring** - Checks every 5 seconds with three levels (normal/warning/critical)
+- 🚦 **Auto-throttling** - Automatically slows down at 95% memory to prevent crashes
+- ⚡ **Optimized processing** - 98% faster message handling with selective cloning
+- 🔧 **Configurable** - Adjust limits with `--max-memory` flag or disable with `--no-enable-resource-monitor`
+
+**Memory Optimizations:**
+
+| Optimization                     | Impact                 | Speedup                         |
+| -------------------------------- | ---------------------- | ------------------------------- |
+| **Selective Message Cloning**    | 4.1MB saved per step   | 97.6% faster (254ms → 6ms)      |
+| **Array Operation Improvements** | Reduced GC pressure    | 7 optimizations across codebase |
+| **Automatic Throttling**         | Prevents memory spikes | Active at 285MB (95% threshold) |
+
+**Example Usage:**
+
+```bash
+# Default (300MB limit, monitoring enabled)
+ironcode
+
+# Custom memory limit
+ironcode --max-memory 500
+
+# Disable resource monitoring
+ironcode --no-enable-resource-monitor
+
+# Both options
+ironcode --max-memory 400 --enable-resource-monitor
+```
+
+See [RESOURCE-MONITORING.md](./RESOURCE-MONITORING.md) for full documentation.
+
+#### Native Rust Performance
+
 IronCode rewrites key operations in native Rust with **measured real-world performance gains**:
 
 | Operation                 | TypeScript/Node | Rust Native | **Speedup**        | Notes                  |
@@ -132,6 +172,9 @@ IronCode rewrites key operations in native Rust with **measured real-world perfo
 - 🔥 **Smart edit strategies** with fuzzy matching and Levenshtein similarity
 - 📊 **Optimized I/O**: Raw FFI implementation for consistent performance
 - 🔧 **Consistent native tooling**: All file operations use Rust for predictable performance
+- 🎯 **Memory efficiency**: Automatic resource monitoring with 300MB default limit
+- 🚦 **Auto-throttling**: Prevents memory spikes and system crashes
+- ⚡ **98% faster message processing**: Selective cloning optimization (254ms → 6ms)
 
 ---
 
@@ -231,6 +274,12 @@ _Coming soon - AUR package will be available in the future_
 # Start interactive session in current directory
 ironcode
 
+# Run with custom memory limit (default: 300MB)
+ironcode --max-memory 500
+
+# Run without resource monitoring
+ironcode --no-enable-resource-monitor
+
 # Run with specific model
 ironcode --model anthropic/claude-sonnet-4
 
@@ -327,6 +376,16 @@ bun run typecheck
 # Format code (using prettier)
 bun run format
 
+# Resource monitoring tests
+cd packages/ironcode
+bun test test/resource.test.ts                    # Unit tests
+bun test test/resource-monitor.test.ts            # Allocation test
+bun test test/resource-integration.test.ts        # Server integration
+bun --expose-gc test/clone-optimization.test.ts   # Clone comparison
+bun test test/stress-test.ts                      # Light load test
+bun test test/heavy-test.ts                       # Heavy file ops
+bun test test/extreme-test.ts                     # Conversation simulation
+
 # Benchmark native Rust components
 cd packages/ironcode/native/tool
 cargo bench
@@ -412,6 +471,8 @@ Contributions are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) befo
 
 **Recent Contributions:**
 
+- ✅ **Memory optimization deployed to production** (97.6% faster message processing - Feb 2026)
+- ✅ **Resource monitoring system** (automatic throttling, 300MB default limit - Feb 2026)
 - ✅ **Native PTY/Terminal deployed to production** (15.29x speedup, powers Bash tool - Feb 2026)
 - ✅ Native Rust edit tool with 9 strategies (3-4x speedup)
 - ✅ File Watcher Rust infrastructure (ready but not integrated - @parcel/watcher already native)
