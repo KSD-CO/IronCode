@@ -62,12 +62,6 @@ if (!process.env.NPM_TOKEN && !process.env.NODE_AUTH_TOKEN) {
   await $`cd ./dist/${pkg.name} && bun pm pack && npm publish *.tgz --access public --tag ${Script.channel}`
 }
 
-const image = `ghcr.io/${Script.repository.toLowerCase()}`
-const platforms = "linux/amd64,linux/arm64"
-const tags = [`${image}:${version}`, `${image}:${Script.channel}`]
-const tagFlags = tags.flatMap((t) => ["-t", t])
-await $`docker buildx build --platform ${platforms} ${tagFlags} --push .`
-
 // registries
 if (!Script.preview) {
   // Download archives from GitHub Release to calculate SHA values
