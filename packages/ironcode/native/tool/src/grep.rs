@@ -57,8 +57,7 @@ fn grep(
             let file_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
 
             // Simple glob matching for common patterns
-            let matches_glob = if glob_pattern.starts_with("*.") {
-                let ext = &glob_pattern[2..];
+            let matches_glob = if let Some(ext) = glob_pattern.strip_prefix("*.") {
                 file_name.ends_with(ext)
             } else if glob_pattern.contains("*.{") && glob_pattern.ends_with("}") {
                 // Handle *.{ts,tsx} pattern

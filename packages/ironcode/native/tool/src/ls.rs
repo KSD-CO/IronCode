@@ -85,7 +85,7 @@ pub fn execute(search_path: &str, ignore_patterns: Vec<String>) -> Result<Output
         // Add file to its directory
         files_by_dir
             .entry(dir.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(path.file_name().unwrap().to_string_lossy().to_string());
     }
 
@@ -113,7 +113,7 @@ pub fn execute(search_path: &str, ignore_patterns: Vec<String>) -> Result<Output
                     return false;
                 }
                 let parent = if d.contains('/') {
-                    d.rsplitn(2, '/').nth(1).unwrap_or(".")
+                    d.rsplit_once('/').map(|x| x.0).unwrap_or(".")
                 } else {
                     "."
                 };

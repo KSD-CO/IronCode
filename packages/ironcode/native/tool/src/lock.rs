@@ -169,7 +169,7 @@ pub fn release_read_lock(key: &str) -> Result<(), String> {
             lock_state.readers -= 1;
         }
         // Check if we should remove the lock
-        lock_state.writer == false
+        !lock_state.writer
             && lock_state.readers == 0
             && lock_state.waiting_readers.is_empty()
             && lock_state.waiting_writers.is_empty()
@@ -277,7 +277,7 @@ mod tests {
     #[test]
     fn test_writer_exclusivity() {
         let key = "test3";
-        let (t1, acq1) = acquire_write_lock(key).unwrap();
+        let (_t1, acq1) = acquire_write_lock(key).unwrap();
         assert!(acq1);
 
         // Second writer should block

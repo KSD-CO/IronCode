@@ -40,7 +40,7 @@ pub fn execute(
             lines[i].to_string()
         };
 
-        let size = line.as_bytes().len() + if raw.is_empty() { 0 } else { 1 };
+        let size = line.len() + if raw.is_empty() { 0 } else { 1 };
         if bytes + size > MAX_BYTES {
             truncated_by_bytes = true;
             break;

@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use tree_sitter::{Language, Parser};
+use tree_sitter::Parser;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BashParseResult {

@@ -274,7 +274,7 @@ fn whitespace_normalized_replacer(content: &str, find: &str) -> Vec<String> {
             let normalized_line = normalize_whitespace(line);
             if normalized_line.contains(&normalized_find) {
                 // Try to find substring match with flexible whitespace
-                let words: Vec<&str> = find.trim().split_whitespace().collect();
+                let words: Vec<&str> = find.split_whitespace().collect();
                 if !words.is_empty() && words.len() == 1 {
                     // Single word - just find it
                     if line.contains(words[0]) {

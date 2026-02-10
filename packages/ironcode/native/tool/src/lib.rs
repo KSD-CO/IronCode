@@ -20,7 +20,7 @@ pub mod watcher;
 pub mod webfetch;
 
 #[no_mangle]
-pub extern "C" fn glob_ffi(pattern: *const c_char, search: *const c_char) -> *mut c_char {
+pub unsafe extern "C" fn glob_ffi(pattern: *const c_char, search: *const c_char) -> *mut c_char {
     let pattern_str = unsafe {
         if pattern.is_null() {
             return std::ptr::null_mut();
@@ -45,7 +45,7 @@ pub extern "C" fn glob_ffi(pattern: *const c_char, search: *const c_char) -> *mu
 }
 
 #[no_mangle]
-pub extern "C" fn ls_ffi(path: *const c_char, ignore_patterns_json: *const c_char) -> *mut c_char {
+pub unsafe extern "C" fn ls_ffi(path: *const c_char, ignore_patterns_json: *const c_char) -> *mut c_char {
     let path_str = unsafe {
         if path.is_null() {
             return std::ptr::null_mut();
@@ -74,7 +74,7 @@ pub extern "C" fn ls_ffi(path: *const c_char, ignore_patterns_json: *const c_cha
 }
 
 #[no_mangle]
-pub extern "C" fn read_ffi(filepath: *const c_char, offset: i32, limit: i32) -> *mut c_char {
+pub unsafe extern "C" fn read_ffi(filepath: *const c_char, offset: i32, limit: i32) -> *mut c_char {
     let filepath_str = unsafe {
         if filepath.is_null() {
             return std::ptr::null_mut();
@@ -104,7 +104,7 @@ pub extern "C" fn read_ffi(filepath: *const c_char, offset: i32, limit: i32) -> 
 
 // Optimized read that returns raw content without JSON serialization
 #[no_mangle]
-pub extern "C" fn read_raw_ffi(filepath: *const c_char) -> *mut c_char {
+pub unsafe extern "C" fn read_raw_ffi(filepath: *const c_char) -> *mut c_char {
     let filepath_str = unsafe {
         if filepath.is_null() {
             return std::ptr::null_mut();
@@ -122,7 +122,7 @@ pub extern "C" fn read_raw_ffi(filepath: *const c_char) -> *mut c_char {
 }
 
 #[no_mangle]
-pub extern "C" fn grep_ffi(
+pub unsafe extern "C" fn grep_ffi(
     pattern: *const c_char,
     search: *const c_char,
     include_glob: *const c_char,
@@ -161,7 +161,7 @@ pub extern "C" fn grep_ffi(
 // Write file with automatic parent directory creation
 // Returns 0 on success, -1 on error
 #[no_mangle]
-pub extern "C" fn write_raw_ffi(filepath: *const c_char, content: *const c_char) -> i32 {
+pub unsafe extern "C" fn write_raw_ffi(filepath: *const c_char, content: *const c_char) -> i32 {
     let filepath_str = unsafe {
         if filepath.is_null() {
             return -1;
@@ -178,7 +178,7 @@ pub extern "C" fn write_raw_ffi(filepath: *const c_char, content: *const c_char)
 
     // Create parent directories if they don't exist
     if let Some(parent) = std::path::Path::new(filepath_str).parent() {
-        if let Err(_) = std::fs::create_dir_all(parent) {
+        if std::fs::create_dir_all(parent).is_err() {
             return -1;
         }
     }
@@ -190,7 +190,7 @@ pub extern "C" fn write_raw_ffi(filepath: *const c_char, content: *const c_char)
 }
 
 #[no_mangle]
-pub extern "C" fn stats_ffi() -> *mut c_char {
+pub unsafe extern "C" fn stats_ffi() -> *mut c_char {
     match stats::get_stats() {
         Ok(stats) => match serde_json::to_string(&stats) {
             Ok(json) => CString::new(json).unwrap().into_raw(),
@@ -201,7 +201,7 @@ pub extern "C" fn stats_ffi() -> *mut c_char {
 }
 
 #[no_mangle]
-pub extern "C" fn free_string(s: *mut c_char) {
+pub unsafe extern "C" fn free_string(s: *mut c_char) {
     if !s.is_null() {
         unsafe {
             let _ = CString::from_raw(s);
@@ -211,7 +211,7 @@ pub extern "C" fn free_string(s: *mut c_char) {
 
 // Terminal FFI functions
 #[no_mangle]
-pub extern "C" fn terminal_create(
+pub unsafe extern "C" fn terminal_create(
     id: *const c_char,
     cwd: *const c_char,
     rows: u16,
@@ -242,7 +242,7 @@ pub extern "C" fn terminal_create(
 }
 
 #[no_mangle]
-pub extern "C" fn terminal_write(id: *const c_char, data: *const c_char) -> bool {
+pub unsafe extern "C" fn terminal_write(id: *const c_char, data: *const c_char) -> bool {
     let id_str = unsafe {
         if id.is_null() {
             return false;
@@ -261,7 +261,7 @@ pub extern "C" fn terminal_write(id: *const c_char, data: *const c_char) -> bool
 }
 
 #[no_mangle]
-pub extern "C" fn terminal_read(id: *const c_char) -> *mut c_char {
+pub unsafe extern "C" fn terminal_read(id: *const c_char) -> *mut c_char {
     let id_str = unsafe {
         if id.is_null() {
             return std::ptr::null_mut();
@@ -279,7 +279,7 @@ pub extern "C" fn terminal_read(id: *const c_char) -> *mut c_char {
 }
 
 #[no_mangle]
-pub extern "C" fn terminal_resize(id: *const c_char, rows: u16, cols: u16) -> bool {
+pub unsafe extern "C" fn terminal_resize(id: *const c_char, rows: u16, cols: u16) -> bool {
     let id_str = unsafe {
         if id.is_null() {
             return false;
@@ -291,7 +291,7 @@ pub extern "C" fn terminal_resize(id: *const c_char, rows: u16, cols: u16) -> bo
 }
 
 #[no_mangle]
-pub extern "C" fn terminal_close(id: *const c_char) -> bool {
+pub unsafe extern "C" fn terminal_close(id: *const c_char) -> bool {
     let id_str = unsafe {
         if id.is_null() {
             return false;
@@ -303,7 +303,7 @@ pub extern "C" fn terminal_close(id: *const c_char) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn terminal_get_info(id: *const c_char) -> *mut c_char {
+pub unsafe extern "C" fn terminal_get_info(id: *const c_char) -> *mut c_char {
     let id_str = unsafe {
         if id.is_null() {
             return std::ptr::null_mut();
@@ -321,7 +321,7 @@ pub extern "C" fn terminal_get_info(id: *const c_char) -> *mut c_char {
 }
 
 #[no_mangle]
-pub extern "C" fn terminal_update_title(id: *const c_char, title: *const c_char) -> bool {
+pub unsafe extern "C" fn terminal_update_title(id: *const c_char, title: *const c_char) -> bool {
     let id_str = unsafe {
         if id.is_null() {
             return false;
@@ -340,7 +340,7 @@ pub extern "C" fn terminal_update_title(id: *const c_char, title: *const c_char)
 }
 
 #[no_mangle]
-pub extern "C" fn terminal_check_status(id: *const c_char) -> *mut c_char {
+pub unsafe extern "C" fn terminal_check_status(id: *const c_char) -> *mut c_char {
     let id_str = unsafe {
         if id.is_null() {
             return std::ptr::null_mut();
@@ -358,7 +358,7 @@ pub extern "C" fn terminal_check_status(id: *const c_char) -> *mut c_char {
 }
 
 #[no_mangle]
-pub extern "C" fn terminal_mark_exited(id: *const c_char) -> bool {
+pub unsafe extern "C" fn terminal_mark_exited(id: *const c_char) -> bool {
     let id_str = unsafe {
         if id.is_null() {
             return false;
@@ -370,7 +370,7 @@ pub extern "C" fn terminal_mark_exited(id: *const c_char) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn terminal_get_buffer(id: *const c_char) -> *mut c_char {
+pub unsafe extern "C" fn terminal_get_buffer(id: *const c_char) -> *mut c_char {
     let id_str = unsafe {
         if id.is_null() {
             return std::ptr::null_mut();
@@ -392,7 +392,7 @@ pub extern "C" fn terminal_get_buffer(id: *const c_char) -> *mut c_char {
 }
 
 #[no_mangle]
-pub extern "C" fn terminal_drain_buffer(id: *const c_char) -> *mut c_char {
+pub unsafe extern "C" fn terminal_drain_buffer(id: *const c_char) -> *mut c_char {
     let id_str = unsafe {
         if id.is_null() {
             return std::ptr::null_mut();
@@ -414,7 +414,7 @@ pub extern "C" fn terminal_drain_buffer(id: *const c_char) -> *mut c_char {
 }
 
 #[no_mangle]
-pub extern "C" fn terminal_clear_buffer(id: *const c_char) -> bool {
+pub unsafe extern "C" fn terminal_clear_buffer(id: *const c_char) -> bool {
     let id_str = unsafe {
         if id.is_null() {
             return false;
@@ -426,7 +426,7 @@ pub extern "C" fn terminal_clear_buffer(id: *const c_char) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn terminal_get_buffer_info(id: *const c_char) -> *mut c_char {
+pub unsafe extern "C" fn terminal_get_buffer_info(id: *const c_char) -> *mut c_char {
     let id_str = unsafe {
         if id.is_null() {
             return std::ptr::null_mut();
@@ -444,7 +444,7 @@ pub extern "C" fn terminal_get_buffer_info(id: *const c_char) -> *mut c_char {
 }
 
 #[no_mangle]
-pub extern "C" fn terminal_list() -> *mut c_char {
+pub unsafe extern "C" fn terminal_list() -> *mut c_char {
     let sessions = terminal::list();
     match serde_json::to_string(&sessions) {
         Ok(json) => match CString::new(json) {
@@ -456,7 +456,7 @@ pub extern "C" fn terminal_list() -> *mut c_char {
 }
 
 #[no_mangle]
-pub extern "C" fn terminal_cleanup_idle(timeout_secs: u64) -> *mut c_char {
+pub unsafe extern "C" fn terminal_cleanup_idle(timeout_secs: u64) -> *mut c_char {
     let removed = terminal::cleanup_idle(timeout_secs);
     match serde_json::to_string(&removed) {
         Ok(json) => match CString::new(json) {
@@ -498,7 +498,7 @@ fn base64_encode(data: &[u8]) -> String {
 
 // VCS FFI function
 #[no_mangle]
-pub extern "C" fn vcs_info_ffi(cwd: *const c_char) -> *mut c_char {
+pub unsafe extern "C" fn vcs_info_ffi(cwd: *const c_char) -> *mut c_char {
     let cwd_str = unsafe {
         if cwd.is_null() {
             return std::ptr::null_mut();
@@ -517,7 +517,7 @@ pub extern "C" fn vcs_info_ffi(cwd: *const c_char) -> *mut c_char {
 
 // Edit FFI function
 #[no_mangle]
-pub extern "C" fn edit_replace_ffi(
+pub unsafe extern "C" fn edit_replace_ffi(
     content: *const c_char,
     old_string: *const c_char,
     new_string: *const c_char,
@@ -584,7 +584,7 @@ pub extern "C" fn edit_replace_ffi(
 
 // File existence check
 #[no_mangle]
-pub extern "C" fn file_exists_ffi(filepath: *const c_char) -> i32 {
+pub unsafe extern "C" fn file_exists_ffi(filepath: *const c_char) -> i32 {
     let path_str = unsafe {
         if filepath.is_null() {
             return 0;
@@ -601,7 +601,7 @@ pub extern "C" fn file_exists_ffi(filepath: *const c_char) -> i32 {
 
 // Get file metadata (size, modified time, etc)
 #[no_mangle]
-pub extern "C" fn file_stat_ffi(filepath: *const c_char) -> *mut c_char {
+pub unsafe extern "C" fn file_stat_ffi(filepath: *const c_char) -> *mut c_char {
     let path_str = unsafe {
         if filepath.is_null() {
             return std::ptr::null_mut();
@@ -652,7 +652,7 @@ pub extern "C" fn file_stat_ffi(filepath: *const c_char) -> *mut c_char {
 
 // Archive extraction
 #[no_mangle]
-pub extern "C" fn extract_zip_ffi(zip_path: *const c_char, dest_dir: *const c_char) -> i32 {
+pub unsafe extern "C" fn extract_zip_ffi(zip_path: *const c_char, dest_dir: *const c_char) -> i32 {
     let zip_path_str = unsafe {
         if zip_path.is_null() {
             return -1;
@@ -675,7 +675,7 @@ pub extern "C" fn extract_zip_ffi(zip_path: *const c_char, dest_dir: *const c_ch
 
 // Fuzzy search FFI
 #[no_mangle]
-pub extern "C" fn fuzzy_search_ffi(
+pub unsafe extern "C" fn fuzzy_search_ffi(
     query: *const c_char,
     items_json: *const c_char,
     limit: i32,
@@ -721,7 +721,7 @@ pub extern "C" fn fuzzy_search_ffi(
 // NOTE: Currently NOT used in production - fuzzysort (JavaScript) is faster
 // Kept for future optimization attempts. See RUST_MIGRATION_PLAN.md section 2.1
 #[no_mangle]
-pub extern "C" fn fuzzy_search_raw_ffi(
+pub unsafe extern "C" fn fuzzy_search_raw_ffi(
     query: *const c_char,
     items_newline_separated: *const c_char,
     limit: i32,
@@ -764,7 +764,7 @@ pub extern "C" fn fuzzy_search_raw_ffi(
 // Fuzzy search with nucleo algorithm (Helix editor - closest to fuzzysort performance)
 // NOTE: Currently NOT used in production - kept for future optimization
 #[no_mangle]
-pub extern "C" fn fuzzy_search_nucleo_ffi(
+pub unsafe extern "C" fn fuzzy_search_nucleo_ffi(
     query: *const c_char,
     items_newline_separated: *const c_char,
     limit: i32,
@@ -803,7 +803,7 @@ pub extern "C" fn fuzzy_search_nucleo_ffi(
 
 // Bash command parsing FFI
 #[no_mangle]
-pub extern "C" fn parse_bash_command_ffi(
+pub unsafe extern "C" fn parse_bash_command_ffi(
     command: *const c_char,
     cwd: *const c_char,
 ) -> *mut c_char {
@@ -832,7 +832,7 @@ pub extern "C" fn parse_bash_command_ffi(
 
 // File listing FFI (replacement for ripgrep --files)
 #[no_mangle]
-pub extern "C" fn file_list_ffi(
+pub unsafe extern "C" fn file_list_ffi(
     cwd: *const c_char,
     globs_json: *const c_char,
     hidden: bool,
@@ -883,7 +883,7 @@ pub extern "C" fn file_list_ffi(
 // To enable: cargo build --release --features webfetch
 #[cfg(feature = "webfetch")]
 #[no_mangle]
-pub extern "C" fn webfetch_ffi(
+pub unsafe extern "C" fn webfetch_ffi(
     url: *const c_char,
     format: *const c_char,
     timeout_secs: u64,
@@ -937,7 +937,7 @@ pub extern "C" fn webfetch_ffi(
 /// Create a file watcher with event queue
 /// Returns error string on failure, null on success
 #[no_mangle]
-pub extern "C" fn watcher_create_ffi(
+pub unsafe extern "C" fn watcher_create_ffi(
     id: *const c_char,
     path: *const c_char,
     ignore_patterns_json: *const c_char,
@@ -990,7 +990,7 @@ pub extern "C" fn watcher_create_ffi(
 /// Poll events from watcher (non-blocking)
 /// Returns JSON array of events
 #[no_mangle]
-pub extern "C" fn watcher_poll_events_ffi(id: *const c_char) -> *mut c_char {
+pub unsafe extern "C" fn watcher_poll_events_ffi(id: *const c_char) -> *mut c_char {
     let id_str = unsafe {
         if id.is_null() {
             return std::ptr::null_mut();
@@ -1016,7 +1016,7 @@ pub extern "C" fn watcher_poll_events_ffi(id: *const c_char) -> *mut c_char {
 /// Get pending event count
 /// Returns count as i32, or -1 on error
 #[no_mangle]
-pub extern "C" fn watcher_pending_count_ffi(id: *const c_char) -> i32 {
+pub unsafe extern "C" fn watcher_pending_count_ffi(id: *const c_char) -> i32 {
     let id_str = unsafe {
         if id.is_null() {
             return -1;
@@ -1033,7 +1033,7 @@ pub extern "C" fn watcher_pending_count_ffi(id: *const c_char) -> i32 {
 /// Remove a file watcher
 /// Returns error string on failure, null on success
 #[no_mangle]
-pub extern "C" fn watcher_remove_ffi(id: *const c_char) -> *mut c_char {
+pub unsafe extern "C" fn watcher_remove_ffi(id: *const c_char) -> *mut c_char {
     let id_str = unsafe {
         if id.is_null() {
             return CString::new("id is null").unwrap().into_raw();
@@ -1050,7 +1050,7 @@ pub extern "C" fn watcher_remove_ffi(id: *const c_char) -> *mut c_char {
 /// List all active watchers
 /// Returns JSON array of watcher IDs
 #[no_mangle]
-pub extern "C" fn watcher_list_ffi() -> *mut c_char {
+pub unsafe extern "C" fn watcher_list_ffi() -> *mut c_char {
     let ids = watcher::list();
     match serde_json::to_string(&ids) {
         Ok(json) => CString::new(json).unwrap().into_raw(),
@@ -1061,7 +1061,7 @@ pub extern "C" fn watcher_list_ffi() -> *mut c_char {
 /// Get watcher info
 /// Returns JSON object with watcher details, or error string
 #[no_mangle]
-pub extern "C" fn watcher_get_info_ffi(id: *const c_char) -> *mut c_char {
+pub unsafe extern "C" fn watcher_get_info_ffi(id: *const c_char) -> *mut c_char {
     let id_str = unsafe {
         if id.is_null() {
             return std::ptr::null_mut();
@@ -1084,8 +1084,8 @@ pub extern "C" fn watcher_get_info_ffi(id: *const c_char) -> *mut c_char {
 /// Acquire a read lock for the given key
 /// Returns JSON: {"ticket": number, "acquired": boolean}
 #[no_mangle]
-pub extern "C" fn lock_acquire_read_ffi(key: *const c_char) -> *mut c_char {
-    let key_str = unsafe {
+pub unsafe extern "C" fn lock_acquire_read_ffi(key: *const c_char) -> *mut c_char {
+    let key_str = {
         if key.is_null() {
             return std::ptr::null_mut();
         }
@@ -1116,8 +1116,8 @@ pub extern "C" fn lock_acquire_read_ffi(key: *const c_char) -> *mut c_char {
 /// Acquire a write lock for the given key
 /// Returns JSON: {"ticket": number, "acquired": boolean}
 #[no_mangle]
-pub extern "C" fn lock_acquire_write_ffi(key: *const c_char) -> *mut c_char {
-    let key_str = unsafe {
+pub unsafe extern "C" fn lock_acquire_write_ffi(key: *const c_char) -> *mut c_char {
+    let key_str = {
         if key.is_null() {
             return std::ptr::null_mut();
         }
@@ -1148,8 +1148,8 @@ pub extern "C" fn lock_acquire_write_ffi(key: *const c_char) -> *mut c_char {
 /// Check if a read lock is ready
 /// Returns 1 if ready, 0 if not ready, -1 on error
 #[no_mangle]
-pub extern "C" fn lock_check_read_ffi(key: *const c_char, ticket: u64) -> i32 {
-    let key_str = unsafe {
+pub unsafe extern "C" fn lock_check_read_ffi(key: *const c_char, ticket: u64) -> i32 {
+    let key_str = {
         if key.is_null() {
             return -1;
         }
@@ -1166,8 +1166,8 @@ pub extern "C" fn lock_check_read_ffi(key: *const c_char, ticket: u64) -> i32 {
 /// Check if a write lock is ready
 /// Returns 1 if ready, 0 if not ready, -1 on error
 #[no_mangle]
-pub extern "C" fn lock_check_write_ffi(key: *const c_char, ticket: u64) -> i32 {
-    let key_str = unsafe {
+pub unsafe extern "C" fn lock_check_write_ffi(key: *const c_char, ticket: u64) -> i32 {
+    let key_str = {
         if key.is_null() {
             return -1;
         }
@@ -1184,8 +1184,8 @@ pub extern "C" fn lock_check_write_ffi(key: *const c_char, ticket: u64) -> i32 {
 /// Finalize acquiring a read lock
 /// Returns 0 on success, -1 on error
 #[no_mangle]
-pub extern "C" fn lock_finalize_read_ffi(key: *const c_char, ticket: u64) -> i32 {
-    let key_str = unsafe {
+pub unsafe extern "C" fn lock_finalize_read_ffi(key: *const c_char, ticket: u64) -> i32 {
+    let key_str = {
         if key.is_null() {
             return -1;
         }
@@ -1201,8 +1201,8 @@ pub extern "C" fn lock_finalize_read_ffi(key: *const c_char, ticket: u64) -> i32
 /// Finalize acquiring a write lock
 /// Returns 0 on success, -1 on error
 #[no_mangle]
-pub extern "C" fn lock_finalize_write_ffi(key: *const c_char, ticket: u64) -> i32 {
-    let key_str = unsafe {
+pub unsafe extern "C" fn lock_finalize_write_ffi(key: *const c_char, ticket: u64) -> i32 {
+    let key_str = {
         if key.is_null() {
             return -1;
         }
@@ -1218,8 +1218,8 @@ pub extern "C" fn lock_finalize_write_ffi(key: *const c_char, ticket: u64) -> i3
 /// Release a read lock
 /// Returns 0 on success, -1 on error
 #[no_mangle]
-pub extern "C" fn lock_release_read_ffi(key: *const c_char) -> i32 {
-    let key_str = unsafe {
+pub unsafe extern "C" fn lock_release_read_ffi(key: *const c_char) -> i32 {
+    let key_str = {
         if key.is_null() {
             return -1;
         }
@@ -1235,8 +1235,8 @@ pub extern "C" fn lock_release_read_ffi(key: *const c_char) -> i32 {
 /// Release a write lock
 /// Returns 0 on success, -1 on error
 #[no_mangle]
-pub extern "C" fn lock_release_write_ffi(key: *const c_char) -> i32 {
-    let key_str = unsafe {
+pub unsafe extern "C" fn lock_release_write_ffi(key: *const c_char) -> i32 {
+    let key_str = {
         if key.is_null() {
             return -1;
         }
@@ -1252,7 +1252,7 @@ pub extern "C" fn lock_release_write_ffi(key: *const c_char) -> i32 {
 /// Get lock statistics
 /// Returns JSON with stats
 #[no_mangle]
-pub extern "C" fn lock_get_stats_ffi() -> *mut c_char {
+pub unsafe extern "C" fn lock_get_stats_ffi() -> *mut c_char {
     let stats = lock::get_lock_stats();
     let result = serde_json::json!({
         "total_locks": stats.total_locks,

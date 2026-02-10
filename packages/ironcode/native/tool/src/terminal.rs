@@ -2,8 +2,6 @@ use portable_pty::{native_pty_system, Child, CommandBuilder, MasterPty, PtySize}
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::io::{Read, Write};
-#[cfg(unix)]
-use std::os::unix::io::AsRawFd;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -125,7 +123,7 @@ pub fn create(
 
     let shell = command
         .map(|s| s.to_string())
-        .unwrap_or_else(|| get_shell());
+        .unwrap_or_else(get_shell);
     let mut cmd = CommandBuilder::new(&shell);
     let working_dir = cwd.unwrap_or(".");
     cmd.cwd(working_dir);
@@ -398,7 +396,7 @@ pub fn get_buffer_info(id: &str) -> Result<BufferInfo, String> {
     Ok(BufferInfo {
         size,
         limit: BUFFER_LIMIT,
-        chunks: (size + BUFFER_CHUNK - 1) / BUFFER_CHUNK,
+        chunks: size.div_ceil(BUFFER_CHUNK),
     })
 }
 
