@@ -215,6 +215,8 @@ ironcode --version
 # Or run directly from download location
 ```
 
+**Note for Windows users:** IronCode uses native Rust libraries for performance. The Windows build is statically linked and should work out of the box. If you encounter DLL loading errors, please [report the issue](https://github.com/KSD-CO/IronCode/issues) with the error message.
+
 ### Arch Linux (AUR)
 
 _Coming soon - AUR package will be available in the future_
