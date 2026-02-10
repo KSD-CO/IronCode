@@ -13,7 +13,11 @@ const sidecarConfig = getCurrentSidecar()
 
 const dir = "src-tauri/target/ironcode-binaries"
 
+// Determine platform for artifact name
+const platform = process.platform === "win32" ? "win32" : process.platform === "darwin" ? "darwin" : "linux"
+const artifactName = `ironcode-cli-${platform}`
+
 await $`mkdir -p ${dir}`
-await $`gh run download ${Bun.env.GITHUB_RUN_ID} -n ironcode-cli`.cwd(dir)
+await $`gh run download ${Bun.env.GITHUB_RUN_ID} -n ${artifactName}`.cwd(dir)
 
 await copyBinaryToSidecarFolder(windowsify(`${dir}/${sidecarConfig.ocBinary}/bin/ironcode`))
