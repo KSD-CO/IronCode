@@ -71,6 +71,12 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: packages/ironcode/native/tool
+          shared-key: cli-${{ matrix.platform }}
+
       - name: Build native Rust library
         run: |
           cd packages/ironcode/native/tool
@@ -222,6 +228,12 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: packages/ironcode/native/tool
+          shared-key: cli-linux
 
       - name: Build native Rust library
         run: |
