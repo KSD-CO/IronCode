@@ -171,7 +171,8 @@ for (const item of targets) {
   const nativeLibPath = path.join(dir, `native/tool/target/release/${libName}`)
 
   if (fs.existsSync(nativeLibPath)) {
-    await $`cp ${nativeLibPath} ./dist/${name}/bin/${libName}`
+    const destPath = path.join(dir, `dist/${name}/bin/${libName}`)
+    await Bun.write(destPath, Bun.file(nativeLibPath))
     console.log(`Copied ${libName} to ${name}/bin`)
   } else {
     console.warn(`Warning: Native library not found at ${nativeLibPath}`)
