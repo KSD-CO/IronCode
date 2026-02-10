@@ -227,27 +227,40 @@ export async function buildNotes(from: string, to: string) {
 
   console.log("generating changelog since " + from)
 
-  const ironcode = await createIroncode({ port: 0 })
   const notes: string[] = []
 
-  try {
-    const lines = await generateChangelog(commits, ironcode)
-    notes.push(...lines)
-    console.log("---- Generated Changelog ----")
-    console.log(notes.join("\n"))
-    console.log("-----------------------------")
-  } catch (error) {
-    if (error instanceof Error && error.name === "TimeoutError") {
-      console.log("Changelog generation timed out, using raw commits")
-      for (const commit of commits) {
-        const attribution = commit.author && !Script.team.includes(commit.author) ? ` (@${commit.author})` : ""
-        notes.push(`- ${commit.message}${attribution}`)
-      }
-    } else {
-      throw error
+  // Skip AI summarization in CI to avoid FFI/Rust dependency
+  const skipAI = process.env.CI === "true"
+
+  if (skipAI) {
+    console.log("CI environment detected, using raw commit messages")
+    for (const commit of commits) {
+      const section = getSection(commit.areas)
+      const attribution = commit.author && !Script.team.includes(commit.author) ? ` (@${commit.author})` : ""
+      if (!notes.includes(`## ${section}`)) notes.push(`## ${section}`)
+      notes.push(`- ${commit.message}${attribution}`)
     }
-  } finally {
-    await ironcode.server.close()
+  } else {
+    const ironcode = await createIroncode({ port: 0 })
+    try {
+      const lines = await generateChangelog(commits, ironcode)
+      notes.push(...lines)
+      console.log("---- Generated Changelog ----")
+      console.log(notes.join("\n"))
+      console.log("-----------------------------")
+    } catch (error) {
+      if (error instanceof Error && error.name === "TimeoutError") {
+        console.log("Changelog generation timed out, using raw commits")
+        for (const commit of commits) {
+          const attribution = commit.author && !Script.team.includes(commit.author) ? ` (@${commit.author})` : ""
+          notes.push(`- ${commit.message}${attribution}`)
+        }
+      } else {
+        throw error
+      }
+    } finally {
+      await ironcode.server.close()
+    }
   }
   console.log("changelog generation complete")
 
