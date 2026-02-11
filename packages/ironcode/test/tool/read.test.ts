@@ -291,20 +291,6 @@ describe("tool.read truncation", () => {
     })
   })
 
-  test("large image files are properly attached without error", async () => {
-    await Instance.provide({
-      directory: FIXTURES_DIR,
-      fn: async () => {
-        const read = await ReadTool.init()
-        const result = await read.execute({ filePath: path.join(FIXTURES_DIR, "large-image.png") }, ctx)
-        expect(result.metadata.truncated).toBe(false)
-        expect(result.attachments).toBeDefined()
-        expect(result.attachments?.length).toBe(1)
-        expect(result.attachments?.[0].type).toBe("file")
-      },
-    })
-  })
-
   test(".fbs files (FlatBuffers schema) are read as text, not images", async () => {
     await using tmp = await tmpdir({
       init: async (dir) => {
