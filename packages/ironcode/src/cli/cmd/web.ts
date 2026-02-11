@@ -3,7 +3,6 @@ import { UI } from "../ui"
 import { cmd } from "./cmd"
 import { withNetworkOptions, resolveNetworkOptions } from "../network"
 import { Flag } from "../../flag/flag"
-import open from "open"
 import { networkInterfaces } from "os"
 
 function getNetworkIPs() {
@@ -31,7 +30,7 @@ function getNetworkIPs() {
 export const WebCommand = cmd({
   command: "web",
   builder: (yargs) => withNetworkOptions(yargs),
-  describe: "start ironcode server and open web interface",
+  describe: "start ironcode API server (no web UI)",
   handler: async (args) => {
     if (!Flag.IRONCODE_SERVER_PASSWORD) {
       UI.println(UI.Style.TEXT_WARNING_BOLD + "!  " + "IRONCODE_SERVER_PASSWORD is not set; server is unsecured.")
@@ -66,14 +65,18 @@ export const WebCommand = cmd({
           `${opts.mdnsDomain}:${server.port}`,
         )
       }
-
-      // Open localhost in browser
-      open(localhostUrl.toString()).catch(() => {})
     } else {
       const displayUrl = server.url.toString()
-      UI.println(UI.Style.TEXT_INFO_BOLD + "  Web interface:    ", UI.Style.TEXT_NORMAL, displayUrl)
-      open(displayUrl).catch(() => {})
+      UI.println(UI.Style.TEXT_INFO_BOLD + "  API server:       ", UI.Style.TEXT_NORMAL, displayUrl)
     }
+
+    UI.empty()
+    UI.println(
+      UI.Style.TEXT_INFO_BOLD + "  Note:             ",
+      UI.Style.TEXT_NORMAL,
+      "API server only - use 'ironcode' CLI or 'ironcode tui' for interactive sessions",
+    )
+    UI.empty()
 
     await new Promise(() => {})
     await server.stop()
