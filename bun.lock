@@ -20,16 +20,6 @@
         "turbo": "2.5.6",
       },
     },
-    "packages/gitlab": {
-      "name": "@gitlab/workspace",
-    },
-    "packages/gitlab/ironcode-gitlab-auth": {
-      "name": "@gitlab/ironcode-gitlab-auth",
-      "version": "1.9.0",
-      "dependencies": {
-        "@ironcode-ai/plugin": "workspace:*",
-      },
-    },
     "packages/ironcode": {
       "name": "ironcode",
       "version": "1.9.0",
@@ -61,7 +51,6 @@
         "@ai-sdk/xai": "2.0.51",
         "@clack/prompts": "1.0.0-alpha.1",
         "@gitlab/gitlab-ai-provider": "3.5.0",
-        "@gitlab/ironcode-gitlab-auth": "workspace:*",
         "@hono/standard-validator": "0.1.5",
         "@hono/zod-validator": "catalog:",
         "@ironcode-ai/plugin": "workspace:*",
@@ -450,10 +439,6 @@
     "@fastify/busboy": ["@fastify/busboy@2.1.1", "", {}, "sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA=="],
 
     "@gitlab/gitlab-ai-provider": ["@gitlab/gitlab-ai-provider@3.5.0", "", { "dependencies": { "@anthropic-ai/sdk": "^0.71.0", "@anycable/core": "^0.9.2", "graphql-request": "^6.1.0", "isomorphic-ws": "^5.0.0", "openai": "^6.16.0", "socket.io-client": "^4.8.1", "vscode-jsonrpc": "^8.2.1", "zod": "^3.25.76" }, "peerDependencies": { "@ai-sdk/provider": ">=2.0.0", "@ai-sdk/provider-utils": ">=3.0.0" } }, "sha512-OoAwCz4fOci3h/2l+PRHMclclh3IaFq8w1es2wvBJ8ca7vtglKsBYT7dvmYpsXlu7pg9mopbjcexvmVCQEUTAQ=="],
-
-    "@gitlab/ironcode-gitlab-auth": ["@gitlab/ironcode-gitlab-auth@workspace:packages/gitlab/ironcode-gitlab-auth"],
-
-    "@gitlab/workspace": ["@gitlab/workspace@workspace:packages/gitlab"],
 
     "@graphql-typed-document-node/core": ["@graphql-typed-document-node/core@3.2.0", "", { "peerDependencies": { "graphql": "^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0" } }, "sha512-mB9oAsNCm9aM3/SOv4YtBMqZbYj10R7dkq8byBqxGY/ncFwhf2oQzMV+LCRlWoDSEBJ3COiR1yeDvMtsoOsuFQ=="],
 

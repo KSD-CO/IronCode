@@ -65,7 +65,6 @@
     "@ai-sdk/xai": "2.0.51",
     "@clack/prompts": "1.0.0-alpha.1",
     "@gitlab/gitlab-ai-provider": "3.5.0",
-    "@gitlab/ironcode-gitlab-auth": "workspace:*",
     "@hono/standard-validator": "0.1.5",
     "@hono/zod-validator": "catalog:",
     "@ironcode-ai/plugin": "workspace:*",
