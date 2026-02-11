@@ -29,7 +29,6 @@ pub fn execute(
     let mut raw: Vec<String> = Vec::with_capacity(limit.min(1000));
     let mut bytes = 0;
     let mut truncated_by_bytes = false;
-    let mut current_line = 0;
 
     // Use streaming read with larger buffer (64KB for better I/O performance)
     let file = fs::File::open(path).map_err(|e| format!("Failed to open file: {}", e))?;
