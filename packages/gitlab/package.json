@@ -1,7 +1,0 @@
-{
-  "name": "@gitlab/workspace",
-  "private": true,
-  "workspaces": [
-    "ironcode-gitlab-auth"
-  ]
-}
