@@ -101,14 +101,14 @@ pub fn parse_bash_command(command: &str, _cwd: &str) -> Result<BashParseResult, 
 }
 
 /// Helper function to walk the tree recursively
-fn walk_tree<F>(cursor: &mut tree_sitter::TreeCursor, source: &[u8], callback: &mut F)
+fn walk_tree<F>(cursor: &mut tree_sitter::TreeCursor, _source: &[u8], callback: &mut F)
 where
     F: FnMut(tree_sitter::Node),
 {
     callback(cursor.node());
     if cursor.goto_first_child() {
         loop {
-            walk_tree(cursor, source, callback);
+            walk_tree(cursor, _source, callback);
             if !cursor.goto_next_sibling() {
                 break;
             }
@@ -135,29 +135,29 @@ mod tests {
     #[test]
     fn test_parse_simple_command() {
         let result = parse_bash_command("ls -la", "/tmp").unwrap();
-        assert!(result.patterns.len() > 0);
+        assert!(!result.patterns.is_empty());
         assert_eq!(result.patterns[0], "ls -la");
     }
 
     #[test]
     fn test_parse_cd_command() {
         let result = parse_bash_command("cd /home/user", "/tmp").unwrap();
-        assert!(result.directories.len() > 0);
+        assert!(!result.directories.is_empty());
         assert!(result.directories.contains(&"/home/user".to_string()));
     }
 
     #[test]
     fn test_parse_rm_command() {
         let result = parse_bash_command("rm -rf ./build", "/tmp").unwrap();
-        assert!(result.directories.len() > 0);
-        assert!(result.patterns.len() > 0);
+        assert!(!result.directories.is_empty());
+        assert!(!result.patterns.is_empty());
     }
 
     #[test]
     fn test_parse_complex_command() {
         let result = parse_bash_command("mkdir test && cd test && touch file.txt", "/tmp").unwrap();
-        assert!(result.directories.len() > 0);
-        assert!(result.patterns.len() > 0);
+        assert!(!result.directories.is_empty());
+        assert!(!result.patterns.is_empty());
     }
 
     #[test]

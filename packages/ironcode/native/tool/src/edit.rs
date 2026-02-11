@@ -93,8 +93,8 @@ fn line_trimmed_replacer(content: &str, find: &str) -> Vec<String> {
 
         if matches {
             let mut match_start = 0;
-            for k in 0..i {
-                match_start += original_lines[k].len() + 1; // +1 for newline
+            for line in original_lines.iter().take(i) {
+                match_start += line.len() + 1; // +1 for newline
             }
 
             let mut match_end = match_start;
@@ -139,8 +139,8 @@ fn block_anchor_replacer(content: &str, find: &str) -> Vec<String> {
             continue;
         }
 
-        for j in i + 2..original_lines.len() {
-            if original_lines[j].trim() == last_line_search {
+        for (j, line) in original_lines.iter().enumerate().skip(i + 2) {
+            if line.trim() == last_line_search {
                 candidates.push((i, j));
                 break;
             }
@@ -183,12 +183,17 @@ fn block_anchor_replacer(content: &str, find: &str) -> Vec<String> {
 
         if similarity >= SINGLE_CANDIDATE_SIMILARITY_THRESHOLD {
             let mut match_start = 0;
-            for k in 0..start_line {
-                match_start += original_lines[k].len() + 1;
+            for line in original_lines.iter().take(start_line) {
+                match_start += line.len() + 1;
             }
             let mut match_end = match_start;
-            for k in start_line..=end_line {
-                match_end += original_lines[k].len();
+            for (k, line) in original_lines
+                .iter()
+                .enumerate()
+                .take(end_line + 1)
+                .skip(start_line)
+            {
+                match_end += line.len();
                 if k < end_line {
                     match_end += 1;
                 }
@@ -237,12 +242,17 @@ fn block_anchor_replacer(content: &str, find: &str) -> Vec<String> {
     if max_similarity >= MULTIPLE_CANDIDATES_SIMILARITY_THRESHOLD {
         if let Some((start_line, end_line)) = best_match {
             let mut match_start = 0;
-            for k in 0..start_line {
-                match_start += original_lines[k].len() + 1;
+            for line in original_lines.iter().take(start_line) {
+                match_start += line.len() + 1;
             }
             let mut match_end = match_start;
-            for k in start_line..=end_line {
-                match_end += original_lines[k].len();
+            for (k, line) in original_lines
+                .iter()
+                .enumerate()
+                .take(end_line + 1)
+                .skip(start_line)
+            {
+                match_end += line.len();
                 if k < end_line {
                     match_end += 1;
                 }

@@ -401,7 +401,7 @@ pub fn push_to_remote(cwd: &str) -> Result<String, VcsError> {
             // 2. Try default SSH key from ~/.ssh
             if allowed_types.contains(git2::CredentialType::SSH_KEY) {
                 let username = username_from_url.unwrap_or("git");
-                if let Some(home) = std::env::var("HOME").ok() {
+                if let Ok(home) = std::env::var("HOME") {
                     let id_rsa = std::path::PathBuf::from(&home).join(".ssh/id_rsa");
                     let id_ed25519 = std::path::PathBuf::from(&home).join(".ssh/id_ed25519");
                     

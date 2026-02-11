@@ -31,10 +31,12 @@ impl LockState {
     }
 }
 
-/// Global lock registry
-static LOCKS: Mutex<Option<Arc<Mutex<HashMap<String, LockState>>>>> = Mutex::new(None);
+type LockRegistry = Arc<Mutex<HashMap<String, LockState>>>;
 
-fn get_registry() -> Arc<Mutex<HashMap<String, LockState>>> {
+/// Global lock registry
+static LOCKS: Mutex<Option<LockRegistry>> = Mutex::new(None);
+
+fn get_registry() -> LockRegistry {
     let mut guard = LOCKS.lock().unwrap();
     if guard.is_none() {
         *guard = Some(Arc::new(Mutex::new(HashMap::new())));

@@ -47,7 +47,7 @@ fn get_memory_usage() -> usize {
 fn get_memory_usage() -> usize {
     use std::process::Command;
     let output = Command::new("ps")
-        .args(&["-o", "rss=", "-p", &std::process::id().to_string()])
+        .args(["-o", "rss=", "-p", &std::process::id().to_string()])
         .output()
         .unwrap();
     let rss_str = String::from_utf8_lossy(&output.stdout);
@@ -102,11 +102,7 @@ fn benchmark_size(lines: usize) {
     let end_mem = get_memory_usage();
 
     let avg_micros = duration.as_micros() as f64 / iterations as f64;
-    let mem_delta = if end_mem > start_mem {
-        end_mem - start_mem
-    } else {
-        0
-    };
+    let mem_delta = end_mem.saturating_sub(start_mem);
 
     println!("\nRust Performance:");
     println!("  Time per operation: {}", format_time(avg_micros));

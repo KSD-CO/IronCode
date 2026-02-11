@@ -66,7 +66,7 @@ mod tests {
             "tests/test.rs".to_string(),
         ];
         let results = search("main", &items, None);
-        assert!(results.len() > 0);
+        assert!(!results.is_empty());
         assert_eq!(results[0], "src/main.rs");
     }
 
