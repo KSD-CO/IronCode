@@ -361,20 +361,82 @@ pub fn push_to_remote(cwd: &str) -> Result<String, VcsError> {
     // Push current branch to remote
     let refspec = format!("refs/heads/{}:refs/heads/{}", branch_name, branch_name);
 
-    // Set up callbacks for credentials (will use SSH agent or credential helper)
+    // Set up callbacks for credentials with multiple fallback methods
     let mut callbacks = git2::RemoteCallbacks::new();
-    callbacks.credentials(|_url, username_from_url, _allowed_types| {
-        git2::Cred::ssh_key_from_agent(username_from_url.unwrap_or("git"))
+    let repo_config = repo.config().ok();
+
+    callbacks.credentials(move |url, username_from_url, allowed_types| {
+        // Try different credential methods in order of preference
+
+        // 1. Try SSH key from agent first (for SSH URLs)
+        if allowed_types.contains(git2::CredentialType::SSH_KEY) {
+            if let Ok(cred) = git2::Cred::ssh_key_from_agent(username_from_url.unwrap_or("git")) {
+                return Ok(cred);
+            }
+        }
+
+        // 2. Try default SSH key from ~/.ssh
+        if allowed_types.contains(git2::CredentialType::SSH_KEY) {
+            let username = username_from_url.unwrap_or("git");
+            if let Some(home) = std::env::var("HOME").ok() {
+                let id_rsa = std::path::PathBuf::from(&home).join(".ssh/id_rsa");
+                let id_ed25519 = std::path::PathBuf::from(&home).join(".ssh/id_ed25519");
+
+                // Try id_ed25519 first (modern default)
+                if id_ed25519.exists() {
+                    if let Ok(cred) = git2::Cred::ssh_key(username, None, &id_ed25519, None) {
+                        return Ok(cred);
+                    }
+                }
+
+                // Try id_rsa
+                if id_rsa.exists() {
+                    if let Ok(cred) = git2::Cred::ssh_key(username, None, &id_rsa, None) {
+                        return Ok(cred);
+                    }
+                }
+            }
+        }
+
+        // 3. Try credential helper (for HTTPS)
+        if allowed_types.contains(git2::CredentialType::USER_PASS_PLAINTEXT) {
+            if let Some(ref config) = repo_config {
+                if let Ok(cred) = git2::Cred::credential_helper(config, url, username_from_url) {
+                    return Ok(cred);
+                }
+            }
+        }
+
+        // 4. Try default credential (anonymous or default)
+        if allowed_types.contains(git2::CredentialType::DEFAULT) {
+            if let Ok(cred) = git2::Cred::default() {
+                return Ok(cred);
+            }
+        }
+
+        Err(git2::Error::from_str(
+            "No valid authentication method found. Please configure SSH keys or credential helper.",
+        ))
     });
 
     let mut push_options = git2::PushOptions::new();
     push_options.remote_callbacks(callbacks);
 
-    remote
-        .push(&[refspec.as_str()], Some(&mut push_options))
-        .map_err(|e| VcsError::GitError(format!("Failed to push: {}", e)))?;
-
-    Ok(format!("Pushed {} to {}", branch_name, remote_name))
+    // Try to push
+    match remote.push(&[refspec.as_str()], Some(&mut push_options)) {
+        Ok(_) => {
+            // After successful push, set upstream tracking if not already set
+            if let Ok(mut branch) = repo.find_branch(branch_name, git2::BranchType::Local) {
+                // Only set upstream if it's not already set
+                if branch.upstream().is_err() {
+                    let remote_ref = format!("{}/{}", remote_name, branch_name);
+                    let _ = branch.set_upstream(Some(&remote_ref));
+                }
+            }
+            Ok(format!("Pushed {} to {}", branch_name, remote_name))
+        }
+        Err(e) => Err(VcsError::GitError(format!("Failed to push: {}", e))),
+    }
 }
 
 #[cfg(test)]
