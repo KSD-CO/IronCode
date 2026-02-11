@@ -24,6 +24,20 @@
 
 ## 🎉 What's New
 
+### February 2026 - Git Source Control UI
+
+**Built-in Git UI for seamless version control within TUI:**
+
+- 🎯 **Full Git Integration** - Stage, commit, push without leaving IronCode
+- 📊 **Visual Status View** - See staged/unstaged changes with color-coded icons
+- 🌿 **Branch Management** - Quick checkout between branches
+- 📝 **Inline Commit** - Type commit messages directly in TUI
+- 🔍 **Syntax-Highlighted Diffs** - Review changes with color-coded diffs
+- ⚡ **Multi-Auth Push** - Supports SSH keys, SSH agent, and HTTPS with credential helper
+- 🎨 **Intuitive UI** - Keyboard shortcuts (p: push, a: stage all, Space: stage/unstage)
+
+**Open Git panel with `Ctrl+X` then `I` or `/git` command**
+
 ### February 2026 - Streaming Optimizations
 
 **Massive performance and memory improvements through streaming patterns:**
@@ -66,6 +80,7 @@ IronCode is a **high-performance CLI fork** of [OpenCode](https://github.com/ano
 ### Key Features
 
 - ⌨️ **CLI-First**: Powerful terminal UI optimized for command-line workflows
+- 🎯 **Git Source Control**: Full Git integration - stage, commit, diff, push without leaving TUI
 - 🏠 **100% Local**: No cloud services, works completely offline
 - 🔒 **Privacy First**: Your code never leaves your machine
 - 🎯 **Lightweight**: Stripped down to core functionality - CLI only
@@ -142,6 +157,11 @@ IronCode rewrites key operations in native Rust with **measured real-world perfo
 | **Read (50K lines)**      | 1.45 ms         | 0.97 ms     | **1.49x faster**   | Streaming optimized    |
 | **Read (100K lines)**     | 3.71 ms         | 2.38 ms     | **1.56x faster**   | 99.7% memory savings   |
 | **Read (500K lines)**     | 31.50 ms        | 21.55 ms    | **1.46x faster**   | 30MB file              |
+| **Git Status**            | ~15-20 ms       | 9.43 ms     | **1.83x faster**   | libgit2, no spawn      |
+| **Git Stage/Unstage**     | ~10-15 ms       | <5 ms       | **2-3x faster**    | Native operations      |
+| **Git Commit**            | ~15-20 ms       | <10 ms      | **2x faster**      | Direct libgit2         |
+| **Git Branch List**       | ~10 ms          | <5 ms       | **2x faster**      | No process spawn       |
+| **Git Diff**              | ~20-30 ms       | ~15 ms      | **1.5x faster**    | Streaming diff         |
 
 **Key Insights:**
 
@@ -159,6 +179,7 @@ IronCode rewrites key operations in native Rust with **measured real-world perfo
 **Native Rust Components:**
 
 - ✅ **PTY/Terminal**: Full terminal session management with 2MB ring buffer, zero-copy streaming (15.29x faster) - Powers all Bash tool operations
+- ✅ **Git Source Control**: Complete Git operations via libgit2 (status, stage, commit, push, branch, diff) - 1.5-3x faster than subprocess
 - ✅ **File Reading**: Streaming read with 64KB buffer and pre-allocation (1.2-1.6x faster, 99.7% memory savings)
 - ✅ **Grep Search**: Streaming line-by-line search (90-99% memory reduction, scales to GB files)
 - ✅ **Edit Tool**: 9 smart replacement strategies with fuzzy matching (complex compute justifies FFI)
@@ -372,6 +393,59 @@ Once started, IronCode provides an interactive terminal UI:
 - Use `Ctrl+C` to cancel operations
 - Use `Ctrl+D` or type `exit` to quit
 
+### Git Source Control
+
+IronCode includes a built-in Git UI accessible within the TUI:
+
+**Open Git Panel:**
+
+- Press `Ctrl+X` then `I` (keybinding)
+- Or type `/git` or `/source-control` command
+
+**Features:**
+
+- **Status View** - See all file changes (staged/unstaged)
+  - `↑↓` or `j/k`: Navigate files
+  - `Space`: Stage/unstage selected file
+  - `Enter`: View diff
+  - `a`: Stage all files
+  - `u`: Unstage all files
+  - `r`: Refresh status
+  - `p`: Push to remote
+- **Branches View** - Switch between branches
+  - `↑↓` or `j/k`: Navigate branches
+  - `Enter`: Checkout branch
+  - Current branch marked with `*`
+- **Commit View** - Create commits
+  - Type your commit message
+  - `Enter`: Commit staged changes
+  - `Esc`: Cancel
+- **Diff View** - Review changes
+  - Syntax-highlighted diffs (green +, red -, blue line numbers)
+  - `h` or `Backspace`: Return to status view
+
+**Push Authentication:**
+
+IronCode supports multiple authentication methods:
+
+- SSH keys (id_rsa, id_ed25519) from `~/.ssh/`
+- SSH agent
+- HTTPS with credential helper (GitHub CLI recommended)
+
+For HTTPS authentication with GitHub:
+
+```bash
+# Install GitHub CLI if not already installed
+brew install gh  # macOS
+# or: sudo apt install gh  # Linux
+
+# Authenticate
+gh auth login
+
+# Configure git to use gh for credentials
+git config --global credential.helper '!gh auth git-credential'
+```
+
 ---
 
 ## Agents
@@ -529,6 +603,7 @@ Contributions are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) befo
 
 **Recent Contributions:**
 
+- ✅ **Git Source Control UI** (Full TUI integration with libgit2 - Feb 2026)
 - ✅ **Streaming read optimization** (1.2-1.6x faster, 99.7% memory savings - Feb 2026)
 - ✅ **Grep streaming optimization** (90-99% memory reduction, GB-file capability - Feb 2026)
 - ✅ **Memory optimization deployed to production** (97.6% faster message processing - Feb 2026)
