@@ -35,6 +35,7 @@ export function DialogGit() {
   const [selectedFile, setSelectedFile] = createSignal<GitFileStatus | null>(null)
   const [loading, setLoading] = createSignal(false)
   const [error, setError] = createSignal<string | null>(null)
+  const [successMessage, setSuccessMessage] = createSignal<string | null>(null)
 
   let diffScrollBoxRef: ScrollBoxRenderable
 
@@ -90,6 +91,7 @@ export function DialogGit() {
     try {
       setLoading(true)
       setError(null)
+      setSuccessMessage(null)
       const status = gitStatusDetailedFFI(cwd())
       if (status) {
         setFiles(status.files)
@@ -105,6 +107,7 @@ export function DialogGit() {
     try {
       setLoading(true)
       setError(null)
+      setSuccessMessage(null)
       const branchList = gitListBranchesFFI(cwd())
       setBranches(branchList)
     } catch (e) {
@@ -118,6 +121,7 @@ export function DialogGit() {
     try {
       setLoading(true)
       setError(null)
+      setSuccessMessage(null)
       gitStageFilesFFI(cwd(), [file.path])
       refreshStatus()
     } catch (e) {
@@ -131,6 +135,7 @@ export function DialogGit() {
     try {
       setLoading(true)
       setError(null)
+      setSuccessMessage(null)
       gitUnstageFilesFFI(cwd(), [file.path])
       refreshStatus()
     } catch (e) {
@@ -176,11 +181,22 @@ export function DialogGit() {
     try {
       setLoading(true)
       setError(null)
+      setSuccessMessage(null)
       const result = gitCommitFFI(cwd(), msg)
+
       if (result.success) {
+        const commitHash = result.commit ? result.commit.substring(0, 7) : "unknown"
+        setSuccessMessage(`✓ Committed ${commitHash}: ${msg}`)
         setCommitMessage("")
         setView("status")
         refreshStatus()
+
+        // Clear success message after 3 seconds
+        setTimeout(() => setSuccessMessage(null), 3000)
+      } else if (result.error) {
+        setError(result.error)
+      } else {
+        setError("Commit failed")
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to commit")
@@ -411,6 +427,11 @@ export function DialogGit() {
           {/* Error display */}
           <Show when={error()}>
             <text fg={theme.error}>{error()}</text>
+          </Show>
+
+          {/* Success message */}
+          <Show when={successMessage()}>
+            <text fg={theme.success}>{successMessage()}</text>
           </Show>
 
           {/* Loading indicator */}
