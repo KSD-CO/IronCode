@@ -241,14 +241,23 @@ export function DialogGit() {
       setLoading(true)
       setError(null)
       setSuccessMessage(null)
-      const result = gitPushFFI(cwd())
 
-      if (result.success && result.message) {
-        setSuccessMessage(`✓ ${result.message}`)
+      const result = gitPushFFI(cwd())
+      console.log("Push result:", result) // Debug log
+
+      if (result.success) {
+        const msg = result.message || "Everything up-to-date"
+        setSuccessMessage(`✓ ${msg}`)
+        console.log("Success message set:", msg) // Debug log
         setTimeout(() => setSuccessMessage(null), 3000)
+      } else if (result.error) {
+        setError(result.error)
+        setTimeout(() => setError(null), 3000)
       }
     } catch (e) {
+      console.error("Push error:", e) // Debug log
       setError(e instanceof Error ? e.message : "Failed to push")
+      setTimeout(() => setError(null), 3000)
     } finally {
       setLoading(false)
     }
@@ -453,14 +462,22 @@ export function DialogGit() {
 
         {/* Main Content Area */}
         <box flexDirection="column" paddingLeft={2} paddingRight={2} paddingBottom={1} flexGrow={1} gap={1}>
-          {/* Error display */}
-          <Show when={error()}>
-            <text fg={theme.error}>{error()}</text>
+          {/* Success message - prominent display */}
+          <Show when={successMessage()}>
+            <box paddingLeft={2} paddingRight={2} paddingTop={1} paddingBottom={1} backgroundColor={theme.success}>
+              <text fg={theme.selectedListItemText} attributes={TextAttributes.BOLD}>
+                {successMessage()}
+              </text>
+            </box>
           </Show>
 
-          {/* Success message */}
-          <Show when={successMessage()}>
-            <text fg={theme.success}>{successMessage()}</text>
+          {/* Error display */}
+          <Show when={error()}>
+            <box paddingLeft={2} paddingRight={2} paddingTop={1} paddingBottom={1} backgroundColor={theme.error}>
+              <text fg={theme.selectedListItemText} attributes={TextAttributes.BOLD}>
+                {error()}
+              </text>
+            </box>
           </Show>
 
           {/* Loading indicator */}
