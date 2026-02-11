@@ -368,7 +368,9 @@ export namespace MessageV2 {
     modelID: z.string(),
     providerID: z.string(),
     /**
-     * @deprecated
+     * @deprecated - Duplicate of `agent` field, but cannot be removed yet
+     * because it's persisted in existing user sessions. Safe to remove after
+     * storage migration or when backward compatibility is no longer needed.
      */
     mode: z.string(),
     agent: z.string(),

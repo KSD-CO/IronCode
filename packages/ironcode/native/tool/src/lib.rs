@@ -45,7 +45,10 @@ pub unsafe extern "C" fn glob_ffi(pattern: *const c_char, search: *const c_char)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn ls_ffi(path: *const c_char, ignore_patterns_json: *const c_char) -> *mut c_char {
+pub unsafe extern "C" fn ls_ffi(
+    path: *const c_char,
+    ignore_patterns_json: *const c_char,
+) -> *mut c_char {
     let path_str = unsafe {
         if path.is_null() {
             return std::ptr::null_mut();
@@ -103,6 +106,7 @@ pub unsafe extern "C" fn read_ffi(filepath: *const c_char, offset: i32, limit: i
 }
 
 // Optimized read that returns raw content without JSON serialization
+// Uses BufReader with read_to_string for best performance
 #[no_mangle]
 pub unsafe extern "C" fn read_raw_ffi(filepath: *const c_char) -> *mut c_char {
     let filepath_str = unsafe {
@@ -112,11 +116,26 @@ pub unsafe extern "C" fn read_raw_ffi(filepath: *const c_char) -> *mut c_char {
         CStr::from_ptr(filepath).to_str().unwrap_or("")
     };
 
-    match std::fs::read_to_string(filepath_str) {
-        Ok(content) => match CString::new(content) {
-            Ok(cstring) => cstring.into_raw(),
-            Err(_) => std::ptr::null_mut(),
-        },
+    use std::io::{BufReader, Read};
+
+    // Use BufReader with larger buffer for better performance
+    match std::fs::File::open(filepath_str) {
+        Ok(file) => {
+            // Get file size to pre-allocate string capacity
+            let metadata = file.metadata();
+            let capacity = metadata.map(|m| m.len() as usize).unwrap_or(0);
+
+            let mut reader = BufReader::with_capacity(65536, file); // 64KB buffer
+            let mut content = String::with_capacity(capacity);
+
+            match reader.read_to_string(&mut content) {
+                Ok(_) => match CString::new(content) {
+                    Ok(cstring) => cstring.into_raw(),
+                    Err(_) => std::ptr::null_mut(),
+                },
+                Err(_) => std::ptr::null_mut(),
+            }
+        }
         Err(_) => std::ptr::null_mut(),
     }
 }
