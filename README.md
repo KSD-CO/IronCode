@@ -236,7 +236,7 @@ npx ironcode-ai
 
 ### Homebrew (macOS/Linux)
 
-IronCode is available through a Homebrew tap. The formula automatically installs the appropriate binary for your platform and includes all dependencies (like `ripgrep`).
+IronCode is available through a Homebrew tap. The formula automatically installs the appropriate binary for your platform.
 
 ```bash
 # Add the tap

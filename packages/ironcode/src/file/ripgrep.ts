@@ -1,41 +1,13 @@
-// Ripgrep utility functions
+// File listing and tree utilities using native Rust FFI
 import path from "path"
-import { Global } from "../global"
-import fs from "fs/promises"
 import z from "zod"
-import { NamedError } from "@ironcode-ai/util/error"
-import { lazy } from "../util/lazy"
-import { $ } from "bun"
-
-import { ZipReader, BlobReader, BlobWriter } from "@zip.js/zip.js"
 import { Log } from "@/util/log"
 import { fileListFFI } from "@/tool/ffi"
 
 export namespace Ripgrep {
   const log = Log.create({ service: "ripgrep" })
-  const Stats = z.object({
-    elapsed: z.object({
-      secs: z.number(),
-      nanos: z.number(),
-      human: z.string(),
-    }),
-    searches: z.number(),
-    searches_with_match: z.number(),
-    bytes_searched: z.number(),
-    bytes_printed: z.number(),
-    matched_lines: z.number(),
-    matches: z.number(),
-  })
 
-  const Begin = z.object({
-    type: z.literal("begin"),
-    data: z.object({
-      path: z.object({
-        text: z.string(),
-      }),
-    }),
-  })
-
+  // Schema for grep match results (used by API route schema)
   export const Match = z.object({
     type: z.literal("match"),
     data: z.object({
@@ -59,150 +31,7 @@ export namespace Ripgrep {
     }),
   })
 
-  const End = z.object({
-    type: z.literal("end"),
-    data: z.object({
-      path: z.object({
-        text: z.string(),
-      }),
-      binary_offset: z.number().nullable(),
-      stats: Stats,
-    }),
-  })
-
-  const Summary = z.object({
-    type: z.literal("summary"),
-    data: z.object({
-      elapsed_total: z.object({
-        human: z.string(),
-        nanos: z.number(),
-        secs: z.number(),
-      }),
-      stats: Stats,
-    }),
-  })
-
-  const Result = z.union([Begin, Match, End, Summary])
-
-  export type Result = z.infer<typeof Result>
   export type Match = z.infer<typeof Match>
-  export type Begin = z.infer<typeof Begin>
-  export type End = z.infer<typeof End>
-  export type Summary = z.infer<typeof Summary>
-  const PLATFORM = {
-    "arm64-darwin": { platform: "aarch64-apple-darwin", extension: "tar.gz" },
-    "arm64-linux": {
-      platform: "aarch64-unknown-linux-gnu",
-      extension: "tar.gz",
-    },
-    "x64-darwin": { platform: "x86_64-apple-darwin", extension: "tar.gz" },
-    "x64-linux": { platform: "x86_64-unknown-linux-musl", extension: "tar.gz" },
-    "x64-win32": { platform: "x86_64-pc-windows-msvc", extension: "zip" },
-  } as const
-
-  export const ExtractionFailedError = NamedError.create(
-    "RipgrepExtractionFailedError",
-    z.object({
-      filepath: z.string(),
-      stderr: z.string(),
-    }),
-  )
-
-  export const UnsupportedPlatformError = NamedError.create(
-    "RipgrepUnsupportedPlatformError",
-    z.object({
-      platform: z.string(),
-    }),
-  )
-
-  export const DownloadFailedError = NamedError.create(
-    "RipgrepDownloadFailedError",
-    z.object({
-      url: z.string(),
-      status: z.number(),
-    }),
-  )
-
-  const state = lazy(async () => {
-    let filepath = Bun.which("rg")
-    if (filepath) return { filepath }
-    filepath = path.join(Global.Path.bin, "rg" + (process.platform === "win32" ? ".exe" : ""))
-
-    const file = Bun.file(filepath)
-    if (!(await file.exists())) {
-      const platformKey = `${process.arch}-${process.platform}` as keyof typeof PLATFORM
-      const config = PLATFORM[platformKey]
-      if (!config) throw new UnsupportedPlatformError({ platform: platformKey })
-
-      const version = "14.1.1"
-      const filename = `ripgrep-${version}-${config.platform}.${config.extension}`
-      const url = `https://github.com/BurntSushi/ripgrep/releases/download/${version}/${filename}`
-
-      const response = await fetch(url)
-      if (!response.ok) throw new DownloadFailedError({ url, status: response.status })
-
-      const buffer = await response.arrayBuffer()
-      const archivePath = path.join(Global.Path.bin, filename)
-      await Bun.write(archivePath, buffer)
-      if (config.extension === "tar.gz") {
-        const args = ["tar", "-xzf", archivePath, "--strip-components=1"]
-
-        if (platformKey.endsWith("-darwin")) args.push("--include=*/rg")
-        if (platformKey.endsWith("-linux")) args.push("--wildcards", "*/rg")
-
-        const proc = Bun.spawn(args, {
-          cwd: Global.Path.bin,
-          stderr: "pipe",
-          stdout: "pipe",
-        })
-        await proc.exited
-        if (proc.exitCode !== 0)
-          throw new ExtractionFailedError({
-            filepath,
-            stderr: await Bun.readableStreamToText(proc.stderr),
-          })
-      }
-      if (config.extension === "zip") {
-        const zipFileReader = new ZipReader(new BlobReader(new Blob([await Bun.file(archivePath).arrayBuffer()])))
-        const entries = await zipFileReader.getEntries()
-        let rgEntry: any
-        for (const entry of entries) {
-          if (entry.filename.endsWith("rg.exe")) {
-            rgEntry = entry
-            break
-          }
-        }
-
-        if (!rgEntry) {
-          throw new ExtractionFailedError({
-            filepath: archivePath,
-            stderr: "rg.exe not found in zip archive",
-          })
-        }
-
-        const rgBlob = await rgEntry.getData(new BlobWriter())
-        if (!rgBlob) {
-          throw new ExtractionFailedError({
-            filepath: archivePath,
-            stderr: "Failed to extract rg.exe from zip archive",
-          })
-        }
-        await Bun.write(filepath, await rgBlob.arrayBuffer())
-        await zipFileReader.close()
-      }
-      await fs.unlink(archivePath)
-      if (!platformKey.endsWith("-win32")) await fs.chmod(filepath, 0o755)
-    }
-
-    return {
-      filepath,
-    }
-  })
-
-  export async function filepath() {
-    const { filepath } = await state()
-    return filepath
-  }
 
   export async function* files(input: {
     cwd: string
@@ -303,45 +132,5 @@ export namespace Ripgrep {
     if (total > used) lines.push(`[${total - used} truncated]`)
 
     return lines.join("\n")
-  }
-
-  export async function search(input: {
-    cwd: string
-    pattern: string
-    glob?: string[]
-    limit?: number
-    follow?: boolean
-  }) {
-    const args = [`${await filepath()}`, "--json", "--hidden", "--glob='!.git/*'"]
-    if (input.follow) args.push("--follow")
-
-    if (input.glob) {
-      for (const g of input.glob) {
-        args.push(`--glob=${g}`)
-      }
-    }
-
-    if (input.limit) {
-      args.push(`--max-count=${input.limit}`)
-    }
-
-    args.push("--")
-    args.push(input.pattern)
-
-    const command = args.join(" ")
-    const result = await $`${{ raw: command }}`.cwd(input.cwd).quiet().nothrow()
-    if (result.exitCode !== 0) {
-      return []
-    }
-
-    // Handle both Unix (\n) and Windows (\r\n) line endings
-    const lines = result.text().trim().split(/\r?\n/).filter(Boolean)
-    // Parse JSON lines from ripgrep output
-
-    return lines
-      .map((line) => JSON.parse(line))
-      .map((parsed) => Result.parse(parsed))
-      .filter((r) => r.type === "match")
-      .map((r) => r.data)
   }
 }
