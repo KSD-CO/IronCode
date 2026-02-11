@@ -1097,6 +1097,198 @@ pub unsafe extern "C" fn watcher_get_info_ffi(id: *const c_char) -> *mut c_char 
 }
 
 // ============================================================================
+// Git/VCS FFI Functions
+// ============================================================================
+
+/// Get detailed Git status with file list
+#[no_mangle]
+pub unsafe extern "C" fn git_status_detailed_ffi(cwd: *const c_char) -> *mut c_char {
+    let cwd_str = unsafe {
+        if cwd.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(cwd).to_str().unwrap_or(".")
+    };
+
+    match vcs::get_status_detailed(cwd_str) {
+        Ok(status) => match serde_json::to_string(&status) {
+            Ok(json) => CString::new(json).unwrap().into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        },
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// Stage files (git add)
+/// paths_json: JSON array of file paths, empty array for "git add ."
+#[no_mangle]
+pub unsafe extern "C" fn git_stage_files_ffi(
+    cwd: *const c_char,
+    paths_json: *const c_char,
+) -> *mut c_char {
+    let cwd_str = unsafe {
+        if cwd.is_null() {
+            return CString::new("cwd is null").unwrap().into_raw();
+        }
+        CStr::from_ptr(cwd).to_str().unwrap_or(".")
+    };
+
+    let paths: Vec<String> = unsafe {
+        if paths_json.is_null() {
+            vec![]
+        } else {
+            let json_str = CStr::from_ptr(paths_json).to_str().unwrap_or("[]");
+            serde_json::from_str(json_str).unwrap_or_else(|_| vec![])
+        }
+    };
+
+    match vcs::stage_files(cwd_str, paths) {
+        Ok(_) => std::ptr::null_mut(), // Success
+        Err(e) => CString::new(format!("{}", e)).unwrap().into_raw(),
+    }
+}
+
+/// Unstage files (git reset)
+/// paths_json: JSON array of file paths, empty array for reset all
+#[no_mangle]
+pub unsafe extern "C" fn git_unstage_files_ffi(
+    cwd: *const c_char,
+    paths_json: *const c_char,
+) -> *mut c_char {
+    let cwd_str = unsafe {
+        if cwd.is_null() {
+            return CString::new("cwd is null").unwrap().into_raw();
+        }
+        CStr::from_ptr(cwd).to_str().unwrap_or(".")
+    };
+
+    let paths: Vec<String> = unsafe {
+        if paths_json.is_null() {
+            vec![]
+        } else {
+            let json_str = CStr::from_ptr(paths_json).to_str().unwrap_or("[]");
+            serde_json::from_str(json_str).unwrap_or_else(|_| vec![])
+        }
+    };
+
+    match vcs::unstage_files(cwd_str, paths) {
+        Ok(_) => std::ptr::null_mut(), // Success
+        Err(e) => CString::new(format!("{}", e)).unwrap().into_raw(),
+    }
+}
+
+/// Commit staged changes
+/// Returns commit SHA on success, error string on failure
+#[no_mangle]
+pub unsafe extern "C" fn git_commit_ffi(cwd: *const c_char, message: *const c_char) -> *mut c_char {
+    let cwd_str = unsafe {
+        if cwd.is_null() {
+            return CString::new("cwd is null").unwrap().into_raw();
+        }
+        CStr::from_ptr(cwd).to_str().unwrap_or(".")
+    };
+
+    let message_str = unsafe {
+        if message.is_null() {
+            return CString::new("message is null").unwrap().into_raw();
+        }
+        CStr::from_ptr(message).to_str().unwrap_or("")
+    };
+
+    match vcs::commit(cwd_str, message_str) {
+        Ok(commit_sha) => {
+            let result = serde_json::json!({ "success": true, "commit": commit_sha });
+            match serde_json::to_string(&result) {
+                Ok(json) => CString::new(json).unwrap().into_raw(),
+                Err(_) => std::ptr::null_mut(),
+            }
+        }
+        Err(e) => {
+            let result = serde_json::json!({ "success": false, "error": format!("{}", e) });
+            match serde_json::to_string(&result) {
+                Ok(json) => CString::new(json).unwrap().into_raw(),
+                Err(_) => std::ptr::null_mut(),
+            }
+        }
+    }
+}
+
+/// List all local branches
+#[no_mangle]
+pub unsafe extern "C" fn git_list_branches_ffi(cwd: *const c_char) -> *mut c_char {
+    let cwd_str = unsafe {
+        if cwd.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(cwd).to_str().unwrap_or(".")
+    };
+
+    match vcs::list_branches(cwd_str) {
+        Ok(branches) => match serde_json::to_string(&branches) {
+            Ok(json) => CString::new(json).unwrap().into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        },
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// Checkout branch
+#[no_mangle]
+pub unsafe extern "C" fn git_checkout_branch_ffi(
+    cwd: *const c_char,
+    branch_name: *const c_char,
+) -> *mut c_char {
+    let cwd_str = unsafe {
+        if cwd.is_null() {
+            return CString::new("cwd is null").unwrap().into_raw();
+        }
+        CStr::from_ptr(cwd).to_str().unwrap_or(".")
+    };
+
+    let branch_str = unsafe {
+        if branch_name.is_null() {
+            return CString::new("branch_name is null").unwrap().into_raw();
+        }
+        CStr::from_ptr(branch_name).to_str().unwrap_or("")
+    };
+
+    match vcs::checkout_branch(cwd_str, branch_str) {
+        Ok(_) => std::ptr::null_mut(), // Success
+        Err(e) => CString::new(format!("{}", e)).unwrap().into_raw(),
+    }
+}
+
+/// Get file diff
+#[no_mangle]
+pub unsafe extern "C" fn git_file_diff_ffi(
+    cwd: *const c_char,
+    file_path: *const c_char,
+    staged: bool,
+) -> *mut c_char {
+    let cwd_str = unsafe {
+        if cwd.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(cwd).to_str().unwrap_or(".")
+    };
+
+    let file_str = unsafe {
+        if file_path.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(file_path).to_str().unwrap_or("")
+    };
+
+    match vcs::get_file_diff(cwd_str, file_str, staged) {
+        Ok(diff) => match CString::new(diff) {
+            Ok(cstring) => cstring.into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        },
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+// ============================================================================
 // Lock FFI Functions
 // ============================================================================
 

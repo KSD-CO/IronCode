@@ -121,9 +121,7 @@ pub fn create(
         })
         .map_err(|e| format!("Failed to open PTY: {}", e))?;
 
-    let shell = command
-        .map(|s| s.to_string())
-        .unwrap_or_else(get_shell);
+    let shell = command.map(|s| s.to_string()).unwrap_or_else(get_shell);
     let mut cmd = CommandBuilder::new(&shell);
     let working_dir = cwd.unwrap_or(".");
     cmd.cwd(working_dir);
