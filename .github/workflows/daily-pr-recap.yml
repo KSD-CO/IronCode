@@ -33,7 +33,9 @@ jobs:
                 "gh search*": "allow",
                 "git log*": "allow",
                 "git show*": "allow",
-                "git diff*": "allow"
+                "git diff*": "allow",
+                "git tag*": "allow",
+                "gh release*": "allow"
               },
               "webfetch": "deny",
               "edit": "deny",
@@ -64,7 +66,16 @@ jobs:
           # For each commit, you can get more details if needed:
           # git show <commit-hash> --stat --oneline
 
-          STEP 3: For high-activity PRs, check comment counts
+          STEP 3: Gather releases/tags created today
+          Run these commands to get releases published today:
+
+          # Get releases published today
+          gh release list --repo ${{ github.repository }} --limit 50 --json tagName,name,createdAt,publishedAt,isPrerelease,isDraft
+
+          # Filter for releases published today (${TODAY})
+          # Check if publishedAt matches today's date
+
+          STEP 4: For high-activity PRs, check comment counts
           For promising PRs, run:
           gh pr view [NUMBER] --repo ${{ github.repository }} --json comments --jq '[.comments[] | select(.author.login != \"copilot-pull-request-reviewer\" and .author.login != \"github-actions\")] | length'
 
@@ -72,7 +83,7 @@ jobs:
           - copilot-pull-request-reviewer
           - github-actions
 
-          STEP 4: Identify what matters (ONLY from today's activity)
+          STEP 5: Identify what matters (ONLY from today's activity)
 
           **Bug Fixes From Today:**
           - PRs with 'fix' or 'bug' in title created/updated today
@@ -92,7 +103,12 @@ jobs:
           - Show commit message and key files changed
           - Group by author if multiple commits
 
-          STEP 5: Generate the recap
+          **Releases Today:**
+          - New releases/tags published today
+          - Show version number and release name
+          - Indicate if prerelease or draft
+
+          STEP 6: Generate the recap
           Create a structured recap:
 
           ===TELEGRAM_START===
@@ -109,9 +125,12 @@ jobs:
 
           **Direct Commits to Dev**
           [Commits pushed directly, not via PR - show author, message, key files]
+
+          **Releases Today**
+          [New releases/tags published today - show version and type]
           ===TELEGRAM_END===
 
-          STEP 6: Format for Telegram
+          STEP 7: Format for Telegram
           - Use Telegram markdown (**, __, etc.)
           - BE EXTREMELY CONCISE - surface what we might miss
           - Use hyperlinked PR numbers: [#1234](https://github.com/${{ github.repository }}/pull/1234)
