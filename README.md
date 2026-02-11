@@ -194,20 +194,36 @@ npx ironcode-ai
 
 ### Homebrew (macOS/Linux)
 
+IronCode is available through a Homebrew tap. The formula automatically installs the appropriate binary for your platform and includes all dependencies (like `ripgrep`).
+
 ```bash
 # Add the tap
-brew tap KSD-CO/tap
+brew tap KSD-CO/tap https://github.com/KSD-CO/homebrew-tap
 
 # Install IronCode
 brew install ironcode
+
+# Verify installation
+ironcode --version
 
 # Update to latest version
 brew upgrade ironcode
 ```
 
-### Direct Download
+**Supported Platforms:**
 
-Download pre-built binaries for your platform from [GitHub Releases](https://github.com/KSD-CO/IronCode/releases):
+- macOS (Intel x64)
+- macOS (Apple Silicon arm64)
+- Linux (x64)
+- Linux (arm64)
+
+The Homebrew formula is auto-generated from releases and maintained at [github.com/KSD-CO/homebrew-tap](https://github.com/KSD-CO/homebrew-tap/blob/main/ironcode.rb).
+
+### Direct Download (Standalone Binary)
+
+For users who prefer not to use package managers, download the pre-built CLI binary directly from [GitHub Releases](https://github.com/KSD-CO/IronCode/releases).
+
+These are **standalone executables** that require no additional installation - just download, extract, and run:
 
 **Linux (x64):**
 
