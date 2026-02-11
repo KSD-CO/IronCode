@@ -971,6 +971,10 @@ export type KeybindsConfig = {
    */
   status_view?: string
   /**
+   * Git source control
+   */
+  git_status?: string
+  /**
    * Export session to editor
    */
   session_export?: string

@@ -8462,6 +8462,11 @@
             "default": "<leader>s",
             "type": "string"
           },
+          "git_status": {
+            "description": "Git source control",
+            "default": "<leader>i",
+            "type": "string"
+          },
           "session_export": {
             "description": "Export session to editor",
             "default": "<leader>x",
