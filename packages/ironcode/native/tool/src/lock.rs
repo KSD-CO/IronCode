@@ -22,6 +22,7 @@ impl LockState {
         }
     }
 
+    #[allow(dead_code)]
     fn is_empty(&self) -> bool {
         self.readers == 0
             && !self.writer

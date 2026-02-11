@@ -13,6 +13,7 @@ import { LocalProvider, useLocal } from "@tui/context/local"
 import { DialogModel, useConnected } from "@tui/component/dialog-model"
 import { DialogMcp } from "@tui/component/dialog-mcp"
 import { DialogStatus } from "@tui/component/dialog-status"
+import { DialogGit } from "@tui/component/dialog-git"
 import { DialogThemeList } from "@tui/component/dialog-theme-list"
 import { DialogThemeEditor } from "@tui/component/dialog-theme-editor"
 import { DialogExplorer } from "@tui/component/dialog-explorer"
@@ -481,6 +482,19 @@ function App() {
         dialog.replace(() => <DialogStatus />)
       },
       category: "System",
+    },
+    {
+      title: "Git: Source Control",
+      keybind: "git_status" as any,
+      value: "git.status",
+      slash: {
+        name: "git",
+        aliases: ["source-control"],
+      },
+      onSelect: () => {
+        dialog.replace(() => <DialogGit />, undefined, "fullscreen")
+      },
+      category: "Git",
     },
     {
       title: "Switch theme",

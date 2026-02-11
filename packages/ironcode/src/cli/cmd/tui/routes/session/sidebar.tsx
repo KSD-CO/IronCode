@@ -25,6 +25,7 @@ export function Sidebar(props: { sessionID: string; overlay?: boolean }) {
     diff: true,
     todo: true,
     lsp: true,
+    git: true,
   })
 
   // Sort MCP servers alphabetically for consistent display order
@@ -218,6 +219,30 @@ export function Sidebar(props: { sessionID: string; overlay?: boolean }) {
                 </box>
                 <Show when={todo().length <= 2 || expanded.todo}>
                   <For each={todo()}>{(todo) => <TodoItem status={todo.status} content={todo.content} />}</For>
+                </Show>
+              </box>
+            </Show>
+            <Show when={sync.data.vcs}>
+              <box>
+                <text fg={theme.text}>
+                  <b>Git</b>
+                </text>
+                <box flexDirection="row" gap={1}>
+                  <text fg={theme.textMuted}>Branch:</text>
+                  <text fg={theme.text}>{sync.data.vcs!.branch}</text>
+                </box>
+                <Show when={sync.data.vcs!.added || sync.data.vcs!.modified || sync.data.vcs!.deleted}>
+                  <box flexDirection="row" gap={1}>
+                    <Show when={sync.data.vcs!.added}>
+                      <text fg={theme.success}>+{sync.data.vcs!.added}</text>
+                    </Show>
+                    <Show when={sync.data.vcs!.modified}>
+                      <text fg={theme.warning}>~{sync.data.vcs!.modified}</text>
+                    </Show>
+                    <Show when={sync.data.vcs!.deleted}>
+                      <text fg={theme.error}>-{sync.data.vcs!.deleted}</text>
+                    </Show>
+                  </box>
                 </Show>
               </box>
             </Show>

@@ -231,6 +231,38 @@ const lib = dlopen(libPath, {
     args: [],
     returns: FFIType.ptr,
   },
+  git_status_detailed_ffi: {
+    args: [FFIType.cstring],
+    returns: FFIType.ptr,
+  },
+  git_stage_files_ffi: {
+    args: [FFIType.cstring, FFIType.cstring],
+    returns: FFIType.ptr,
+  },
+  git_unstage_files_ffi: {
+    args: [FFIType.cstring, FFIType.cstring],
+    returns: FFIType.ptr,
+  },
+  git_commit_ffi: {
+    args: [FFIType.cstring, FFIType.cstring],
+    returns: FFIType.ptr,
+  },
+  git_list_branches_ffi: {
+    args: [FFIType.cstring],
+    returns: FFIType.ptr,
+  },
+  git_checkout_branch_ffi: {
+    args: [FFIType.cstring, FFIType.cstring],
+    returns: FFIType.ptr,
+  },
+  git_file_diff_ffi: {
+    args: [FFIType.cstring, FFIType.cstring, FFIType.bool],
+    returns: FFIType.ptr,
+  },
+  git_push_ffi: {
+    args: [FFIType.cstring],
+    returns: FFIType.ptr,
+  },
   free_string: {
     args: [FFIType.ptr],
     returns: FFIType.void,
@@ -816,4 +848,129 @@ export function lockGetStatsFFI(): LockStats {
   lib.symbols.free_string(ptr)
 
   return JSON.parse(jsonStr)
+}
+
+// ============================================================================
+// Git/VCS FFI Functions
+// ============================================================================
+
+export interface GitFileStatus {
+  path: string
+  status: "added" | "modified" | "deleted" | "untracked" | "staged"
+  staged: boolean
+}
+
+export interface GitStatus {
+  branch: string
+  files: GitFileStatus[]
+}
+
+export interface GitBranchInfo {
+  name: string
+  is_head: boolean
+}
+
+export interface GitCommitResult {
+  success: boolean
+  commit?: string
+  error?: string
+}
+
+export function gitStatusDetailedFFI(cwd: string = "."): GitStatus | null {
+  const ptr = lib.symbols.git_status_detailed_ffi(Buffer.from(cwd + "\0"))
+  if (!ptr) return null
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  return JSON.parse(jsonStr)
+}
+
+export function gitStageFilesFFI(cwd: string, paths: string[] = []): void {
+  const pathsJson = JSON.stringify(paths)
+  const ptr = lib.symbols.git_stage_files_ffi(Buffer.from(cwd + "\0"), Buffer.from(pathsJson + "\0"))
+
+  if (ptr) {
+    const errorStr = new CString(ptr).toString()
+    lib.symbols.free_string(ptr)
+    throw new Error(`Failed to stage files: ${errorStr}`)
+  }
+}
+
+export function gitUnstageFilesFFI(cwd: string, paths: string[] = []): void {
+  const pathsJson = JSON.stringify(paths)
+  const ptr = lib.symbols.git_unstage_files_ffi(Buffer.from(cwd + "\0"), Buffer.from(pathsJson + "\0"))
+
+  if (ptr) {
+    const errorStr = new CString(ptr).toString()
+    lib.symbols.free_string(ptr)
+    throw new Error(`Failed to unstage files: ${errorStr}`)
+  }
+}
+
+export function gitCommitFFI(cwd: string, message: string): GitCommitResult {
+  const ptr = lib.symbols.git_commit_ffi(Buffer.from(cwd + "\0"), Buffer.from(message + "\0"))
+  if (!ptr) throw new Error("git_commit_ffi returned null")
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  const result: GitCommitResult = JSON.parse(jsonStr)
+  if (!result.success && result.error) {
+    throw new Error(result.error)
+  }
+
+  return result
+}
+
+export function gitListBranchesFFI(cwd: string = "."): GitBranchInfo[] {
+  const ptr = lib.symbols.git_list_branches_ffi(Buffer.from(cwd + "\0"))
+  if (!ptr) return []
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  return JSON.parse(jsonStr)
+}
+
+export function gitCheckoutBranchFFI(cwd: string, branchName: string): void {
+  const ptr = lib.symbols.git_checkout_branch_ffi(Buffer.from(cwd + "\0"), Buffer.from(branchName + "\0"))
+
+  if (ptr) {
+    const errorStr = new CString(ptr).toString()
+    lib.symbols.free_string(ptr)
+    throw new Error(`Failed to checkout branch: ${errorStr}`)
+  }
+}
+
+export function gitFileDiffFFI(cwd: string, filePath: string, staged: boolean = false): string {
+  const ptr = lib.symbols.git_file_diff_ffi(Buffer.from(cwd + "\0"), Buffer.from(filePath + "\0"), staged)
+  if (!ptr) return ""
+
+  const diffStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  return diffStr
+}
+
+export interface GitPushResult {
+  success: boolean
+  message?: string
+  error?: string
+}
+
+export function gitPushFFI(cwd: string = "."): GitPushResult {
+  const ptr = lib.symbols.git_push_ffi(Buffer.from(cwd + "\0"))
+  if (!ptr) throw new Error("git_push_ffi returned null")
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  const result: GitPushResult = JSON.parse(jsonStr)
+
+  if (!result.success && result.error) {
+    throw new Error(result.error)
+  }
+
+  return result
 }
