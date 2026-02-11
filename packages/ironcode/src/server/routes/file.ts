@@ -6,6 +6,7 @@ import { Ripgrep } from "../../file/ripgrep"
 import { LSP } from "../../lsp"
 import { Instance } from "../../project/instance"
 import { lazy } from "../../util/lazy"
+import { grepFFI } from "../../tool/ffi"
 
 export const FileRoutes = lazy(() =>
   new Hono()
@@ -13,7 +14,7 @@ export const FileRoutes = lazy(() =>
       "/find",
       describeRoute({
         summary: "Find text",
-        description: "Search for text patterns across files in the project using ripgrep.",
+        description: "Search for text patterns across files in the project using native grep.",
         operationId: "find.text",
         responses: {
           200: {
@@ -34,12 +35,44 @@ export const FileRoutes = lazy(() =>
       ),
       async (c) => {
         const pattern = c.req.valid("query").pattern
-        const result = await Ripgrep.search({
-          cwd: Instance.directory,
-          pattern,
-          limit: 10,
-        })
-        return c.json(result)
+
+        // Use native Rust grep FFI instead of spawning ripgrep
+        const grepResult = grepFFI(pattern, Instance.directory)
+
+        // Parse the output to extract matches
+        const lines = grepResult.output.split("\n")
+        const matches: any[] = []
+
+        let currentFile = ""
+        for (const line of lines) {
+          // Match file path lines (format: "path:")
+          const fileMatch = line.match(/^(.+):$/)
+          if (fileMatch) {
+            currentFile = fileMatch[1]
+            continue
+          }
+
+          // Match result lines (format: "  Line N: content")
+          const lineMatch = line.match(/^\s+Line (\d+): (.+)$/)
+          if (lineMatch && currentFile) {
+            const lineNum = parseInt(lineMatch[1], 10)
+            const lineText = lineMatch[2]
+
+            // Convert to Ripgrep.Match.data format for API compatibility
+            matches.push({
+              path: { text: currentFile },
+              lines: { text: lineText },
+              line_number: lineNum,
+              absolute_offset: 0, // Not available from grepFFI
+              submatches: [], // Not available from grepFFI
+            })
+
+            // Limit to 10 matches (original limit)
+            if (matches.length >= 10) break
+          }
+        }
+
+        return c.json(matches)
       },
     )
     .get(

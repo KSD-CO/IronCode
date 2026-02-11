@@ -3,6 +3,7 @@ use ignore::WalkBuilder;
 use rexile::ReXile;
 use serde::{Deserialize, Serialize};
 use std::fs;
+use std::io::{BufRead, BufReader};
 use std::time::SystemTime;
 
 #[derive(Serialize, Deserialize)]
@@ -80,9 +81,9 @@ fn grep(
             }
         }
 
-        // Read file and search for pattern
-        let content = match fs::read_to_string(path) {
-            Ok(c) => c,
+        // Read file and search for pattern using streaming
+        let file = match fs::File::open(path) {
+            Ok(f) => f,
             Err(_) => continue,
         };
 
@@ -95,14 +96,28 @@ fn grep(
             .unwrap_or_default()
             .as_millis() as u64;
 
-        for (line_num, line) in content.lines().enumerate() {
-            if regex.is_match(line) {
+        // Use streaming read with 64KB buffer for memory efficiency
+        let reader = BufReader::with_capacity(65536, file);
+
+        for (line_num, line_result) in reader.lines().enumerate() {
+            let line = match line_result {
+                Ok(l) => l,
+                Err(_) => break, // Stop on error, move to next file
+            };
+
+            if regex.is_match(&line) {
                 matches.push(GrepMatch {
                     path: path.to_string_lossy().to_string(),
                     mod_time,
                     line_num: line_num + 1,
-                    line_text: line.to_string(),
+                    line_text: line,
                 });
+
+                // Early exit if we have enough matches (limit is 100)
+                if matches.len() >= 1000 {
+                    // Collect more than limit to allow sorting
+                    break;
+                }
             }
         }
     }

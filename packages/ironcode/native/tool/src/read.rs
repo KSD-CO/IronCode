@@ -1,6 +1,6 @@
 use crate::types::Output;
 use std::fs;
-use std::io::Read;
+use std::io::{BufRead, BufReader, Read};
 use std::path::Path;
 
 const DEFAULT_READ_LIMIT: usize = 2000;
@@ -22,31 +22,56 @@ pub fn execute(
         return Err(format!("Cannot read binary file: {}", filepath));
     }
 
-    let content = fs::read_to_string(path).map_err(|e| format!("Failed to read file: {}", e))?;
-
-    let lines: Vec<&str> = content.lines().collect();
-    let total_lines = lines.len();
     let offset = offset.unwrap_or(0);
     let limit = limit.unwrap_or(DEFAULT_READ_LIMIT);
 
-    let mut raw: Vec<String> = Vec::new();
+    // Pre-allocate with capacity hint
+    let mut raw: Vec<String> = Vec::with_capacity(limit.min(1000));
     let mut bytes = 0;
     let mut truncated_by_bytes = false;
+    let mut current_line = 0;
 
-    for i in offset..std::cmp::min(total_lines, offset + limit) {
-        let line = if lines[i].len() > MAX_LINE_LENGTH {
-            format!("{}...", &lines[i][..MAX_LINE_LENGTH])
+    // Use streaming read with larger buffer (64KB for better I/O performance)
+    let file = fs::File::open(path).map_err(|e| format!("Failed to open file: {}", e))?;
+    let reader = BufReader::with_capacity(65536, file);
+
+    let mut lines_iter = reader.lines();
+    let mut total_lines = 0;
+
+    // Read lines
+    while let Some(line_result) = lines_iter.next() {
+        let line = line_result.map_err(|e| format!("Failed to read line: {}", e))?;
+        total_lines += 1;
+
+        // Skip lines before offset
+        if total_lines <= offset {
+            continue;
+        }
+
+        // Stop if we've collected enough lines
+        if raw.len() >= limit {
+            // Count remaining lines for total_lines
+            total_lines += lines_iter.count();
+            break;
+        }
+
+        // Truncate long lines
+        let line = if line.len() > MAX_LINE_LENGTH {
+            format!("{}...", &line[..MAX_LINE_LENGTH])
         } else {
-            lines[i].to_string()
+            line
         };
 
+        // Check byte limit
         let size = line.len() + if raw.is_empty() { 0 } else { 1 };
         if bytes + size > MAX_BYTES {
             truncated_by_bytes = true;
             break;
         }
+
         raw.push(line);
         bytes += size;
+        current_line += 1;
     }
 
     let formatted: Vec<String> = raw

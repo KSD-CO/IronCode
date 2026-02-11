@@ -3,6 +3,7 @@ import { Ripgrep } from "../../../file/ripgrep"
 import { Instance } from "../../../project/instance"
 import { bootstrap } from "../../bootstrap"
 import { cmd } from "../cmd"
+import { grepFFI } from "../../../tool/ffi"
 
 export const RipgrepCommand = cmd({
   command: "rg",
@@ -76,12 +77,39 @@ const SearchCommand = cmd({
         description: "Limit number of results",
       }),
   async handler(args) {
-    const results = await Ripgrep.search({
-      cwd: process.cwd(),
-      pattern: args.pattern,
-      glob: args.glob as string[] | undefined,
-      limit: args.limit,
-    })
-    process.stdout.write(JSON.stringify(results, null, 2) + EOL)
+    // Use native Rust grep FFI instead of spawning ripgrep
+    const result = grepFFI(args.pattern, process.cwd(), args.glob ? args.glob.join(",") : undefined)
+
+    // Parse output to extract structured matches
+    const lines = result.output.split("\n")
+    const matches: any[] = []
+
+    let currentFile = ""
+    for (const line of lines) {
+      // Match file path lines (format: "path:")
+      const fileMatch = line.match(/^(.+):$/)
+      if (fileMatch) {
+        currentFile = fileMatch[1]
+        continue
+      }
+
+      // Match result lines (format: "  Line N: content")
+      const lineMatch = line.match(/^\s+Line (\d+): (.+)$/)
+      if (lineMatch && currentFile) {
+        const lineNum = parseInt(lineMatch[1], 10)
+        const lineText = lineMatch[2]
+
+        matches.push({
+          path: { text: currentFile },
+          lines: { text: lineText },
+          line_number: lineNum,
+        })
+
+        // Apply limit if specified
+        if (args.limit && matches.length >= args.limit) break
+      }
+    }
+
+    process.stdout.write(JSON.stringify(matches, null, 2) + EOL)
   },
 })
