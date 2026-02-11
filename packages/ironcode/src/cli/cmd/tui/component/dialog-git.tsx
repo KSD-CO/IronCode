@@ -469,35 +469,51 @@ export function DialogGit() {
           </Show>
 
           {/* View Tabs */}
-          <box flexDirection="row" gap={2}>
-            <text
-              fg={view() === "status" ? theme.primary : theme.textMuted}
-              attributes={view() === "status" ? TextAttributes.BOLD : undefined}
-              onMouseUp={() => setView("status")}
+          <box flexDirection="row" justifyContent="space-between" alignItems="center">
+            <box flexDirection="row" gap={2}>
+              <text
+                fg={view() === "status" ? theme.primary : theme.textMuted}
+                attributes={view() === "status" ? TextAttributes.BOLD : undefined}
+                onMouseUp={() => setView("status")}
+              >
+                Status
+              </text>
+              <text
+                fg={view() === "branches" ? theme.primary : theme.textMuted}
+                attributes={view() === "branches" ? TextAttributes.BOLD : undefined}
+                onMouseUp={() => setView("branches")}
+              >
+                Branches
+              </text>
+              <text
+                fg={view() === "commit" ? theme.primary : theme.textMuted}
+                attributes={view() === "commit" ? TextAttributes.BOLD : undefined}
+                onMouseUp={() => {
+                  if (stagedFiles().length > 0) {
+                    setView("commit")
+                  } else {
+                    setError("No files staged for commit. Stage files first.")
+                    setTimeout(() => setError(null), 2000)
+                  }
+                }}
+              >
+                Commit {stagedFiles().length > 0 ? `(${stagedFiles().length})` : ""}
+              </text>
+            </box>
+
+            {/* Push button - always visible */}
+            <box
+              paddingLeft={2}
+              paddingRight={2}
+              paddingTop={0}
+              paddingBottom={0}
+              backgroundColor={theme.primary}
+              onMouseUp={handlePush}
             >
-              Status
-            </text>
-            <text
-              fg={view() === "branches" ? theme.primary : theme.textMuted}
-              attributes={view() === "branches" ? TextAttributes.BOLD : undefined}
-              onMouseUp={() => setView("branches")}
-            >
-              Branches
-            </text>
-            <text
-              fg={view() === "commit" ? theme.primary : theme.textMuted}
-              attributes={view() === "commit" ? TextAttributes.BOLD : undefined}
-              onMouseUp={() => {
-                if (stagedFiles().length > 0) {
-                  setView("commit")
-                } else {
-                  setError("No files staged for commit. Stage files first.")
-                  setTimeout(() => setError(null), 2000)
-                }
-              }}
-            >
-              Commit {stagedFiles().length > 0 ? `(${stagedFiles().length})` : ""}
-            </text>
+              <text fg={theme.selectedListItemText} attributes={TextAttributes.BOLD}>
+                Push (p)
+              </text>
+            </box>
           </box>
 
           {/* Status View */}
@@ -518,14 +534,9 @@ export function DialogGit() {
                       <text fg={theme.success} attributes={TextAttributes.BOLD}>
                         Staged Changes ({stagedFiles().length})
                       </text>
-                      <box flexDirection="row" gap={2}>
-                        <text fg={theme.primary} onMouseUp={handlePush}>
-                          [Push]
-                        </text>
-                        <text fg={theme.textMuted} onMouseUp={handleUnstageAll}>
-                          [unstage all]
-                        </text>
-                      </box>
+                      <text fg={theme.textMuted} onMouseUp={handleUnstageAll}>
+                        [unstage all]
+                      </text>
                     </box>
                     <For each={files()}>
                       {(file, index) => (
