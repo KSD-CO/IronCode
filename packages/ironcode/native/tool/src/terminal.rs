@@ -72,6 +72,7 @@ impl RingBuffer {
         self.data.len()
     }
 
+    #[allow(dead_code)]
     fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
@@ -87,6 +88,7 @@ impl RingBuffer {
 
 pub struct TerminalSession {
     master: Box<dyn MasterPty + Send>,
+    #[allow(dead_code)]
     child: Box<dyn Child + Send + Sync>,
     reader: Arc<Mutex<Box<dyn Read + Send>>>,
     writer: Arc<Mutex<Box<dyn Write + Send>>>,

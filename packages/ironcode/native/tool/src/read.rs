@@ -70,7 +70,6 @@ pub fn execute(
 
         raw.push(line);
         bytes += size;
-        current_line += 1;
     }
 
     let formatted: Vec<String> = raw

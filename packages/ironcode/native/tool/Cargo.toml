@@ -11,13 +11,15 @@ crate-type = ["cdylib", "rlib"]
 name = "ironcode-tool"
 path = "src/main.rs"
 
-[[bin]]
+[[bench]]
 name = "compare"
 path = "benches/compare.rs"
+harness = false
 
-[[bin]]
+[[bench]]
 name = "memory_bench"
 path = "benches/memory_bench.rs"
+harness = false
 
 [[bench]]
 name = "vcs_bench"

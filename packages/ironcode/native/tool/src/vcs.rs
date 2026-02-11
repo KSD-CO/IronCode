@@ -367,47 +367,62 @@ pub fn push_to_remote(cwd: &str) -> Result<String, VcsError> {
 
     callbacks.credentials(move |url, username_from_url, allowed_types| {
         // Try different credential methods in order of preference
-
-        // 1. Try SSH key from agent first (for SSH URLs)
-        if allowed_types.contains(git2::CredentialType::SSH_KEY) {
-            if let Ok(cred) = git2::Cred::ssh_key_from_agent(username_from_url.unwrap_or("git")) {
-                return Ok(cred);
-            }
-        }
-
-        // 2. Try default SSH key from ~/.ssh
-        if allowed_types.contains(git2::CredentialType::SSH_KEY) {
-            let username = username_from_url.unwrap_or("git");
-            if let Some(home) = std::env::var("HOME").ok() {
-                let id_rsa = std::path::PathBuf::from(&home).join(".ssh/id_rsa");
-                let id_ed25519 = std::path::PathBuf::from(&home).join(".ssh/id_ed25519");
-
-                // Try id_ed25519 first (modern default)
-                if id_ed25519.exists() {
-                    if let Ok(cred) = git2::Cred::ssh_key(username, None, &id_ed25519, None) {
+        
+        // For HTTPS URLs, try credential helper first
+        if url.starts_with("https://") {
+            // 1. Try credential helper (for HTTPS)
+            if allowed_types.contains(git2::CredentialType::USER_PASS_PLAINTEXT) {
+                if let Some(ref config) = repo_config {
+                    if let Ok(cred) = git2::Cred::credential_helper(config, url, username_from_url) {
                         return Ok(cred);
                     }
                 }
-
-                // Try id_rsa
-                if id_rsa.exists() {
-                    if let Ok(cred) = git2::Cred::ssh_key(username, None, &id_rsa, None) {
+            }
+            
+            // 2. Try username from URL with empty password (GitHub will handle via OAuth)
+            if allowed_types.contains(git2::CredentialType::USER_PASS_PLAINTEXT) {
+                if let Some(username) = username_from_url {
+                    if let Ok(cred) = git2::Cred::userpass_plaintext(username, "") {
                         return Ok(cred);
                     }
                 }
             }
         }
-
-        // 3. Try credential helper (for HTTPS)
-        if allowed_types.contains(git2::CredentialType::USER_PASS_PLAINTEXT) {
-            if let Some(ref config) = repo_config {
-                if let Ok(cred) = git2::Cred::credential_helper(config, url, username_from_url) {
+        
+        // For SSH URLs
+        if url.starts_with("git@") || url.starts_with("ssh://") {
+            // 1. Try SSH key from agent first (for SSH URLs)
+            if allowed_types.contains(git2::CredentialType::SSH_KEY) {
+                if let Ok(cred) = git2::Cred::ssh_key_from_agent(username_from_url.unwrap_or("git")) {
                     return Ok(cred);
                 }
             }
+
+            // 2. Try default SSH key from ~/.ssh
+            if allowed_types.contains(git2::CredentialType::SSH_KEY) {
+                let username = username_from_url.unwrap_or("git");
+                if let Some(home) = std::env::var("HOME").ok() {
+                    let id_rsa = std::path::PathBuf::from(&home).join(".ssh/id_rsa");
+                    let id_ed25519 = std::path::PathBuf::from(&home).join(".ssh/id_ed25519");
+                    
+                    // Try id_ed25519 first (modern default)
+                    if id_ed25519.exists() {
+                        if let Ok(cred) = git2::Cred::ssh_key(username, None, &id_ed25519, None) {
+                            return Ok(cred);
+                        }
+                    }
+                    
+                    // Try id_rsa
+                    if id_rsa.exists() {
+                        if let Ok(cred) = git2::Cred::ssh_key(username, None, &id_rsa, None) {
+                            return Ok(cred);
+                        }
+                    }
+                }
+            }
         }
 
-        // 4. Try default credential (anonymous or default)
+        // 3. Try default credential (anonymous or default)
         if allowed_types.contains(git2::CredentialType::DEFAULT) {
             if let Ok(cred) = git2::Cred::default() {
                 return Ok(cred);
@@ -415,7 +430,7 @@ pub fn push_to_remote(cwd: &str) -> Result<String, VcsError> {
         }
 
         Err(git2::Error::from_str(
-            "No valid authentication method found. Please configure SSH keys or credential helper.",
+            "No valid authentication method found. For HTTPS, configure git credential helper. For SSH, add your SSH key to ssh-agent.",
         ))
     });
 

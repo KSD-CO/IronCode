@@ -15,6 +15,7 @@ pub struct WatcherEvent {
 }
 
 struct WatcherState {
+    #[allow(dead_code)]
     watcher: RecommendedWatcher,
     ignore_patterns: Vec<String>,
     event_queue: Arc<Mutex<VecDeque<WatcherEvent>>>,
