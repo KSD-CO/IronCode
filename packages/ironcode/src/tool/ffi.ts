@@ -259,6 +259,10 @@ const lib = dlopen(libPath, {
     args: [FFIType.cstring, FFIType.cstring, FFIType.bool],
     returns: FFIType.ptr,
   },
+  git_push_ffi: {
+    args: [FFIType.cstring],
+    returns: FFIType.ptr,
+  },
   free_string: {
     args: [FFIType.ptr],
     returns: FFIType.void,
@@ -947,4 +951,26 @@ export function gitFileDiffFFI(cwd: string, filePath: string, staged: boolean = 
   lib.symbols.free_string(ptr)
 
   return diffStr
+}
+
+export interface GitPushResult {
+  success: boolean
+  message?: string
+  error?: string
+}
+
+export function gitPushFFI(cwd: string = "."): GitPushResult {
+  const ptr = lib.symbols.git_push_ffi(Buffer.from(cwd + "\0"))
+  if (!ptr) throw new Error("git_push_ffi returned null")
+
+  const jsonStr = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+
+  const result: GitPushResult = JSON.parse(jsonStr)
+
+  if (!result.success && result.error) {
+    throw new Error(result.error)
+  }
+
+  return result
 }

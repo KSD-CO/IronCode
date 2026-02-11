@@ -13,6 +13,7 @@ import {
   gitListBranchesFFI,
   gitCheckoutBranchFFI,
   gitFileDiffFFI,
+  gitPushFFI,
   type GitFileStatus,
   type GitBranchInfo,
 } from "@/tool/ffi"
@@ -223,12 +224,31 @@ export function DialogGit() {
     try {
       setLoading(true)
       setError(null)
+      setSuccessMessage(null)
       const diff = gitFileDiffFFI(cwd(), file.path, file.staged)
       setDiffContent(diff)
       setSelectedFile(file)
       setView("diff")
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to get diff")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handlePush = () => {
+    try {
+      setLoading(true)
+      setError(null)
+      setSuccessMessage(null)
+      const result = gitPushFFI(cwd())
+
+      if (result.success && result.message) {
+        setSuccessMessage(`✓ ${result.message}`)
+        setTimeout(() => setSuccessMessage(null), 3000)
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to push")
     } finally {
       setLoading(false)
     }
@@ -359,8 +379,13 @@ export function DialogGit() {
     } else if (name === "2") {
       setView("branches")
       evt.preventDefault()
-    } else if (name === "3" && stagedFiles().length > 0) {
-      setView("commit")
+    } else if (name === "3") {
+      if (stagedFiles().length > 0) {
+        setView("commit")
+      } else {
+        setError("No files staged for commit. Stage files first with Space or 'a'")
+        setTimeout(() => setError(null), 2000)
+      }
       evt.preventDefault()
     } else if (name === "backspace" || name === "h") {
       if (view() === "diff") {
@@ -380,6 +405,9 @@ export function DialogGit() {
       evt.preventDefault()
     } else if (name === "u" && view() === "status") {
       handleUnstageAll()
+      evt.preventDefault()
+    } else if (name === "p" && view() === "status") {
+      handlePush()
       evt.preventDefault()
     }
   })
@@ -408,7 +436,8 @@ export function DialogGit() {
         <box paddingLeft={2} paddingRight={2}>
           <Show when={view() === "status"}>
             <text fg={theme.textMuted}>
-              ↑↓/jk: navigate | Enter: diff | Space: stage/unstage | a: stage all | u: unstage all | r: refresh
+              ↑↓/jk: navigate | Enter: diff | Space: stage/unstage | a: stage all | u: unstage all | p: push | r:
+              refresh
             </text>
           </Show>
           <Show when={view() === "branches"}>
@@ -461,6 +490,9 @@ export function DialogGit() {
               onMouseUp={() => {
                 if (stagedFiles().length > 0) {
                   setView("commit")
+                } else {
+                  setError("No files staged for commit. Stage files first.")
+                  setTimeout(() => setError(null), 2000)
                 }
               }}
             >
@@ -486,9 +518,14 @@ export function DialogGit() {
                       <text fg={theme.success} attributes={TextAttributes.BOLD}>
                         Staged Changes ({stagedFiles().length})
                       </text>
-                      <text fg={theme.textMuted} onMouseUp={handleUnstageAll}>
-                        [unstage all]
-                      </text>
+                      <box flexDirection="row" gap={2}>
+                        <text fg={theme.primary} onMouseUp={handlePush}>
+                          [Push]
+                        </text>
+                        <text fg={theme.textMuted} onMouseUp={handleUnstageAll}>
+                          [unstage all]
+                        </text>
+                      </box>
                     </box>
                     <For each={files()}>
                       {(file, index) => (

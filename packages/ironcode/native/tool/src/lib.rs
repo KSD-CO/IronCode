@@ -1288,6 +1288,45 @@ pub unsafe extern "C" fn git_file_diff_ffi(
     }
 }
 
+/// Push to remote
+#[no_mangle]
+pub unsafe extern "C" fn git_push_ffi(cwd: *const c_char) -> *mut c_char {
+    let cwd_str = unsafe {
+        if cwd.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(cwd).to_str().unwrap_or(".")
+    };
+
+    #[derive(serde::Serialize)]
+    struct PushResult {
+        success: bool,
+        message: Option<String>,
+        error: Option<String>,
+    }
+
+    let result = match vcs::push_to_remote(cwd_str) {
+        Ok(message) => PushResult {
+            success: true,
+            message: Some(message),
+            error: None,
+        },
+        Err(e) => PushResult {
+            success: false,
+            message: None,
+            error: Some(e.to_string()),
+        },
+    };
+
+    match serde_json::to_string(&result) {
+        Ok(json) => match CString::new(json) {
+            Ok(cstring) => cstring.into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        },
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
 // ============================================================================
 // Lock FFI Functions
 // ============================================================================

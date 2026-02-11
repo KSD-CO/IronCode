@@ -338,6 +338,45 @@ pub fn get_file_diff(cwd: &str, file_path: &str, staged: bool) -> Result<String,
     Ok(diff_text)
 }
 
+/// Push commits to remote
+pub fn push_to_remote(cwd: &str) -> Result<String, VcsError> {
+    let path = Path::new(cwd);
+    let repo =
+        Repository::discover(path).map_err(|e| VcsError::NotGitRepo(e.message().to_string()))?;
+
+    // Get current branch
+    let head = repo
+        .head()
+        .map_err(|e| VcsError::GitError(e.message().to_string()))?;
+    let branch_name = head
+        .shorthand()
+        .ok_or_else(|| VcsError::GitError("Could not get branch name".to_string()))?;
+
+    // Get remote
+    let remote_name = "origin"; // Default to origin
+    let mut remote = repo
+        .find_remote(remote_name)
+        .map_err(|e| VcsError::GitError(format!("Remote '{}' not found: {}", remote_name, e)))?;
+
+    // Push current branch to remote
+    let refspec = format!("refs/heads/{}:refs/heads/{}", branch_name, branch_name);
+
+    // Set up callbacks for credentials (will use SSH agent or credential helper)
+    let mut callbacks = git2::RemoteCallbacks::new();
+    callbacks.credentials(|_url, username_from_url, _allowed_types| {
+        git2::Cred::ssh_key_from_agent(username_from_url.unwrap_or("git"))
+    });
+
+    let mut push_options = git2::PushOptions::new();
+    push_options.remote_callbacks(callbacks);
+
+    remote
+        .push(&[refspec.as_str()], Some(&mut push_options))
+        .map_err(|e| VcsError::GitError(format!("Failed to push: {}", e)))?;
+
+    Ok(format!("Pushed {} to {}", branch_name, remote_name))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
