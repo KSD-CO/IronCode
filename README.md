@@ -49,12 +49,6 @@
 - No data loss - regex matches on full line content before display truncation
 - Scales to much larger codebases on memory-constrained systems
 
-See documentation:
-
-- [STREAMING-READ-OPTIMIZATION.md](./STREAMING-READ-OPTIMIZATION.md) - Read optimization details
-- [GREP-STREAMING-OPTIMIZATION.md](./GREP-STREAMING-OPTIMIZATION.md) - Grep optimization details
-- [GREP-STREAMING-DATA-INTEGRITY.md](./GREP-STREAMING-DATA-INTEGRITY.md) - Data integrity verification
-
 ### Previous Updates
 
 - **Memory optimization** - 97.6% faster message processing (254ms → 6ms) - Feb 2026
@@ -535,8 +529,8 @@ Contributions are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) befo
 
 **Recent Contributions:**
 
-- ✅ **Grep streaming optimization** (90-99% memory reduction, GB-file capability - Feb 2026)
 - ✅ **Streaming read optimization** (1.2-1.6x faster, 99.7% memory savings - Feb 2026)
+- ✅ **Grep streaming optimization** (90-99% memory reduction, GB-file capability - Feb 2026)
 - ✅ **Memory optimization deployed to production** (97.6% faster message processing - Feb 2026)
 - ✅ **Resource monitoring system** (automatic throttling, 300MB default limit - Feb 2026)
 - ✅ **Native PTY/Terminal deployed to production** (15.29x speedup, powers Bash tool - Feb 2026)
@@ -622,33 +616,7 @@ _Benchmarked on IronCode repository (dev branch, 100 iterations)_
 
 ---
 
-## Upstream Sync
-
-This fork periodically syncs with [upstream OpenCode](https://github.com/anomalyco/opencode) to incorporate new features and bug fixes.
-
-```bash
-# To sync with upstream
-git remote add upstream https://github.com/anomalyco/opencode.git
-git fetch upstream
-git merge upstream/dev
-```
-
----
-
-## License
-
-This project maintains the same license as [OpenCode](https://github.com/anomalyco/opencode).
-
----
-
 ## Acknowledgments
 
 - **OpenCode Team**: For creating the original open-source AI coding agent
 - All contributors to this fork
-
----
-
-## Links
-
-- [Upstream OpenCode](https://github.com/anomalyco/opencode)
-- [IronCode Documentation](https://ironcode.cloud/docs)
