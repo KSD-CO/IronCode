@@ -17,8 +17,6 @@ jobs:
         with:
           fetch-depth: 1
 
-      - uses: ./.github/actions/setup-bun
-
       - name: Install IronCode
         run: npm install -g ironcode-ai
 
