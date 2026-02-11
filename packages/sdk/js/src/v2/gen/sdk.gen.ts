@@ -2165,7 +2165,7 @@ export class Find extends HeyApiClient {
   /**
    * Find text
    *
-   * Search for text patterns across files in the project using ripgrep.
+   * Search for text patterns across files in the project using native grep.
    */
   public text<ThrowOnError extends boolean = false>(
     parameters: {
