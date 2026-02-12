@@ -1,7 +1,8 @@
 import { Config } from "../config/config"
 import z from "zod"
 import { Provider } from "../provider/provider"
-import { generateObject, streamObject, type ModelMessage } from "ai"
+import { generateText, streamText, Output, type ModelMessage } from "ai"
+import { generateStructured, streamStructured } from "./generate-wrapper"
 import { SystemPrompt } from "../session/system"
 import { Instance } from "../project/instance"
 import { Truncate } from "../tool/truncation"
@@ -289,7 +290,16 @@ export namespace Agent {
     await Plugin.trigger("experimental.chat.system.transform", { model }, { system })
     const existing = await list()
 
-    const params = {
+    const schema = z.object({
+      identifier: z.string(),
+      whenToUse: z.string(),
+      systemPrompt: z.string(),
+    })
+
+    const output = Output.object({ schema })
+
+    type GenWithOutput = Parameters<typeof generateText>[0] & { output: ReturnType<typeof Output.object> }
+    const genParams: GenWithOutput = {
       experimental_telemetry: {
         isEnabled: cfg.experimental?.openTelemetry,
         metadata: {
@@ -310,29 +320,23 @@ export namespace Agent {
         },
       ],
       model: language,
-      schema: z.object({
-        identifier: z.string(),
-        whenToUse: z.string(),
-        systemPrompt: z.string(),
-      }),
-    } satisfies Parameters<typeof generateObject>[0]
+      output,
+      tools: undefined,
+    }
 
     if (defaultModel.providerID === "openai" && (await Auth.get(defaultModel.providerID))?.type === "oauth") {
-      const result = streamObject({
-        ...params,
+      const streamParams = {
+        ...genParams,
         providerOptions: ProviderTransform.providerOptions(model, {
           instructions: SystemPrompt.instructions(),
           store: false,
         }),
         onError: () => {},
-      })
-      for await (const part of result.fullStream) {
-        if (part.type === "error") throw part.error
       }
-      return result.object
+
+      return await streamStructured<z.infer<typeof schema>>(streamParams as any, output)
     }
 
-    const result = await generateObject(params)
-    return result.object
+    return await generateStructured<z.infer<typeof schema>>(genParams as any, output)
   }
 }
