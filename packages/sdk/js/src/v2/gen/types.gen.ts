@@ -1766,6 +1766,10 @@ export type Config = {
   lsp?:
     | false
     | {
+        /**
+         * Maximum number of LSP servers to spawn concurrently (default: 3). Prevents OOM when opening many files.
+         */
+        maxConcurrentSpawns?: number
         [key: string]:
           | {
               disabled: true
@@ -1781,6 +1785,8 @@ export type Config = {
                 [key: string]: unknown
               }
             }
+          | number
+          | undefined
       }
   /**
    * Additional instruction files or patterns to include
