@@ -8,7 +8,7 @@ export namespace Resource {
   const log = Log.create({ service: "resource" })
 
   export interface Limits {
-    /** Max memory in MB (default: 1024 for macOS/Linux, 2048 for Windows) */
+    /** Max memory in MB (default: 2048 for macOS/Linux, 4096 for Windows) */
     maxMemoryMB: number
     /** Memory warning threshold (default: 0.8 = 80%) */
     memoryWarningThreshold: number
@@ -21,7 +21,7 @@ export namespace Resource {
   }
 
   const defaultLimits: Limits = {
-    maxMemoryMB: process.platform === "win32" ? 2048 : 1024,
+    maxMemoryMB: process.platform === "win32" ? 4096 : 2048,
     memoryWarningThreshold: 0.8,
     memoryCriticalThreshold: 0.95,
     cpuWarningThreshold: 80,

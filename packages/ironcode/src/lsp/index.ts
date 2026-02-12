@@ -10,6 +10,7 @@ import { Config } from "../config/config"
 import { spawn } from "child_process"
 import { Instance } from "../project/instance"
 import { Flag } from "@/flag/flag"
+import { Semaphore } from "../util/semaphore"
 
 export namespace LSP {
   const log = Log.create({ service: "lsp" })
@@ -89,6 +90,7 @@ export namespace LSP {
           servers,
           clients,
           spawning: new Map<string, Promise<LSPClient.Info | undefined>>(),
+          spawnSemaphore: new Semaphore(3),
         }
       }
 
@@ -99,6 +101,9 @@ export namespace LSP {
       filterExperimentalServers(servers)
 
       for (const [name, item] of Object.entries(cfg.lsp ?? {})) {
+        if (name === "maxConcurrentSpawns") continue
+        if (typeof item !== "object") continue
+
         const existing = servers[name]
         if (item.disabled) {
           log.info(`LSP server ${name} is disabled`)
@@ -131,11 +136,15 @@ export namespace LSP {
           .join(", "),
       })
 
+      const maxConcurrentSpawns = cfg.lsp?.maxConcurrentSpawns ?? 3
+      log.info(`LSP spawn concurrency limit: ${maxConcurrentSpawns}`)
+
       return {
         broken: new Set<string>(),
         servers,
         clients,
         spawning: new Map<string, Promise<LSPClient.Info | undefined>>(),
+        spawnSemaphore: new Semaphore(maxConcurrentSpawns),
       }
     },
     async (state) => {
@@ -180,45 +189,52 @@ export namespace LSP {
     const result: LSPClient.Info[] = []
 
     async function schedule(server: LSPServer.Info, root: string, key: string) {
-      const handle = await server
-        .spawn(root)
-        .then((value) => {
-          if (!value) s.broken.add(key)
-          return value
-        })
-        .catch((err) => {
+      return s.spawnSemaphore.run(async () => {
+        const queueLength = s.spawnSemaphore.waiting
+        if (queueLength > 0) {
+          log.info(`LSP spawn queued (${queueLength} waiting)`, { serverID: server.id, root })
+        }
+
+        const handle = await server
+          .spawn(root)
+          .then((value) => {
+            if (!value) s.broken.add(key)
+            return value
+          })
+          .catch((err) => {
+            s.broken.add(key)
+            log.error(`Failed to spawn LSP server ${server.id}`, { error: err })
+            return undefined
+          })
+
+        if (!handle) return undefined
+        log.info("spawned lsp server", { serverID: server.id })
+
+        const client = await LSPClient.create({
+          serverID: server.id,
+          server: handle,
+          root,
+        }).catch((err) => {
           s.broken.add(key)
-          log.error(`Failed to spawn LSP server ${server.id}`, { error: err })
+          handle.process.kill()
+          log.error(`Failed to initialize LSP client ${server.id}`, { error: err })
           return undefined
         })
 
-      if (!handle) return undefined
-      log.info("spawned lsp server", { serverID: server.id })
+        if (!client) {
+          handle.process.kill()
+          return undefined
+        }
 
-      const client = await LSPClient.create({
-        serverID: server.id,
-        server: handle,
-        root,
-      }).catch((err) => {
-        s.broken.add(key)
-        handle.process.kill()
-        log.error(`Failed to initialize LSP client ${server.id}`, { error: err })
-        return undefined
+        const existing = s.clients.find((x) => x.root === root && x.serverID === server.id)
+        if (existing) {
+          handle.process.kill()
+          return existing
+        }
+
+        s.clients.push(client)
+        return client
       })
-
-      if (!client) {
-        handle.process.kill()
-        return undefined
-      }
-
-      const existing = s.clients.find((x) => x.root === root && x.serverID === server.id)
-      if (existing) {
-        handle.process.kill()
-        return existing
-      }
-
-      s.clients.push(client)
-      return client
     }
 
     for (const server of Object.values(s.servers)) {
