@@ -122,7 +122,7 @@ for (const item of targets) {
     // changing to win32 flags npm for some reason
     item.os === "win32" ? "windows" : item.os,
     item.arch,
-    item.avx2 === false ? "baseline" : undefined,
+    item.avx2 === false ? "baseline" : item.arch === "x64" ? "modern" : undefined,
     item.abi === undefined ? undefined : item.abi,
   ]
     .filter(Boolean)
@@ -142,6 +142,8 @@ for (const item of targets) {
     tsconfig: "./tsconfig.json",
     plugins: [solidPlugin],
     sourcemap: "external",
+    minify: true, // Enable minification for smaller binary size
+    bytecode: true, // Enable bytecode compilation for faster startup (2x improvement)
     compile: {
       autoloadBunfig: false,
       autoloadDotenv: false,
