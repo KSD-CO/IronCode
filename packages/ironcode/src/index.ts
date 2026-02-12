@@ -57,9 +57,9 @@ const cli = yargs(hideBin(process.argv))
     choices: ["DEBUG", "INFO", "WARN", "ERROR"],
   })
   .option("max-memory", {
-    describe: "max memory limit in MB (default: 300)",
+    describe: "max memory limit in MB (default: 1024 for macOS/Linux, 2048 for Windows)",
     type: "number",
-    default: 300,
+    default: process.platform === "win32" ? 2048 : 1024,
   })
   .option("enable-resource-monitor", {
     describe: "enable resource monitoring and throttling",

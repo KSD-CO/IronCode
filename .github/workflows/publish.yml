@@ -114,14 +114,6 @@ jobs:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Build native Rust library
-        run: |
-          cd packages/ironcode/native/tool
-          cargo build --release
-
       - name: Setup git user
         run: |
           git config --global user.name "github-actions[bot]"
