@@ -143,7 +143,10 @@ for (const item of targets) {
     plugins: [solidPlugin],
     sourcemap: "external",
     minify: true, // Enable minification for smaller binary size
-    bytecode: true, // Enable bytecode compilation for faster startup (2x improvement)
+    // Bytecode disabled: @opentui/core uses top-level await which is incompatible with Bun's bytecode mode.
+    // Trade-off: ~100-200ms slower startup, but runtime performance is unaffected.
+    // Can be re-enabled when @opentui/core removes top-level await or Bun fixes the limitation.
+    bytecode: false,
     compile: {
       autoloadBunfig: false,
       autoloadDotenv: false,
