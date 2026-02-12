@@ -95,6 +95,13 @@ jobs:
           name: ironcode-cli-${{ matrix.platform }}
           path: packages/ironcode/dist
 
+      - name: Upload Rust library (Linux only)
+        if: matrix.platform == 'linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-native-library
+          path: packages/ironcode/native/tool/target/release/libironcode_tool.so
+
     outputs:
       version: ${{ needs.version.outputs.version }}
 
@@ -125,6 +132,12 @@ jobs:
           pattern: ironcode-cli-*
           path: packages/ironcode/dist
           merge-multiple: true
+
+      - name: Download Rust native library
+        uses: actions/download-artifact@v4
+        with:
+          name: rust-native-library
+          path: packages/ironcode/native/tool/target/release
 
       - name: Verify artifacts
         run: |
