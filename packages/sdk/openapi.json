@@ -2429,7 +2429,7 @@
                   "parts": {
                     "type": "array",
                     "items": {
-                      "anyOf": [
+                      "oneOf": [
                         {
                           "$ref": "#/components/schemas/TextPartInput"
                         },
@@ -2805,7 +2805,7 @@
                   "parts": {
                     "type": "array",
                     "items": {
-                      "anyOf": [
+                      "oneOf": [
                         {
                           "$ref": "#/components/schemas/TextPartInput"
                         },
@@ -2930,7 +2930,7 @@
                   "parts": {
                     "type": "array",
                     "items": {
-                      "anyOf": [
+                      "oneOf": [
                         {
                           "type": "object",
                           "properties": {
@@ -3513,11 +3513,11 @@
                 "type": "object",
                 "properties": {
                   "answers": {
-                    "description": "User answers in order of questions (each answer is an array of selected labels)",
                     "type": "array",
                     "items": {
                       "$ref": "#/components/schemas/QuestionAnswer"
-                    }
+                    },
+                    "description": "User answers in order of questions (each answer is an array of selected labels)"
                   }
                 },
                 "required": ["answers"]
@@ -3950,8 +3950,8 @@
                 "type": "object",
                 "properties": {
                   "method": {
-                    "description": "Auth method index",
-                    "type": "number"
+                    "type": "number",
+                    "description": "Auth method index"
                   }
                 },
                 "required": ["method"]
@@ -4019,8 +4019,8 @@
                 "type": "object",
                 "properties": {
                   "method": {
-                    "description": "Auth method index",
-                    "type": "number"
+                    "type": "number",
+                    "description": "Auth method index"
                   },
                   "code": {
                     "description": "OAuth authorization code",
@@ -4465,7 +4465,7 @@
                     "type": "string"
                   },
                   "config": {
-                    "anyOf": [
+                    "oneOf": [
                       {
                         "$ref": "#/components/schemas/McpLocalConfig"
                       },
@@ -4519,8 +4519,8 @@
                   "type": "object",
                   "properties": {
                     "authorizationUrl": {
-                      "description": "URL to open in browser for authorization",
-                      "type": "string"
+                      "type": "string",
+                      "description": "URL to open in browser for authorization"
                     }
                   },
                   "required": ["authorizationUrl"]
@@ -4675,8 +4675,8 @@
                 "type": "object",
                 "properties": {
                   "code": {
-                    "description": "Authorization code from OAuth callback",
-                    "type": "string"
+                    "type": "string",
+                    "description": "Authorization code from OAuth callback"
                   }
                 },
                 "required": ["code"]
@@ -5338,9 +5338,9 @@
                 "type": "object",
                 "properties": {
                   "sessionID": {
-                    "description": "Session ID to navigate to",
                     "type": "string",
-                    "pattern": "^ses"
+                    "pattern": "^ses",
+                    "description": "Session ID to navigate to"
                   }
                 },
                 "required": ["sessionID"]
@@ -5620,17 +5620,17 @@
                 "type": "object",
                 "properties": {
                   "service": {
-                    "description": "Service name for the log entry",
-                    "type": "string"
+                    "type": "string",
+                    "description": "Service name for the log entry"
                   },
                   "level": {
-                    "description": "Log level",
                     "type": "string",
-                    "enum": ["debug", "info", "error", "warn"]
+                    "enum": ["debug", "info", "error", "warn"],
+                    "description": "Log level"
                   },
                   "message": {
-                    "description": "Log message",
-                    "type": "string"
+                    "type": "string",
+                    "description": "Log message"
                   },
                   "extra": {
                     "description": "Additional metadata for the log entry",
@@ -6314,7 +6314,7 @@
             "required": ["created"]
           },
           "error": {
-            "anyOf": [
+            "oneOf": [
               {
                 "$ref": "#/components/schemas/ProviderAuthError"
               },
@@ -6415,7 +6415,7 @@
         ]
       },
       "Message": {
-        "anyOf": [
+        "oneOf": [
           {
             "$ref": "#/components/schemas/UserMessage"
           },
@@ -6708,7 +6708,7 @@
         "required": ["text", "type", "clientName", "uri"]
       },
       "FilePartSource": {
-        "anyOf": [
+        "oneOf": [
           {
             "$ref": "#/components/schemas/FileSource"
           },
@@ -6898,7 +6898,7 @@
         "required": ["status", "input", "error", "time"]
       },
       "ToolState": {
-        "anyOf": [
+        "oneOf": [
           {
             "$ref": "#/components/schemas/ToolStatePending"
           },
@@ -7173,7 +7173,7 @@
         "required": ["id", "sessionID", "messageID", "type", "auto"]
       },
       "Part": {
-        "anyOf": [
+        "oneOf": [
           {
             "$ref": "#/components/schemas/TextPart"
           },
@@ -7434,12 +7434,12 @@
         "type": "object",
         "properties": {
           "label": {
-            "description": "Display text (1-5 words, concise)",
-            "type": "string"
+            "type": "string",
+            "description": "Display text (1-5 words, concise)"
           },
           "description": {
-            "description": "Explanation of choice",
-            "type": "string"
+            "type": "string",
+            "description": "Explanation of choice"
           }
         },
         "required": ["label", "description"]
@@ -7448,19 +7448,19 @@
         "type": "object",
         "properties": {
           "question": {
-            "description": "Complete question",
-            "type": "string"
+            "type": "string",
+            "description": "Complete question"
           },
           "header": {
-            "description": "Very short label (max 30 chars)",
-            "type": "string"
+            "type": "string",
+            "description": "Very short label (max 30 chars)"
           },
           "options": {
-            "description": "Available choices",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/QuestionOption"
-            }
+            },
+            "description": "Available choices"
           },
           "multiple": {
             "description": "Allow selecting multiple choices",
@@ -7485,11 +7485,11 @@
             "pattern": "^ses.*"
           },
           "questions": {
-            "description": "Questions to ask",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/QuestionInfo"
-            }
+            },
+            "description": "Questions to ask"
           },
           "tool": {
             "type": "object",
@@ -7633,20 +7633,20 @@
         "type": "object",
         "properties": {
           "content": {
-            "description": "Brief description of the task",
-            "type": "string"
+            "type": "string",
+            "description": "Brief description of the task"
           },
           "status": {
-            "description": "Current status of the task: pending, in_progress, completed, cancelled",
-            "type": "string"
+            "type": "string",
+            "description": "Current status of the task: pending, in_progress, completed, cancelled"
           },
           "priority": {
-            "description": "Priority level of the task: high, medium, low",
-            "type": "string"
+            "type": "string",
+            "description": "Priority level of the task: high, medium, low"
           },
           "id": {
-            "description": "Unique identifier for the todo item",
-            "type": "string"
+            "type": "string",
+            "description": "Unique identifier for the todo item"
           }
         },
         "required": ["content", "status", "priority", "id"]
@@ -7781,9 +7781,9 @@
             "type": "object",
             "properties": {
               "sessionID": {
-                "description": "Session ID to navigate to",
                 "type": "string",
-                "pattern": "^ses"
+                "pattern": "^ses",
+                "description": "Session ID to navigate to"
               }
             },
             "required": ["sessionID"]
@@ -8081,7 +8081,7 @@
                 "type": "string"
               },
               "error": {
-                "anyOf": [
+                "oneOf": [
                   {
                     "$ref": "#/components/schemas/ProviderAuthError"
                   },
@@ -8277,7 +8277,7 @@
         "required": ["type", "properties"]
       },
       "Event": {
-        "anyOf": [
+        "oneOf": [
           {
             "$ref": "#/components/schemas/Event.installation.updated"
           },
@@ -8423,478 +8423,478 @@
         "type": "object",
         "properties": {
           "leader": {
-            "description": "Leader key for keybind combinations",
             "default": "ctrl+x",
+            "description": "Leader key for keybind combinations",
             "type": "string"
           },
           "app_exit": {
-            "description": "Exit the application",
             "default": "ctrl+c,ctrl+d,<leader>q",
+            "description": "Exit the application",
             "type": "string"
           },
           "editor_open": {
-            "description": "Open external editor",
             "default": "<leader>e",
+            "description": "Open external editor",
             "type": "string"
           },
           "theme_list": {
-            "description": "List available themes",
             "default": "<leader>t",
+            "description": "List available themes",
             "type": "string"
           },
           "sidebar_toggle": {
-            "description": "Toggle sidebar",
             "default": "<leader>b",
+            "description": "Toggle sidebar",
             "type": "string"
           },
           "scrollbar_toggle": {
-            "description": "Toggle session scrollbar",
             "default": "none",
+            "description": "Toggle session scrollbar",
             "type": "string"
           },
           "username_toggle": {
-            "description": "Toggle username visibility",
             "default": "none",
+            "description": "Toggle username visibility",
             "type": "string"
           },
           "status_view": {
-            "description": "View status",
             "default": "<leader>s",
+            "description": "View status",
             "type": "string"
           },
           "git_status": {
-            "description": "Git source control",
             "default": "<leader>i",
+            "description": "Git source control",
             "type": "string"
           },
           "session_export": {
-            "description": "Export session to editor",
             "default": "<leader>x",
+            "description": "Export session to editor",
             "type": "string"
           },
           "session_new": {
-            "description": "Create a new session",
             "default": "<leader>n",
+            "description": "Create a new session",
             "type": "string"
           },
           "session_list": {
-            "description": "List all sessions",
             "default": "<leader>l",
+            "description": "List all sessions",
             "type": "string"
           },
           "session_timeline": {
-            "description": "Show session timeline",
             "default": "<leader>g",
+            "description": "Show session timeline",
             "type": "string"
           },
           "session_fork": {
-            "description": "Fork session from message",
             "default": "none",
+            "description": "Fork session from message",
             "type": "string"
           },
           "session_rename": {
-            "description": "Rename session",
             "default": "ctrl+r",
+            "description": "Rename session",
             "type": "string"
           },
           "session_delete": {
-            "description": "Delete session",
             "default": "ctrl+d",
+            "description": "Delete session",
             "type": "string"
           },
           "stash_delete": {
-            "description": "Delete stash entry",
             "default": "ctrl+d",
+            "description": "Delete stash entry",
             "type": "string"
           },
           "model_provider_list": {
-            "description": "Open provider list from model dialog",
             "default": "ctrl+a",
+            "description": "Open provider list from model dialog",
             "type": "string"
           },
           "model_favorite_toggle": {
-            "description": "Toggle model favorite status",
             "default": "ctrl+f",
+            "description": "Toggle model favorite status",
             "type": "string"
           },
           "session_share": {
-            "description": "Share current session",
             "default": "none",
+            "description": "Share current session",
             "type": "string"
           },
           "session_unshare": {
-            "description": "Unshare current session",
             "default": "none",
+            "description": "Unshare current session",
             "type": "string"
           },
           "session_interrupt": {
-            "description": "Interrupt current session",
             "default": "escape",
+            "description": "Interrupt current session",
             "type": "string"
           },
           "session_compact": {
-            "description": "Compact the session",
             "default": "<leader>c",
+            "description": "Compact the session",
             "type": "string"
           },
           "messages_page_up": {
-            "description": "Scroll messages up by one page",
             "default": "pageup,ctrl+alt+b",
+            "description": "Scroll messages up by one page",
             "type": "string"
           },
           "messages_page_down": {
-            "description": "Scroll messages down by one page",
             "default": "pagedown,ctrl+alt+f",
+            "description": "Scroll messages down by one page",
             "type": "string"
           },
           "messages_line_up": {
-            "description": "Scroll messages up by one line",
             "default": "ctrl+alt+y",
+            "description": "Scroll messages up by one line",
             "type": "string"
           },
           "messages_line_down": {
-            "description": "Scroll messages down by one line",
             "default": "ctrl+alt+e",
+            "description": "Scroll messages down by one line",
             "type": "string"
           },
           "messages_half_page_up": {
-            "description": "Scroll messages up by half page",
             "default": "ctrl+alt+u",
+            "description": "Scroll messages up by half page",
             "type": "string"
           },
           "messages_half_page_down": {
-            "description": "Scroll messages down by half page",
             "default": "ctrl+alt+d",
+            "description": "Scroll messages down by half page",
             "type": "string"
           },
           "messages_first": {
-            "description": "Navigate to first message",
             "default": "ctrl+g,home",
+            "description": "Navigate to first message",
             "type": "string"
           },
           "messages_last": {
-            "description": "Navigate to last message",
             "default": "ctrl+alt+g,end",
+            "description": "Navigate to last message",
             "type": "string"
           },
           "messages_next": {
-            "description": "Navigate to next message",
             "default": "none",
+            "description": "Navigate to next message",
             "type": "string"
           },
           "messages_previous": {
-            "description": "Navigate to previous message",
             "default": "none",
+            "description": "Navigate to previous message",
             "type": "string"
           },
           "messages_last_user": {
-            "description": "Navigate to last user message",
             "default": "none",
+            "description": "Navigate to last user message",
             "type": "string"
           },
           "messages_copy": {
-            "description": "Copy message",
             "default": "<leader>y",
+            "description": "Copy message",
             "type": "string"
           },
           "messages_undo": {
-            "description": "Undo message",
             "default": "<leader>u",
+            "description": "Undo message",
             "type": "string"
           },
           "messages_redo": {
-            "description": "Redo message",
             "default": "<leader>r",
+            "description": "Redo message",
             "type": "string"
           },
           "messages_toggle_conceal": {
-            "description": "Toggle code block concealment in messages",
             "default": "<leader>h",
+            "description": "Toggle code block concealment in messages",
             "type": "string"
           },
           "tool_details": {
-            "description": "Toggle tool details visibility",
             "default": "none",
+            "description": "Toggle tool details visibility",
             "type": "string"
           },
           "model_list": {
-            "description": "List available models",
             "default": "<leader>m",
+            "description": "List available models",
             "type": "string"
           },
           "model_cycle_recent": {
-            "description": "Next recently used model",
             "default": "f2",
+            "description": "Next recently used model",
             "type": "string"
           },
           "model_cycle_recent_reverse": {
-            "description": "Previous recently used model",
             "default": "shift+f2",
+            "description": "Previous recently used model",
             "type": "string"
           },
           "model_cycle_favorite": {
-            "description": "Next favorite model",
             "default": "none",
+            "description": "Next favorite model",
             "type": "string"
           },
           "model_cycle_favorite_reverse": {
-            "description": "Previous favorite model",
             "default": "none",
+            "description": "Previous favorite model",
             "type": "string"
           },
           "command_list": {
-            "description": "List available commands",
             "default": "ctrl+p",
+            "description": "List available commands",
             "type": "string"
           },
           "agent_list": {
-            "description": "List agents",
             "default": "<leader>a",
+            "description": "List agents",
             "type": "string"
           },
           "agent_cycle": {
-            "description": "Next agent",
             "default": "tab",
+            "description": "Next agent",
             "type": "string"
           },
           "agent_cycle_reverse": {
-            "description": "Previous agent",
             "default": "shift+tab",
+            "description": "Previous agent",
             "type": "string"
           },
           "variant_cycle": {
-            "description": "Cycle model variants",
             "default": "ctrl+t",
+            "description": "Cycle model variants",
             "type": "string"
           },
           "input_clear": {
-            "description": "Clear input field",
             "default": "ctrl+c",
+            "description": "Clear input field",
             "type": "string"
           },
           "input_paste": {
-            "description": "Paste from clipboard",
             "default": "ctrl+v",
+            "description": "Paste from clipboard",
             "type": "string"
           },
           "input_submit": {
-            "description": "Submit input",
             "default": "return",
+            "description": "Submit input",
             "type": "string"
           },
           "input_newline": {
-            "description": "Insert newline in input",
             "default": "shift+return,ctrl+return,alt+return,ctrl+j",
+            "description": "Insert newline in input",
             "type": "string"
           },
           "input_move_left": {
-            "description": "Move cursor left in input",
             "default": "left,ctrl+b",
+            "description": "Move cursor left in input",
             "type": "string"
           },
           "input_move_right": {
-            "description": "Move cursor right in input",
             "default": "right,ctrl+f",
+            "description": "Move cursor right in input",
             "type": "string"
           },
           "input_move_up": {
-            "description": "Move cursor up in input",
             "default": "up",
+            "description": "Move cursor up in input",
             "type": "string"
           },
           "input_move_down": {
-            "description": "Move cursor down in input",
             "default": "down",
+            "description": "Move cursor down in input",
             "type": "string"
           },
           "input_select_left": {
-            "description": "Select left in input",
             "default": "shift+left",
+            "description": "Select left in input",
             "type": "string"
           },
           "input_select_right": {
-            "description": "Select right in input",
             "default": "shift+right",
+            "description": "Select right in input",
             "type": "string"
           },
           "input_select_up": {
-            "description": "Select up in input",
             "default": "shift+up",
+            "description": "Select up in input",
             "type": "string"
           },
           "input_select_down": {
-            "description": "Select down in input",
             "default": "shift+down",
+            "description": "Select down in input",
             "type": "string"
           },
           "input_line_home": {
-            "description": "Move to start of line in input",
             "default": "ctrl+a",
+            "description": "Move to start of line in input",
             "type": "string"
           },
           "input_line_end": {
-            "description": "Move to end of line in input",
             "default": "ctrl+e",
+            "description": "Move to end of line in input",
             "type": "string"
           },
           "input_select_line_home": {
-            "description": "Select to start of line in input",
             "default": "ctrl+shift+a",
+            "description": "Select to start of line in input",
             "type": "string"
           },
           "input_select_line_end": {
-            "description": "Select to end of line in input",
             "default": "ctrl+shift+e",
+            "description": "Select to end of line in input",
             "type": "string"
           },
           "input_visual_line_home": {
-            "description": "Move to start of visual line in input",
             "default": "alt+a",
+            "description": "Move to start of visual line in input",
             "type": "string"
           },
           "input_visual_line_end": {
-            "description": "Move to end of visual line in input",
             "default": "alt+e",
+            "description": "Move to end of visual line in input",
             "type": "string"
           },
           "input_select_visual_line_home": {
-            "description": "Select to start of visual line in input",
             "default": "alt+shift+a",
+            "description": "Select to start of visual line in input",
             "type": "string"
           },
           "input_select_visual_line_end": {
-            "description": "Select to end of visual line in input",
             "default": "alt+shift+e",
+            "description": "Select to end of visual line in input",
             "type": "string"
           },
           "input_buffer_home": {
-            "description": "Move to start of buffer in input",
             "default": "home",
+            "description": "Move to start of buffer in input",
             "type": "string"
           },
           "input_buffer_end": {
-            "description": "Move to end of buffer in input",
             "default": "end",
+            "description": "Move to end of buffer in input",
             "type": "string"
           },
           "input_select_buffer_home": {
-            "description": "Select to start of buffer in input",
             "default": "shift+home",
+            "description": "Select to start of buffer in input",
             "type": "string"
           },
           "input_select_buffer_end": {
-            "description": "Select to end of buffer in input",
             "default": "shift+end",
+            "description": "Select to end of buffer in input",
             "type": "string"
           },
           "input_delete_line": {
-            "description": "Delete line in input",
             "default": "ctrl+shift+d",
+            "description": "Delete line in input",
             "type": "string"
           },
           "input_delete_to_line_end": {
-            "description": "Delete to end of line in input",
             "default": "ctrl+k",
+            "description": "Delete to end of line in input",
             "type": "string"
           },
           "input_delete_to_line_start": {
-            "description": "Delete to start of line in input",
             "default": "ctrl+u",
+            "description": "Delete to start of line in input",
             "type": "string"
           },
           "input_backspace": {
-            "description": "Backspace in input",
             "default": "backspace,shift+backspace",
+            "description": "Backspace in input",
             "type": "string"
           },
           "input_delete": {
-            "description": "Delete character in input",
             "default": "ctrl+d,delete,shift+delete",
+            "description": "Delete character in input",
             "type": "string"
           },
           "input_undo": {
-            "description": "Undo in input",
             "default": "ctrl+-,super+z",
+            "description": "Undo in input",
             "type": "string"
           },
           "input_redo": {
-            "description": "Redo in input",
             "default": "ctrl+.,super+shift+z",
+            "description": "Redo in input",
             "type": "string"
           },
           "input_word_forward": {
-            "description": "Move word forward in input",
             "default": "alt+f,alt+right,ctrl+right",
+            "description": "Move word forward in input",
             "type": "string"
           },
           "input_word_backward": {
-            "description": "Move word backward in input",
             "default": "alt+b,alt+left,ctrl+left",
+            "description": "Move word backward in input",
             "type": "string"
           },
           "input_select_word_forward": {
-            "description": "Select word forward in input",
             "default": "alt+shift+f,alt+shift+right",
+            "description": "Select word forward in input",
             "type": "string"
           },
           "input_select_word_backward": {
-            "description": "Select word backward in input",
             "default": "alt+shift+b,alt+shift+left",
+            "description": "Select word backward in input",
             "type": "string"
           },
           "input_delete_word_forward": {
-            "description": "Delete word forward in input",
             "default": "alt+d,alt+delete,ctrl+delete",
+            "description": "Delete word forward in input",
             "type": "string"
           },
           "input_delete_word_backward": {
-            "description": "Delete word backward in input",
             "default": "ctrl+w,ctrl+backspace,alt+backspace",
+            "description": "Delete word backward in input",
             "type": "string"
           },
           "history_previous": {
-            "description": "Previous history item",
             "default": "up",
+            "description": "Previous history item",
             "type": "string"
           },
           "history_next": {
-            "description": "Next history item",
             "default": "down",
+            "description": "Next history item",
             "type": "string"
           },
           "session_child_cycle": {
-            "description": "Next child session",
             "default": "<leader>right",
+            "description": "Next child session",
             "type": "string"
           },
           "session_child_cycle_reverse": {
-            "description": "Previous child session",
             "default": "<leader>left",
+            "description": "Previous child session",
             "type": "string"
           },
           "session_parent": {
-            "description": "Go to parent session",
             "default": "<leader>up",
+            "description": "Go to parent session",
             "type": "string"
           },
           "terminal_suspend": {
-            "description": "Suspend terminal",
             "default": "ctrl+z",
+            "description": "Suspend terminal",
             "type": "string"
           },
           "terminal_title_toggle": {
-            "description": "Toggle terminal title",
             "default": "none",
+            "description": "Toggle terminal title",
             "type": "string"
           },
           "tips_toggle": {
-            "description": "Toggle tips on home screen",
             "default": "<leader>h",
+            "description": "Toggle tips on home screen",
             "type": "string"
           },
           "display_thinking": {
-            "description": "Toggle thinking blocks visibility",
             "default": "none",
+            "description": "Toggle thinking blocks visibility",
             "type": "string"
           }
         },
@@ -9342,15 +9342,15 @@
                 "description": "Timeout in milliseconds for requests to this provider. Default is 300000 (5 minutes). Set to false to disable timeout.",
                 "anyOf": [
                   {
-                    "description": "Timeout in milliseconds for requests to this provider. Default is 300000 (5 minutes). Set to false to disable timeout.",
                     "type": "integer",
                     "exclusiveMinimum": 0,
-                    "maximum": 9007199254740991
+                    "maximum": 9007199254740991,
+                    "description": "Timeout in milliseconds for requests to this provider. Default is 300000 (5 minutes). Set to false to disable timeout."
                   },
                   {
-                    "description": "Disable timeout for this provider entirely.",
                     "type": "boolean",
-                    "const": false
+                    "const": false,
+                    "description": "Disable timeout for this provider entirely."
                   }
                 ]
               }
@@ -9364,16 +9364,16 @@
         "type": "object",
         "properties": {
           "type": {
-            "description": "Type of MCP server connection",
             "type": "string",
-            "const": "local"
+            "const": "local",
+            "description": "Type of MCP server connection"
           },
           "command": {
-            "description": "Command and arguments to run the MCP server",
             "type": "array",
             "items": {
               "type": "string"
-            }
+            },
+            "description": "Command and arguments to run the MCP server"
           },
           "environment": {
             "description": "Environment variables to set when running the MCP server",
@@ -9421,13 +9421,13 @@
         "type": "object",
         "properties": {
           "type": {
-            "description": "Type of MCP server connection",
             "type": "string",
-            "const": "remote"
+            "const": "remote",
+            "description": "Type of MCP server connection"
           },
           "url": {
-            "description": "URL of the remote MCP server",
-            "type": "string"
+            "type": "string",
+            "description": "URL of the remote MCP server"
           },
           "enabled": {
             "description": "Enable or disable the MCP server on startup",
@@ -9501,8 +9501,8 @@
                 "type": "object",
                 "properties": {
                   "enabled": {
-                    "description": "Enable scroll acceleration",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "Enable scroll acceleration"
                   }
                 },
                 "required": ["enabled"]
@@ -9621,12 +9621,12 @@
             }
           },
           "model": {
-            "description": "Model to use in the format of provider/model, eg anthropic/claude-2",
-            "type": "string"
+            "type": "string",
+            "description": "Model to use in the format of provider/model, eg anthropic/claude-2"
           },
           "small_model": {
-            "description": "Small model to use for tasks like title generation in the format of provider/model",
-            "type": "string"
+            "type": "string",
+            "description": "Small model to use for tasks like title generation in the format of provider/model"
           },
           "default_agent": {
             "description": "Default agent to use when none is specified. Must be a primary agent. Falls back to 'build' if not set or if the specified agent is invalid.",
@@ -9700,7 +9700,7 @@
             "additionalProperties": {
               "anyOf": [
                 {
-                  "anyOf": [
+                  "oneOf": [
                     {
                       "$ref": "#/components/schemas/McpLocalConfig"
                     },
@@ -9991,7 +9991,7 @@
         "required": ["type", "key", "token"]
       },
       "Auth": {
-        "anyOf": [
+        "oneOf": [
           {
             "$ref": "#/components/schemas/OAuth"
           },
@@ -10755,7 +10755,7 @@
         "required": ["status", "error"]
       },
       "MCPStatus": {
-        "anyOf": [
+        "oneOf": [
           {
             "$ref": "#/components/schemas/MCPStatusConnected"
           },
