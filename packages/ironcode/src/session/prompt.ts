@@ -768,6 +768,9 @@ export namespace SessionPrompt {
           )
           return result
         },
+        toModelOutput(output) {
+          return { type: "text", value: output.output }
+        },
       })
     }
 
@@ -860,6 +863,9 @@ export namespace SessionPrompt {
           attachments,
           content: result.content, // directly return content to preserve ordering when outputting to model
         }
+      }
+      item.toModelOutput = (output: any) => {
+        return { type: "text" as const, value: output.output ?? "" }
       }
       tools[key] = item
     }

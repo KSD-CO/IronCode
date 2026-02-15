@@ -1179,6 +1179,10 @@ export namespace Config {
         .object({
           disable_paste_summary: z.boolean().optional(),
           batch_tool: z.boolean().optional().describe("Enable the batch tool"),
+          devtools: z
+            .boolean()
+            .optional()
+            .describe("Enable AI SDK DevTools middleware for debugging LLM calls (run 'npx @ai-sdk/devtools' to launch viewer)"),
           openTelemetry: z
             .boolean()
             .optional()

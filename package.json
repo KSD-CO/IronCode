@@ -32,6 +32,7 @@
       "@tailwindcss/vite": "4.1.18",
       "diff": "8.0.2",
       "dompurify": "3.3.1",
+      "@ai-sdk/devtools": "0.0.14",
       "ai": "5.0.129",
       "hono": "4.11.9",
       "hono-openapi": "1.1.2",
