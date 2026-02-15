@@ -9889,6 +9889,10 @@
                 "description": "Enable the batch tool",
                 "type": "boolean"
               },
+              "devtools": {
+                "description": "Enable AI SDK DevTools middleware for debugging LLM calls (run 'npx @ai-sdk/devtools' to launch viewer)",
+                "type": "boolean"
+              },
               "openTelemetry": {
                 "description": "Enable OpenTelemetry spans for AI SDK calls (using the 'experimental_telemetry' flag)",
                 "type": "boolean"

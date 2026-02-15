@@ -1182,7 +1182,9 @@ export namespace Config {
           devtools: z
             .boolean()
             .optional()
-            .describe("Enable AI SDK DevTools middleware for debugging LLM calls (run 'npx @ai-sdk/devtools' to launch viewer)"),
+            .describe(
+              "Enable AI SDK DevTools middleware for debugging LLM calls (run 'npx @ai-sdk/devtools' to launch viewer)",
+            ),
           openTelemetry: z
             .boolean()
             .optional()
