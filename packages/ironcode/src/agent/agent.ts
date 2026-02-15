@@ -2,7 +2,6 @@ import { Config } from "../config/config"
 import z from "zod"
 import { Provider } from "../provider/provider"
 import { generateText, streamText, Output, type ModelMessage } from "ai"
-import { generateStructured, streamStructured } from "./generate-wrapper"
 import { SystemPrompt } from "../session/system"
 import { Instance } from "../project/instance"
 import { Truncate } from "../tool/truncation"
@@ -298,8 +297,7 @@ export namespace Agent {
 
     const output = Output.object({ schema })
 
-    type GenWithOutput = Parameters<typeof generateText>[0] & { output: ReturnType<typeof Output.object> }
-    const genParams: GenWithOutput = {
+    const genParams = {
       experimental_telemetry: {
         isEnabled: cfg.experimental?.openTelemetry,
         metadata: {
@@ -321,22 +319,24 @@ export namespace Agent {
       ],
       model: language,
       output,
-      tools: undefined,
     }
 
     if (defaultModel.providerID === "openai" && (await Auth.get(defaultModel.providerID))?.type === "oauth") {
-      const streamParams = {
+      const stream = streamText({
         ...genParams,
         providerOptions: ProviderTransform.providerOptions(model, {
           instructions: SystemPrompt.instructions(),
           store: false,
         }),
         onError: () => {},
+      } as any)
+      for await (const part of stream.fullStream) {
+        if (part?.type === "error") throw part.error
       }
-
-      return await streamStructured<z.infer<typeof schema>>(streamParams as any, output)
+      return (await (stream as any).output) as z.infer<typeof schema>
     }
 
-    return await generateStructured<z.infer<typeof schema>>(genParams as any, output)
+    const res = (await generateText(genParams as any)) as any
+    return res.output as z.infer<typeof schema>
   }
 }

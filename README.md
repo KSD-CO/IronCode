@@ -15,7 +15,6 @@
 
 <p align="center"><strong>High-performance CLI AI coding agent</strong></p>
 <p align="center">
-  <a href="https://github.com/anomalyco/opencode"><img alt="Upstream" src="https://img.shields.io/badge/upstream-opencode-blue?style=flat-square" /></a>
   <a href="https://github.com/KSD-CO/IronCode/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/KSD-CO/IronCode/publish.yml?style=flat-square&branch=dev" /></a>
   <a href="https://www.npmjs.com/package/ironcode-ai"><img alt="npm version" src="https://img.shields.io/npm/v/ironcode-ai?style=flat-square" /></a>
   <a href="https://ironcode.cloud/"><img alt="Website" src="https://img.shields.io/badge/website-ironcode.cloud-brightgreen?style=flat-square" /></a>
@@ -24,6 +23,13 @@
 ---
 
 ## 🎉 What's New
+
+### February 2026 - AI SDK v6 Integration
+
+**Leveraging new AI SDK v6 features for better debugging and token efficiency:**
+
+- 🔧 **DevTools Middleware** - Full debugging visibility for LLM calls via `@ai-sdk/devtools`. Enable with `"experimental": { "devtools": true }` in config, then run `npx @ai-sdk/devtools` to launch viewer at `localhost:4983`. Inspect input/output, token usage, timing, and raw provider data.
+- 💰 **`toModelOutput` Optimization** - Tool results now send only the essential `output` text back to the model, stripping `title`, `metadata`, and `attachments` (including base64-encoded images). Reduces token usage on every tool call, especially impactful for large file reads and MCP tools.
 
 ### February 2026 - Git Source Control UI
 

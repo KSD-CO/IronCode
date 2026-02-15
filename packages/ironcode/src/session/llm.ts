@@ -11,6 +11,7 @@ import {
   tool,
   jsonSchema,
 } from "ai"
+import { devToolsMiddleware } from "@ai-sdk/devtools"
 import { clone, mergeDeep, pipe } from "remeda"
 import { ProviderTransform } from "@/provider/transform"
 import { Config } from "@/config/config"
@@ -253,6 +254,7 @@ export namespace LLM {
               return args.params
             },
           },
+          ...(cfg.experimental?.devtools ? [devToolsMiddleware() as any] : []),
         ],
       }),
       experimental_telemetry: {
