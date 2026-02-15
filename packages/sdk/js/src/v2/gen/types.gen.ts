@@ -1820,6 +1820,10 @@ export type Config = {
      */
     batch_tool?: boolean
     /**
+     * Enable AI SDK DevTools middleware for debugging LLM calls (run 'npx @ai-sdk/devtools' to launch viewer)
+     */
+    devtools?: boolean
+    /**
      * Enable OpenTelemetry spans for AI SDK calls (using the 'experimental_telemetry' flag)
      */
     openTelemetry?: boolean
