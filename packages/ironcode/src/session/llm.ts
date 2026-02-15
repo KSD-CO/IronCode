@@ -254,7 +254,7 @@ export namespace LLM {
               return args.params
             },
           },
-          ...(cfg.experimental?.devtools ? [devToolsMiddleware()] : []),
+          ...(cfg.experimental?.devtools ? [devToolsMiddleware() as any] : []),
         ],
       }),
       experimental_telemetry: {
