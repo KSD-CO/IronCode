@@ -24,14 +24,36 @@
 
 ## 🎉 What's New
 
-### February 2026 - AI SDK v6 Integration
+### Feb 15, 2026 - AI SDK v6 Integration
 
 **Leveraging new AI SDK v6 features for better debugging and token efficiency:**
 
 - 🔧 **DevTools Middleware** - Full debugging visibility for LLM calls via `@ai-sdk/devtools`. Enable with `"experimental": { "devtools": true }` in config, then run `npx @ai-sdk/devtools` to launch viewer at `localhost:4983`. Inspect input/output, token usage, timing, and raw provider data.
 - 💰 **`toModelOutput` Optimization** - Tool results now send only the essential `output` text back to the model, stripping `title`, `metadata`, and `attachments` (including base64-encoded images). Reduces token usage on every tool call, especially impactful for large file reads and MCP tools.
+- 🔌 **Provider-Specific Tools** - Native server-side tools from AI providers (lazy-loaded, zero memory overhead when unused). Enable via `"experimental": { "provider_tools": ["anthropic:web_search", "openai:*"] }`. Available tools:
+  - **Anthropic**: `web_search`, `web_fetch`, `code_execution`
+  - **OpenAI**: `web_search`, `code_interpreter`, `image_generation`
+  - **Google**: `google_search`, `code_execution`, `url_context`
+  - **xAI**: `web_search`, `x_search`, `code_execution`
+  - **GitHub Copilot**: `web_search`, `local_shell`, `code_interpreter`, `file_search`, `image_generation`
 
-### February 2026 - Git Source Control UI
+### Feb 15, 2026 - Memory Optimizations
+
+**TypeScript:**
+
+- 🚀 **Lazy Provider SDK Loading** - Provider SDKs (`@ai-sdk/anthropic`, `@ai-sdk/openai`, etc.) are now dynamically imported only when their tools are requested, saving ~20-100MB of unused memory.
+- 📦 **Streaming Message Processing** - Compaction pruning now streams messages instead of loading entire session history into memory. Combined with O(n) `filterCompacted()` (replacing O(n²) `unshift`), long sessions use significantly less peak RAM.
+
+**Rust Native:**
+
+- 🔧 **edit.rs** - Split content lines once and share across all 9 replacer strategies (was splitting 7x redundantly). `normalize_whitespace` builds string directly without intermediate Vec.
+- 📂 **archive.rs** - Iterate ZIP entries by index instead of cloning all entry names upfront.
+- 🔍 **grep.rs** - Pre-allocate match buffer with `Vec::with_capacity(128)`. Avoid intermediate clone in line truncation formatting.
+- 🗂️ **glob.rs** - Partial sort with `select_nth_unstable_by` for top-N results instead of full sort on entire file list.
+- 📖 **read.rs** - Build output string directly instead of collecting into intermediate formatted Vec then joining.
+- 🌐 **webfetch.rs** - Stream-join text nodes without intermediate Vec allocation.
+
+### Feb 12, 2026 - Git Source Control UI
 
 **Built-in Git UI for seamless version control within TUI:**
 
@@ -45,7 +67,7 @@
 
 **Open Git panel with `Ctrl+X` then `I` or `/git` command**
 
-### February 2026 - Streaming Optimizations
+### Feb 10, 2026 - Streaming Optimizations
 
 **Massive performance and memory improvements through streaming patterns:**
 
@@ -72,11 +94,11 @@
 
 ### Previous Updates
 
-- **Memory optimization** - 97.6% faster message processing (254ms → 6ms) - Feb 2026
-- **Resource monitoring** - Automatic throttling with 300MB default limit - Feb 2026
-- **PTY/Terminal native** - 15.29x speedup, powers Bash tool - Feb 2026
-- **Edit tool optimization** - 2-6x faster with 9 smart strategies
-- **Archive extraction** - 3-5x faster with s-zip native
+- **Memory optimization** - 97.6% faster message processing (254ms → 6ms) - Feb 8, 2026
+- **Resource monitoring** - Automatic throttling with 300MB default limit - Feb 7, 2026
+- **PTY/Terminal native** - 15.29x speedup, powers Bash tool - Feb 5, 2026
+- **Edit tool optimization** - 2-6x faster with 9 smart strategies - Feb 3, 2026
+- **Archive extraction** - 3-5x faster with s-zip native - Feb 1, 2026
 
 ---
 
@@ -452,6 +474,73 @@ gh auth login
 # Configure git to use gh for credentials
 git config --global credential.helper '!gh auth git-credential'
 ```
+
+### Provider-Specific Tools
+
+Enable native server-side tools from AI providers. These tools run on the provider's infrastructure (not locally), giving the model direct access to web search, code execution, and more.
+
+**Configuration** — Add `provider_tools` to the `experimental` section in your `ironcode.json`:
+
+```jsonc
+{
+  "experimental": {
+    // Enable specific tools
+    "provider_tools": ["anthropic:web_search"]
+  }
+}
+```
+
+**Format**: `"provider:tool_name"` or `"provider:*"` (wildcard for all tools).
+
+**Examples:**
+
+```jsonc
+{
+  "experimental": {
+    // Single tool
+    "provider_tools": ["anthropic:web_search"]
+
+    // Multiple tools from one provider
+    "provider_tools": ["anthropic:web_search", "anthropic:code_execution"]
+
+    // All tools from a provider (wildcard)
+    "provider_tools": ["openai:*"]
+
+    // Mix providers — only matching tools activate
+    "provider_tools": [
+      "anthropic:web_search",
+      "anthropic:web_fetch",
+      "openai:web_search",
+      "google:google_search",
+      "xai:x_search"
+    ]
+  }
+}
+```
+
+**Available tools by provider:**
+
+| Provider | Tool | Description |
+|----------|------|-------------|
+| **Anthropic** | `web_search` | Search the web for current information |
+| | `web_fetch` | Fetch and read web page content |
+| | `code_execution` | Execute code in a sandboxed environment |
+| **OpenAI** | `web_search` | Search the web using Bing |
+| | `code_interpreter` | Execute Python code with file I/O |
+| | `image_generation` | Generate images with DALL-E |
+| **Google** | `google_search` | Search with Google Search |
+| | `code_execution` | Execute code server-side |
+| | `url_context` | Fetch and analyze URL content |
+| **xAI** | `web_search` | Search the web |
+| | `x_search` | Search X (Twitter) posts |
+| | `code_execution` | Execute code server-side |
+| **GitHub Copilot** | `web_search` | Search the web via Bing |
+| | `local_shell` | Execute shell commands |
+| | `code_interpreter` | Execute code in sandbox |
+| | `file_search` | Search files in vector stores |
+| | `image_generation` | Generate images |
+
+> **Note**: Tools only activate when the current model matches the provider. For example, `anthropic:web_search` only works when using an Anthropic model (Claude). If you configure tools for multiple providers, only the relevant ones activate per session.
 
 ---
 

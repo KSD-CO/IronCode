@@ -31,7 +31,7 @@ fn grep(
     include_glob: Option<&str>,
 ) -> Result<Output, Box<dyn std::error::Error>> {
     let regex = ReXile::new(pattern)?;
-    let mut matches = Vec::new();
+    let mut matches = Vec::with_capacity(128);
 
     let mut builder = WalkBuilder::new(search_path);
     builder
@@ -158,13 +158,11 @@ fn grep(
             output_lines.push(format!("{}:", m.path));
         }
 
-        let truncated_line = if m.line_text.len() > MAX_LINE_LENGTH {
-            format!("{}...", &m.line_text[..MAX_LINE_LENGTH])
+        if m.line_text.len() > MAX_LINE_LENGTH {
+            output_lines.push(format!("  Line {}: {}...", m.line_num, &m.line_text[..MAX_LINE_LENGTH]));
         } else {
-            m.line_text.clone()
-        };
-
-        output_lines.push(format!("  Line {}: {}", m.line_num, truncated_line));
+            output_lines.push(format!("  Line {}: {}", m.line_num, &m.line_text));
+        }
     }
 
     if truncated {

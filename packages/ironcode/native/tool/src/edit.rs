@@ -52,8 +52,20 @@ pub fn levenshtein(a: &str, b: &str) -> usize {
     prev_row[b_len]
 }
 
+/// Normalize whitespace without intermediate Vec allocation
+fn normalize_whitespace(text: &str) -> String {
+    let mut result = String::with_capacity(text.len());
+    for word in text.split_whitespace() {
+        if !result.is_empty() {
+            result.push(' ');
+        }
+        result.push_str(word);
+    }
+    result
+}
+
 /// Simple exact match replacer
-fn simple_replacer(content: &str, find: &str) -> Vec<String> {
+fn simple_replacer(content: &str, find: &str, _content_lines: &[&str]) -> Vec<String> {
     if content.contains(find) {
         vec![find.to_string()]
     } else {
@@ -62,9 +74,8 @@ fn simple_replacer(content: &str, find: &str) -> Vec<String> {
 }
 
 /// Line trimmed replacer - matches lines with trimmed content
-fn line_trimmed_replacer(content: &str, find: &str) -> Vec<String> {
+fn line_trimmed_replacer(content: &str, find: &str, content_lines: &[&str]) -> Vec<String> {
     let mut results = Vec::new();
-    let original_lines: Vec<&str> = content.split('\n').collect();
     let mut search_lines: Vec<&str> = find.split('\n').collect();
 
     // Remove trailing empty line
@@ -77,15 +88,15 @@ fn line_trimmed_replacer(content: &str, find: &str) -> Vec<String> {
     }
 
     let search_len = search_lines.len();
-    if original_lines.len() < search_len {
+    if content_lines.len() < search_len {
         return results;
     }
 
-    for i in 0..=original_lines.len() - search_len {
+    for i in 0..=content_lines.len() - search_len {
         let mut matches = true;
 
         for j in 0..search_len {
-            if original_lines[i + j].trim() != search_lines[j].trim() {
+            if content_lines[i + j].trim() != search_lines[j].trim() {
                 matches = false;
                 break;
             }
@@ -93,13 +104,13 @@ fn line_trimmed_replacer(content: &str, find: &str) -> Vec<String> {
 
         if matches {
             let mut match_start = 0;
-            for line in original_lines.iter().take(i) {
+            for line in content_lines.iter().take(i) {
                 match_start += line.len() + 1; // +1 for newline
             }
 
             let mut match_end = match_start;
             for k in 0..search_len {
-                match_end += original_lines[i + k].len();
+                match_end += content_lines[i + k].len();
                 if k < search_len - 1 {
                     match_end += 1; // Add newline except for last line
                 }
@@ -115,9 +126,8 @@ fn line_trimmed_replacer(content: &str, find: &str) -> Vec<String> {
 }
 
 /// Block anchor replacer - uses first and last lines as anchors with similarity matching
-fn block_anchor_replacer(content: &str, find: &str) -> Vec<String> {
+fn block_anchor_replacer(content: &str, find: &str, content_lines: &[&str]) -> Vec<String> {
     let mut results = Vec::new();
-    let original_lines: Vec<&str> = content.split('\n').collect();
     let mut search_lines: Vec<&str> = find.split('\n').collect();
 
     if search_lines.len() < 3 {
@@ -134,12 +144,12 @@ fn block_anchor_replacer(content: &str, find: &str) -> Vec<String> {
 
     // Collect candidates
     let mut candidates: Vec<(usize, usize)> = Vec::new();
-    for i in 0..original_lines.len() {
-        if original_lines[i].trim() != first_line_search {
+    for i in 0..content_lines.len() {
+        if content_lines[i].trim() != first_line_search {
             continue;
         }
 
-        for (j, line) in original_lines.iter().enumerate().skip(i + 2) {
+        for (j, line) in content_lines.iter().enumerate().skip(i + 2) {
             if line.trim() == last_line_search {
                 candidates.push((i, j));
                 break;
@@ -164,7 +174,7 @@ fn block_anchor_replacer(content: &str, find: &str) -> Vec<String> {
                 if j >= actual_block_size - 1 {
                     break;
                 }
-                let original_line = original_lines[start_line + j].trim();
+                let original_line = content_lines[start_line + j].trim();
                 let search_line = search_lines[j].trim();
                 let max_len = original_line.len().max(search_line.len());
                 if max_len == 0 {
@@ -183,11 +193,11 @@ fn block_anchor_replacer(content: &str, find: &str) -> Vec<String> {
 
         if similarity >= SINGLE_CANDIDATE_SIMILARITY_THRESHOLD {
             let mut match_start = 0;
-            for line in original_lines.iter().take(start_line) {
+            for line in content_lines.iter().take(start_line) {
                 match_start += line.len() + 1;
             }
             let mut match_end = match_start;
-            for (k, line) in original_lines
+            for (k, line) in content_lines
                 .iter()
                 .enumerate()
                 .take(end_line + 1)
@@ -219,7 +229,7 @@ fn block_anchor_replacer(content: &str, find: &str) -> Vec<String> {
                 if j >= actual_block_size - 1 {
                     break;
                 }
-                let original_line = original_lines[start_line + j].trim();
+                let original_line = content_lines[start_line + j].trim();
                 let search_line = search_lines[j].trim();
                 let max_len = original_line.len().max(search_line.len());
                 if max_len == 0 {
@@ -242,11 +252,11 @@ fn block_anchor_replacer(content: &str, find: &str) -> Vec<String> {
     if max_similarity >= MULTIPLE_CANDIDATES_SIMILARITY_THRESHOLD {
         if let Some((start_line, end_line)) = best_match {
             let mut match_start = 0;
-            for line in original_lines.iter().take(start_line) {
+            for line in content_lines.iter().take(start_line) {
                 match_start += line.len() + 1;
             }
             let mut match_end = match_start;
-            for (k, line) in original_lines
+            for (k, line) in content_lines
                 .iter()
                 .enumerate()
                 .take(end_line + 1)
@@ -267,17 +277,13 @@ fn block_anchor_replacer(content: &str, find: &str) -> Vec<String> {
 }
 
 /// Whitespace normalized replacer
-fn whitespace_normalized_replacer(content: &str, find: &str) -> Vec<String> {
+fn whitespace_normalized_replacer(_content: &str, find: &str, content_lines: &[&str]) -> Vec<String> {
     let mut results = Vec::new();
 
-    let normalize_whitespace =
-        |text: &str| -> String { text.split_whitespace().collect::<Vec<&str>>().join(" ") };
-
     let normalized_find = normalize_whitespace(find);
-    let lines: Vec<&str> = content.split('\n').collect();
 
     // Single line matches
-    for line in &lines {
+    for line in content_lines {
         if normalize_whitespace(line) == normalized_find {
             results.push(line.to_string());
         } else {
@@ -302,8 +308,8 @@ fn whitespace_normalized_replacer(content: &str, find: &str) -> Vec<String> {
     // Multi-line matches
     let find_lines: Vec<&str> = find.split('\n').collect();
     if find_lines.len() > 1 {
-        for i in 0..=lines.len().saturating_sub(find_lines.len()) {
-            let block = lines[i..i + find_lines.len()].join("\n");
+        for i in 0..=content_lines.len().saturating_sub(find_lines.len()) {
+            let block = content_lines[i..i + find_lines.len()].join("\n");
             if normalize_whitespace(&block) == normalized_find {
                 results.push(block);
             }
@@ -314,41 +320,33 @@ fn whitespace_normalized_replacer(content: &str, find: &str) -> Vec<String> {
 }
 
 /// Indentation flexible replacer
-fn indentation_flexible_replacer(content: &str, find: &str) -> Vec<String> {
+fn indentation_flexible_replacer(_content: &str, find: &str, content_lines: &[&str]) -> Vec<String> {
     let mut results = Vec::new();
 
     let remove_indentation = |text: &str| -> String {
         let lines: Vec<&str> = text.split('\n').collect();
-        let non_empty_lines: Vec<&&str> = lines
+        let min_indent = lines
             .iter()
             .filter(|line| !line.trim().is_empty())
-            .collect();
-
-        if non_empty_lines.is_empty() {
-            return text.to_string();
-        }
-
-        let min_indent = non_empty_lines
-            .iter()
             .map(|line| line.chars().take_while(|c| c.is_whitespace()).count())
             .min()
             .unwrap_or(0);
 
-        lines
-            .iter()
-            .map(|line| {
-                if line.trim().is_empty() {
-                    line.to_string()
-                } else {
-                    line.chars().skip(min_indent).collect()
-                }
-            })
-            .collect::<Vec<String>>()
-            .join("\n")
+        let mut result = String::with_capacity(text.len());
+        for (i, line) in lines.iter().enumerate() {
+            if i > 0 {
+                result.push('\n');
+            }
+            if line.trim().is_empty() {
+                result.push_str(line);
+            } else {
+                result.extend(line.chars().skip(min_indent));
+            }
+        }
+        result
     };
 
     let normalized_find = remove_indentation(find);
-    let content_lines: Vec<&str> = content.split('\n').collect();
     let find_lines: Vec<&str> = find.split('\n').collect();
 
     for i in 0..=content_lines.len().saturating_sub(find_lines.len()) {
@@ -362,7 +360,7 @@ fn indentation_flexible_replacer(content: &str, find: &str) -> Vec<String> {
 }
 
 /// Escape normalized replacer
-fn escape_normalized_replacer(content: &str, find: &str) -> Vec<String> {
+fn escape_normalized_replacer(content: &str, find: &str, content_lines: &[&str]) -> Vec<String> {
     let mut results = Vec::new();
 
     let unescape_string = |s: &str| -> String {
@@ -400,11 +398,10 @@ fn escape_normalized_replacer(content: &str, find: &str) -> Vec<String> {
         results.push(unescaped_find.clone());
     }
 
-    let lines: Vec<&str> = content.split('\n').collect();
     let find_lines: Vec<&str> = unescaped_find.split('\n').collect();
 
-    for i in 0..=lines.len().saturating_sub(find_lines.len()) {
-        let block = lines[i..i + find_lines.len()].join("\n");
+    for i in 0..=content_lines.len().saturating_sub(find_lines.len()) {
+        let block = content_lines[i..i + find_lines.len()].join("\n");
         let unescaped_block = unescape_string(&block);
         if unescaped_block == unescaped_find {
             results.push(block);
@@ -415,7 +412,7 @@ fn escape_normalized_replacer(content: &str, find: &str) -> Vec<String> {
 }
 
 /// Trimmed boundary replacer
-fn trimmed_boundary_replacer(content: &str, find: &str) -> Vec<String> {
+fn trimmed_boundary_replacer(content: &str, find: &str, content_lines: &[&str]) -> Vec<String> {
     let mut results = Vec::new();
     let trimmed_find = find.trim();
 
@@ -427,11 +424,10 @@ fn trimmed_boundary_replacer(content: &str, find: &str) -> Vec<String> {
         results.push(trimmed_find.to_string());
     }
 
-    let lines: Vec<&str> = content.split('\n').collect();
     let find_lines: Vec<&str> = find.split('\n').collect();
 
-    for i in 0..=lines.len().saturating_sub(find_lines.len()) {
-        let block = lines[i..i + find_lines.len()].join("\n");
+    for i in 0..=content_lines.len().saturating_sub(find_lines.len()) {
+        let block = content_lines[i..i + find_lines.len()].join("\n");
         if block.trim() == trimmed_find {
             results.push(block);
         }
@@ -441,7 +437,7 @@ fn trimmed_boundary_replacer(content: &str, find: &str) -> Vec<String> {
 }
 
 /// Context aware replacer
-fn context_aware_replacer(content: &str, find: &str) -> Vec<String> {
+fn context_aware_replacer(_content: &str, find: &str, content_lines: &[&str]) -> Vec<String> {
     let mut results = Vec::new();
     let mut find_lines: Vec<&str> = find.split('\n').collect();
 
@@ -453,7 +449,6 @@ fn context_aware_replacer(content: &str, find: &str) -> Vec<String> {
         find_lines.pop();
     }
 
-    let content_lines: Vec<&str> = content.split('\n').collect();
     let first_line = find_lines[0].trim();
     let last_line = find_lines[find_lines.len() - 1].trim();
 
@@ -497,7 +492,7 @@ fn context_aware_replacer(content: &str, find: &str) -> Vec<String> {
 }
 
 /// Multi occurrence replacer
-fn multi_occurrence_replacer(content: &str, find: &str) -> Vec<String> {
+fn multi_occurrence_replacer(content: &str, find: &str, _content_lines: &[&str]) -> Vec<String> {
     let mut results = Vec::new();
     let mut start = 0;
 
@@ -508,6 +503,8 @@ fn multi_occurrence_replacer(content: &str, find: &str) -> Vec<String> {
 
     results
 }
+
+type ReplacerFn = fn(&str, &str, &[&str]) -> Vec<String>;
 
 /// Main replace function that tries all strategies
 pub fn replace(
@@ -520,7 +517,10 @@ pub fn replace(
         return Err(ReplaceError::SameStrings);
     }
 
-    let replacers: Vec<fn(&str, &str) -> Vec<String>> = vec![
+    // Split content lines once, shared across all replacers
+    let content_lines: Vec<&str> = content.split('\n').collect();
+
+    let replacers: Vec<ReplacerFn> = vec![
         simple_replacer,
         line_trimmed_replacer,
         block_anchor_replacer,
@@ -535,7 +535,7 @@ pub fn replace(
     let mut not_found = true;
 
     for replacer in replacers {
-        let matches = replacer(content, old_string);
+        let matches = replacer(content, old_string, &content_lines);
         for search in matches {
             if let Some(index) = content.find(&search) {
                 not_found = false;
@@ -599,8 +599,6 @@ mod tests {
     #[test]
     fn test_line_trimmed_replace() {
         let content = "  hello\n  world";
-        // LineTrimmedReplacer will match "  hello\n  world" and replace with "goodbye\nworld"
-        // Result has no indentation because newString has no indentation
         let result = replace(content, "hello\nworld", "goodbye\nworld", false).unwrap();
         assert_eq!(result, "goodbye\nworld");
     }
@@ -608,7 +606,6 @@ mod tests {
     #[test]
     fn test_indentation_preserved() {
         let content = "  hello\n  world\n  test";
-        // IndentationFlexible will match despite indentation
         let result = replace(
             content,
             "hello\nworld\ntest",
@@ -616,7 +613,6 @@ mod tests {
             false,
         )
         .unwrap();
-        // Result should match block with same indentation structure
         assert_eq!(result, "goodbye\ncruel\nworld");
     }
 

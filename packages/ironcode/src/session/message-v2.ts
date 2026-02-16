@@ -676,7 +676,7 @@ export namespace MessageV2 {
   }
 
   export const stream = fn(Identifier.schema("session"), async function* (sessionID) {
-    const list = await Array.fromAsync(await Storage.list(["message", sessionID]))
+    const list = await Storage.list(["message", sessionID])
     for (let i = list.length - 1; i >= 0; i--) {
       yield await get({
         sessionID,
@@ -712,7 +712,7 @@ export namespace MessageV2 {
     const result = [] as MessageV2.WithParts[]
     const completed = new Set<string>()
     for await (const msg of stream) {
-      result.unshift(msg)
+      result.push(msg)
       if (
         msg.info.role === "user" &&
         completed.has(msg.info.id) &&
@@ -721,6 +721,7 @@ export namespace MessageV2 {
         break
       if (msg.info.role === "assistant" && msg.info.summary && msg.info.finish) completed.add(msg.info.parentID)
     }
+    result.reverse()
     return result
   }
 
