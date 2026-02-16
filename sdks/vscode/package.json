@@ -2,7 +2,7 @@
   "name": "ironcode",
   "displayName": "ironcode",
   "description": "IronCode is a high-performance CLI fork of OpenCode - an AI coding agent that runs entirely on your machine. This fork focuses on the command-line experience, removes cloud dependencies, and rewrites performance-critical components in Rust for dramatically improved speed and efficiency.",
-  "version": "1.12.0",
+  "version": "1.12.1",
   "publisher": "tonthatvu",
   "repository": {
     "type": "git",
