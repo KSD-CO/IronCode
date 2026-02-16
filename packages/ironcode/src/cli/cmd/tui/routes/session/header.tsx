@@ -119,15 +119,29 @@ export function Header() {
                 <box flexDirection="row" gap={1} flexShrink={0}>
                   <ContextInfo context={context} cost={cost} />
                   <text fg={theme.textMuted}>
-                    CPU {stats().cpu_usage.toFixed(0)}%{" "}
                     {(() => {
-                      const bars = Math.round(stats().cpu_usage / 10)
-                      return "▓".repeat(bars) + "░".repeat(10 - bars)
+                      const cpu = stats().cpu_usage
+                      const cpuColor = cpu > 80 ? theme.error : cpu > 60 ? theme.warning : theme.success
+                      const bars = Math.max(0, Math.min(5, Math.round(cpu / 20)))
+                      const barStr = "▓".repeat(bars) + "░".repeat(5 - bars)
+                      return (
+                        <span style={{ fg: cpuColor }}>
+                          CPU {stats().cpu_usage.toFixed(2)}% {barStr}
+                        </span>
+                      )
                     })()}{" "}
-                    Mem {(stats().memory_used_mb / 1024).toFixed(1)}/{(stats().memory_total_mb / 1024).toFixed(0)}G{" "}
                     {(() => {
-                      const bars = Math.round((stats().memory_used_mb / stats().memory_total_mb) * 10)
-                      return "▓".repeat(bars) + "░".repeat(10 - bars)
+                      const used = stats().memory_used_mb
+                      const total = stats().memory_total_mb || 1
+                      const memPct = total > 0 ? (used / total) * 100 : 0
+                      const memColor = memPct > 80 ? theme.error : memPct > 60 ? theme.warning : theme.success
+                      const bars = Math.max(0, Math.min(5, Math.round((used / total) * 5)))
+                      const barStr = "▓".repeat(bars) + "░".repeat(5 - bars)
+                      return (
+                        <span style={{ fg: memColor }}>
+                          Mem {(used / 1024).toFixed(2)}/{(total / 1024).toFixed(2)}G {barStr}
+                        </span>
+                      )
                     })()}
                   </text>
                   <text fg={theme.textMuted}>v{Installation.VERSION}</text>
@@ -173,15 +187,15 @@ export function Header() {
               <box flexDirection="row" gap={1} flexShrink={0}>
                 <ContextInfo context={context} cost={cost} />
                 <text fg={theme.textMuted}>
-                  CPU {stats().cpu_usage.toFixed(0)}%{" "}
+                  CPU {stats().cpu_usage.toFixed(2)}%{" "}
                   {(() => {
-                    const bars = Math.round(stats().cpu_usage / 10)
-                    return "▓".repeat(bars) + "░".repeat(10 - bars)
+                    const bars = Math.round(stats().cpu_usage / 20)
+                    return "▓".repeat(bars) + "░".repeat(5 - bars)
                   })()}{" "}
-                  Mem {(stats().memory_used_mb / 1024).toFixed(1)}/{(stats().memory_total_mb / 1024).toFixed(0)}G{" "}
+                  Mem {(stats().memory_used_mb / 1024).toFixed(2)}/{(stats().memory_total_mb / 1024).toFixed(2)}G{" "}
                   {(() => {
-                    const bars = Math.round((stats().memory_used_mb / stats().memory_total_mb) * 10)
-                    return "▓".repeat(bars) + "░".repeat(10 - bars)
+                    const bars = Math.round((stats().memory_used_mb / stats().memory_total_mb) * 5)
+                    return "▓".repeat(bars) + "░".repeat(5 - bars)
                   })()}
                 </text>
                 <text fg={theme.textMuted}>v{Installation.VERSION}</text>

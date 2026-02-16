@@ -16,31 +16,31 @@ export function Dialog(
   const { theme } = useTheme()
   const renderer = useRenderer()
 
-  const isFullscreen = props.size === "fullscreen"
+  const isFullscreen = () => props.size === "fullscreen"
 
   return (
     <box
       onMouseUp={async () => {
         if (renderer.getSelection()) return
-        if (!isFullscreen) props.onClose?.()
+        if (!isFullscreen()) props.onClose?.()
       }}
       width={dimensions().width}
       height={dimensions().height}
-      alignItems={isFullscreen ? undefined : "center"}
+      alignItems={isFullscreen() ? undefined : "center"}
       position="absolute"
-      paddingTop={isFullscreen ? 0 : dimensions().height / 4}
+      paddingTop={isFullscreen() ? 0 : dimensions().height / 4}
       left={0}
       top={0}
-      backgroundColor={isFullscreen ? undefined : RGBA.fromInts(0, 0, 0, 150)}
+      backgroundColor={isFullscreen() ? undefined : RGBA.fromInts(0, 0, 0, 150)}
     >
       <box
         onMouseUp={async (e) => {
           if (renderer.getSelection()) return
           e.stopPropagation()
         }}
-        width={isFullscreen ? dimensions().width : props.size === "large" ? 80 : 60}
-        height={isFullscreen ? dimensions().height : undefined}
-        maxWidth={isFullscreen ? undefined : dimensions().width - 2}
+        width={isFullscreen() ? dimensions().width : props.size === "large" ? 80 : 60}
+        height={isFullscreen() ? dimensions().height : undefined}
+        maxWidth={isFullscreen() ? undefined : dimensions().width - 2}
         backgroundColor={theme.backgroundPanel}
         paddingTop={1}
       >
