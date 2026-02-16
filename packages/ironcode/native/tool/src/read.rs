@@ -72,16 +72,14 @@ pub fn execute(
         bytes += size;
     }
 
-    let formatted: Vec<String> = raw
-        .iter()
-        .enumerate()
-        .map(|(index, line)| format!("{:05}| {}", index + offset + 1, line))
-        .collect();
-
-    let _preview = raw.iter().take(20).cloned().collect::<Vec<_>>().join("\n");
-
+    // Build output directly without intermediate Vec
     let mut output = String::from("<file>\n");
-    output.push_str(&formatted.join("\n"));
+    for (index, line) in raw.iter().enumerate() {
+        if index > 0 {
+            output.push('\n');
+        }
+        output.push_str(&format!("{:05}| {}", index + offset + 1, line));
+    }
 
     let last_read_line = offset + raw.len();
     let has_more_lines = total_lines > last_read_line;

@@ -50,10 +50,14 @@ pub fn execute(pattern: &str, search: &str) -> Result<Output, String> {
         files.push((path.to_string_lossy().to_string(), mtime));
     }
 
-    files.sort_by(|a, b| b.1.cmp(&a.1));
     let limit = 100usize;
     let truncated = files.len() > limit;
-    let files = files.into_iter().take(limit).collect::<Vec<_>>();
+    // Partial sort: only fully sort the top N elements instead of the entire Vec
+    if files.len() > limit {
+        files.select_nth_unstable_by(limit, |a, b| b.1.cmp(&a.1));
+        files.truncate(limit);
+    }
+    files.sort_by(|a, b| b.1.cmp(&a.1));
 
     let output = if files.is_empty() {
         "No files found".to_string()

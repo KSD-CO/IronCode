@@ -115,12 +115,13 @@ pub fn fetch_url(
 fn extract_text_from_html(html: &str) -> String {
     let document = Html::parse_document(html);
 
-    // Use a simple approach: get the root text
-    document
-        .root_element()
-        .text()
-        .collect::<Vec<_>>()
-        .join(" ")
-        .trim()
-        .to_string()
+    // Build text directly without intermediate Vec
+    let mut result = String::new();
+    for text in document.root_element().text() {
+        if !result.is_empty() {
+            result.push(' ');
+        }
+        result.push_str(text);
+    }
+    result.trim().to_string()
 }

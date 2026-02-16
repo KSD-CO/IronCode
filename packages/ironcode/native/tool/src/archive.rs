@@ -29,11 +29,10 @@ pub fn extract_zip(zip_path: &str, dest_dir: &str) -> Result<(), ArchiveError> {
     // Open the ZIP file
     let mut reader = s_zip::StreamingZipReader::open(zip_path)?;
 
-    // Collect entry names first to avoid borrow checker issues
-    let entry_names: Vec<String> = reader.entries().iter().map(|e| e.name.clone()).collect();
-
-    // Extract each entry
-    for entry_name in entry_names {
+    // Iterate entries by index to avoid cloning all names upfront
+    let entry_count = reader.entries().len();
+    for i in 0..entry_count {
+        let entry_name = reader.entries()[i].name.clone();
         let entry_path = dest_dir.join(&entry_name);
 
         // Create parent directories if needed

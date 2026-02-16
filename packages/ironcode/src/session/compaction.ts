@@ -50,14 +50,14 @@ export namespace SessionCompaction {
     const config = await Config.get()
     if (config.compaction?.prune === false) return
     log.info("pruning")
-    const msgs = await Session.messages({ sessionID: input.sessionID })
     let total = 0
     let pruned = 0
     const toPrune = []
     let turns = 0
 
-    loop: for (let msgIndex = msgs.length - 1; msgIndex >= 0; msgIndex--) {
-      const msg = msgs[msgIndex]
+    // Stream messages in reverse order (newest first) instead of loading all into memory.
+    // This avoids materializing the entire message history for long sessions.
+    loop: for await (const msg of MessageV2.stream(input.sessionID)) {
       if (msg.info.role === "user") turns++
       if (turns < 2) continue
       if (msg.info.role === "assistant" && msg.info.summary) break loop

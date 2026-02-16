@@ -47,6 +47,8 @@ import { LLM } from "./llm"
 import { iife } from "@/util/iife"
 import { Shell } from "@/shell/shell"
 import { Truncate } from "@/tool/truncation"
+import { resolveProviderTools } from "@/provider/tools"
+import { Config } from "@/config/config"
 
 // @ts-ignore
 globalThis.AI_SDK_LOG_WARNINGS = false
@@ -868,6 +870,16 @@ export namespace SessionPrompt {
         return { type: "text" as const, value: output.output ?? "" }
       }
       tools[key] = item
+    }
+
+    // Add provider-specific tools (e.g. Anthropic web_search, OpenAI code_interpreter)
+    const cfg = await Config.get()
+    const providerToolsConfig = cfg.experimental?.provider_tools
+    if (providerToolsConfig?.length) {
+      const providerTools = await resolveProviderTools(input.model, providerToolsConfig)
+      for (const [key, providerTool] of Object.entries(providerTools)) {
+        tools[key] = providerTool
+      }
     }
 
     return tools

@@ -1189,6 +1189,12 @@ export namespace Config {
             .boolean()
             .optional()
             .describe("Enable OpenTelemetry spans for AI SDK calls (using the 'experimental_telemetry' flag)"),
+          provider_tools: z
+            .array(z.string())
+            .optional()
+            .describe(
+              "Enable provider-specific tools (e.g. 'anthropic:web_search', 'openai:web_search', 'google:google_search', 'xai:x_search'). Use 'anthropic:*' to enable all tools for a provider.",
+            ),
           primary_tools: z
             .array(z.string())
             .optional()
