@@ -48,12 +48,10 @@ const PROVIDER_TOOLS: Record<string, ProviderToolEntry> = {
     tools: {
       web_search: async () => (await import("./sdk/copilot/responses/tool/web-search")).webSearch(),
       local_shell: async () => (await import("./sdk/copilot/responses/tool/local-shell")).localShell({}),
-      code_interpreter: async () =>
-        (await import("./sdk/copilot/responses/tool/code-interpreter")).codeInterpreter(),
+      code_interpreter: async () => (await import("./sdk/copilot/responses/tool/code-interpreter")).codeInterpreter(),
       file_search: async () =>
         (await import("./sdk/copilot/responses/tool/file-search")).fileSearch({ vectorStoreIds: [] }),
-      image_generation: async () =>
-        (await import("./sdk/copilot/responses/tool/image-generation")).imageGeneration(),
+      image_generation: async () => (await import("./sdk/copilot/responses/tool/image-generation")).imageGeneration(),
     },
   },
 }

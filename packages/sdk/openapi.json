@@ -9897,6 +9897,13 @@
                 "description": "Enable OpenTelemetry spans for AI SDK calls (using the 'experimental_telemetry' flag)",
                 "type": "boolean"
               },
+              "provider_tools": {
+                "description": "Enable provider-specific tools (e.g. 'anthropic:web_search', 'openai:web_search', 'google:google_search', 'xai:x_search'). Use 'anthropic:*' to enable all tools for a provider.",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
               "primary_tools": {
                 "description": "Tools that should only be available to primary agents.",
                 "type": "array",

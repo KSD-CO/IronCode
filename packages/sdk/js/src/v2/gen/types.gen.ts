@@ -1828,6 +1828,10 @@ export type Config = {
      */
     openTelemetry?: boolean
     /**
+     * Enable provider-specific tools (e.g. 'anthropic:web_search', 'openai:web_search', 'google:google_search', 'xai:x_search'). Use 'anthropic:*' to enable all tools for a provider.
+     */
+    provider_tools?: Array<string>
+    /**
      * Tools that should only be available to primary agents.
      */
     primary_tools?: Array<string>

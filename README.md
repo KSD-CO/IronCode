@@ -485,8 +485,8 @@ Enable native server-side tools from AI providers. These tools run on the provid
 {
   "experimental": {
     // Enable specific tools
-    "provider_tools": ["anthropic:web_search"]
-  }
+    "provider_tools": ["anthropic:web_search"],
+  },
 }
 ```
 
@@ -520,25 +520,25 @@ Enable native server-side tools from AI providers. These tools run on the provid
 
 **Available tools by provider:**
 
-| Provider | Tool | Description |
-|----------|------|-------------|
-| **Anthropic** | `web_search` | Search the web for current information |
-| | `web_fetch` | Fetch and read web page content |
-| | `code_execution` | Execute code in a sandboxed environment |
-| **OpenAI** | `web_search` | Search the web using Bing |
-| | `code_interpreter` | Execute Python code with file I/O |
-| | `image_generation` | Generate images with DALL-E |
-| **Google** | `google_search` | Search with Google Search |
-| | `code_execution` | Execute code server-side |
-| | `url_context` | Fetch and analyze URL content |
-| **xAI** | `web_search` | Search the web |
-| | `x_search` | Search X (Twitter) posts |
-| | `code_execution` | Execute code server-side |
-| **GitHub Copilot** | `web_search` | Search the web via Bing |
-| | `local_shell` | Execute shell commands |
-| | `code_interpreter` | Execute code in sandbox |
-| | `file_search` | Search files in vector stores |
-| | `image_generation` | Generate images |
+| Provider           | Tool               | Description                             |
+| ------------------ | ------------------ | --------------------------------------- |
+| **Anthropic**      | `web_search`       | Search the web for current information  |
+|                    | `web_fetch`        | Fetch and read web page content         |
+|                    | `code_execution`   | Execute code in a sandboxed environment |
+| **OpenAI**         | `web_search`       | Search the web using Bing               |
+|                    | `code_interpreter` | Execute Python code with file I/O       |
+|                    | `image_generation` | Generate images with DALL-E             |
+| **Google**         | `google_search`    | Search with Google Search               |
+|                    | `code_execution`   | Execute code server-side                |
+|                    | `url_context`      | Fetch and analyze URL content           |
+| **xAI**            | `web_search`       | Search the web                          |
+|                    | `x_search`         | Search X (Twitter) posts                |
+|                    | `code_execution`   | Execute code server-side                |
+| **GitHub Copilot** | `web_search`       | Search the web via Bing                 |
+|                    | `local_shell`      | Execute shell commands                  |
+|                    | `code_interpreter` | Execute code in sandbox                 |
+|                    | `file_search`      | Search files in vector stores           |
+|                    | `image_generation` | Generate images                         |
 
 > **Note**: Tools only activate when the current model matches the provider. For example, `anthropic:web_search` only works when using an Anthropic model (Claude). If you configure tools for multiple providers, only the relevant ones activate per session.
 
