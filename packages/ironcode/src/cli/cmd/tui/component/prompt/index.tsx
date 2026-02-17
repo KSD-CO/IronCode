@@ -599,6 +599,39 @@ export function Prompt(props: PromptProps) {
             ...x,
           })),
       })
+    } else if (
+      inputText.startsWith("/") &&
+      iife(() => {
+        const name = inputText.split("\n")[0].split(" ")[0].slice(1)
+        return command.slashes().some((x) => {
+          const display = x.display.slice(1) // remove leading "/"
+          return display === name || x.aliases?.some((a) => a.slice(1) === name)
+        })
+      })
+    ) {
+      const name = inputText.split("\n")[0].split(" ")[0].slice(1)
+      const slash = command.slashes().find((x) => {
+        const display = x.display.slice(1)
+        return display === name || x.aliases?.some((a) => a.slice(1) === name)
+      })
+      // Pass the current dialog into the slash handler to provide context
+      // Many command handlers expect a dialog argument; calling without it
+      // can lead to no-ops or errors.
+      slash?.onSelect(dialog)
+    } else if (
+      inputText.startsWith("/") &&
+      !inputText.startsWith("/ ") &&
+      iife(() => {
+        const firstWord = inputText.split("\n")[0].split(" ")[0]
+        return firstWord.length > 1 && /^\/[a-z][\w-]*$/i.test(firstWord)
+      })
+    ) {
+      const name = inputText.split("\n")[0].split(" ")[0]
+      toast.show({
+        message: `Unknown command: ${name}`,
+        variant: "error",
+      })
+      return
     } else {
       sdk.client.session
         .prompt({
@@ -1115,6 +1148,10 @@ export function Prompt(props: PromptProps) {
                   </text>
                   <text fg={theme.text}>
                     {keybind.print("command_list")} <span style={{ fg: theme.textMuted }}>commands</span>
+                  </text>
+                  <text fg={theme.text}>
+                    {keybind.print("review_toggle")} <span style={{ fg: theme.textMuted }}>changes</span>
+                    {props.hint}
                   </text>
                 </Match>
                 <Match when={store.mode === "shell"}>

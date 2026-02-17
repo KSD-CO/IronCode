@@ -173,4 +173,3 @@ curl -fsSL https://bun.sh/install | bash -s "bun-v1.3.8"
 
 - **Issues**: https://github.com/KSD-CO/IronCode/issues
 - **Discussions**: https://github.com/KSD-CO/IronCode/discussions
-- **Upstream**: https://github.com/anomalyco/opencode
