@@ -617,7 +617,7 @@ export function Prompt(props: PromptProps) {
       // Pass the current dialog into the slash handler to provide context
       // Many command handlers expect a dialog argument; calling without it
       // can lead to no-ops or errors.
-      slash?.onSelect(dialog)
+      slash?.onSelect()
     } else if (
       inputText.startsWith("/") &&
       !inputText.startsWith("/ ") &&
@@ -1150,7 +1150,7 @@ export function Prompt(props: PromptProps) {
                     {keybind.print("command_list")} <span style={{ fg: theme.textMuted }}>commands</span>
                   </text>
                   <text fg={theme.text}>
-                    {keybind.print("review_toggle")} <span style={{ fg: theme.textMuted }}>changes</span>
+                    {keybind.print("review_toggle" as any)} <span style={{ fg: theme.textMuted }}>changes</span>
                     {props.hint}
                   </text>
                 </Match>
