@@ -959,6 +959,10 @@ export type KeybindsConfig = {
    */
   sidebar_toggle?: string
   /**
+   * Toggle code review panel
+   */
+  review_toggle?: string
+  /**
    * Toggle session scrollbar
    */
   scrollbar_toggle?: string
