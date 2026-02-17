@@ -60,6 +60,8 @@ import { DialogTimeline } from "./dialog-timeline"
 import { DialogForkFromTimeline } from "./dialog-fork-from-timeline"
 import { DialogSessionRename } from "../../component/dialog-session-rename"
 import { Sidebar } from "./sidebar"
+import { ReviewPanel } from "@tui/component/review-panel"
+import { gitStatusDetailedFFI, gitFileDiffFFI } from "@/tool/ffi"
 import { Flag } from "@/flag/flag"
 import { LANGUAGE_EXTENSIONS } from "@/lsp/language"
 import parsers from "../../../../../../parsers-config.ts"
@@ -143,6 +145,7 @@ export function Session() {
   const dimensions = useTerminalDimensions()
   const [sidebar, setSidebar] = kv.signal<"auto" | "hide">("sidebar", "hide")
   const [sidebarOpen, setSidebarOpen] = createSignal(false)
+  const [reviewOpen, setReviewOpen] = createSignal(false)
   const [conceal, setConceal] = createSignal(true)
   const [showThinking, setShowThinking] = kv.signal("thinking_visibility", true)
   const [timestamps, setTimestamps] = kv.signal<"hide" | "show">("timestamps", "hide")
@@ -160,7 +163,41 @@ export function Session() {
     return false
   })
   const showTimestamps = createMemo(() => timestamps() === "show")
-  const contentWidth = createMemo(() => dimensions().width - (sidebarVisible() ? 42 : 0) - 4)
+  // Compute git change counts for hint bar
+  const [changeCounts, setChangeCounts] = createSignal({ additions: 0, deletions: 0 })
+  const sessionCwd = createMemo(() => {
+    const s = session()
+    return s?.directory || "."
+  })
+  createEffect(() => {
+    const _cwd = sessionCwd()
+    // Also react to message updates to refresh after tool actions
+    const _msgs = sync.data.message[route.sessionID]
+    try {
+      const status = gitStatusDetailedFFI(_cwd)
+      if (!status || status.files.length === 0) {
+        setChangeCounts({ additions: 0, deletions: 0 })
+        return
+      }
+      let additions = 0
+      let deletions = 0
+      for (const file of status.files) {
+        const diff = gitFileDiffFFI(_cwd, file.path, false)
+        const lines = diff.split("\n")
+        additions += lines.filter((l: string) => l.startsWith("+") && !l.startsWith("+++")).length
+        deletions += lines.filter((l: string) => l.startsWith("-") && !l.startsWith("---")).length
+      }
+      setChangeCounts({ additions, deletions })
+    } catch {
+      setChangeCounts({ additions: 0, deletions: 0 })
+    }
+  })
+
+  const reviewWidth = createMemo(() => (reviewOpen() ? Math.max(60, Math.floor(dimensions().width * 0.55)) : 0))
+  const contentWidth = createMemo(() => {
+    if (reviewOpen()) return dimensions().width - reviewWidth() - 2
+    return dimensions().width - (sidebarVisible() ? 42 : 0) - 4
+  })
 
   const scrollAcceleration = createMemo(() => {
     const tui = sync.data.config.tui
@@ -214,6 +251,26 @@ export function Session() {
     } else if (part.tool === "plan_enter") {
       local.agent.set("plan")
       lastSwitch = part.id
+    }
+  })
+
+  // Auto-open code changes panel when /review subtask starts
+  sdk.event.on("message.part.updated", (evt) => {
+    const part = evt.properties.part
+    if (part.type !== "tool") return
+    if (part.sessionID !== route.sessionID) return
+    if (part.tool !== "task") return
+    if (part.state.status !== "running") return
+    // Check if this session has a subtask part with command === "review"
+    const msgs = sync.data.message[route.sessionID] ?? []
+    for (const msg of msgs) {
+      const parts = sync.data.part[msg.id] ?? []
+      for (const p of parts) {
+        if (p.type === "subtask" && (p as any).command === "review") {
+          setReviewOpen(true)
+          return
+        }
+      }
     }
   })
 
@@ -517,6 +574,16 @@ export function Session() {
           setSidebar(() => (isVisible ? "hide" : "auto"))
           setSidebarOpen(!isVisible)
         })
+        dialog.clear()
+      },
+    },
+    {
+      title: reviewOpen() ? "Hide code changes" : "View code changes",
+      value: "session.changes",
+      keybind: "review_toggle" as any,
+      category: "Session",
+      onSelect: (dialog) => {
+        setReviewOpen((v) => !v)
         dialog.clear()
       },
     },
@@ -1097,6 +1164,15 @@ export function Session() {
                   toBottom()
                 }}
                 sessionID={route.sessionID}
+                hint={
+                  <Show when={changeCounts().additions > 0 || changeCounts().deletions > 0}>
+                    <span style={{ fg: theme.textMuted }}>
+                      {" "}
+                      <span style={{ fg: theme.success }}>+{changeCounts().additions}</span>{" "}
+                      <span style={{ fg: theme.error }}>-{changeCounts().deletions}</span>
+                    </span>
+                  </Show>
+                }
               />
             </box>
             <Show when={!sidebarVisible() || !wide()}>
@@ -1105,7 +1181,7 @@ export function Session() {
           </Show>
           <Toast />
         </box>
-        <Show when={sidebarVisible()}>
+        <Show when={sidebarVisible() && !reviewOpen()}>
           <Switch>
             <Match when={wide()}>
               <Sidebar sessionID={route.sessionID} />
@@ -1121,6 +1197,41 @@ export function Session() {
                 backgroundColor={RGBA.fromInts(0, 0, 0, 70)}
               >
                 <Sidebar sessionID={route.sessionID} />
+              </box>
+            </Match>
+          </Switch>
+        </Show>
+        <Show when={reviewOpen()}>
+          <Switch>
+            <Match when={wide()}>
+              <ReviewPanel
+                sessionID={route.sessionID}
+                width={reviewWidth()}
+                onClose={() => setReviewOpen(false)}
+                onRefine={(msg) => {
+                  prompt.set({ input: msg, parts: [] })
+                  setReviewOpen(false)
+                }}
+              />
+            </Match>
+            <Match when={!wide()}>
+              <box
+                position="absolute"
+                top={0}
+                left={0}
+                right={0}
+                bottom={0}
+                backgroundColor={RGBA.fromInts(0, 0, 0, 70)}
+              >
+                <ReviewPanel
+                  sessionID={route.sessionID}
+                  width={dimensions().width}
+                  onClose={() => setReviewOpen(false)}
+                  onRefine={(msg) => {
+                    prompt.set({ input: msg, parts: [] })
+                    setReviewOpen(false)
+                  }}
+                />
               </box>
             </Match>
           </Switch>
@@ -1830,6 +1941,38 @@ function WebSearch(props: ToolProps<any>) {
   )
 }
 
+// Jupiter moon names for sub-agents
+const JUPITER_MOONS = [
+  "Io",
+  "Europa",
+  "Ganymede",
+  "Callisto",
+  "Amalthea",
+  "Himalia",
+  "Elara",
+  "Thebe",
+  "Pasiphae",
+  "Metis",
+  "Carme",
+  "Sinope",
+  "Lysithea",
+  "Ananke",
+  "Leda",
+  "Adrastea",
+]
+const moonAssignments = new Map<string, string>()
+let moonIndex = 0
+
+function getMoonName(sessionId: string): string {
+  let name = moonAssignments.get(sessionId)
+  if (!name) {
+    name = JUPITER_MOONS[moonIndex % JUPITER_MOONS.length]
+    moonAssignments.set(sessionId, name)
+    moonIndex++
+  }
+  return name
+}
+
 function Task(props: ToolProps<typeof TaskTool>) {
   const { theme } = useTheme()
   const keybind = useKeybind()
@@ -1851,11 +1994,32 @@ function Task(props: ToolProps<typeof TaskTool>) {
 
   const isRunning = createMemo(() => props.part.state.status === "running")
 
+  const moonName = createMemo(() => {
+    const sid = props.metadata?.sessionId
+    return sid ? getMoonName(sid) : undefined
+  })
+
+  const currentToolDetail = createMemo(() => {
+    const item = current()
+    if (!item) return ""
+    const input = item.state.status !== "pending" ? (item.state as any).input : undefined
+    if (!input) return ""
+    if (item.tool === "read" && input.filePath) return input.filePath.split("/").pop()
+    if (item.tool === "grep" && input.pattern) return `"${input.pattern}"`
+    if (item.tool === "glob" && input.pattern) return input.pattern
+    if (item.tool === "bash" && input.command) return Locale.truncate(input.command, 40)
+    if (item.tool === "edit" && input.filePath) return input.filePath.split("/").pop()
+    if (item.tool === "write" && input.filePath) return input.filePath.split("/").pop()
+    if (item.tool === "webfetch" || item.tool === "websearch")
+      return Locale.truncate(input.url || input.query || "", 40)
+    return ""
+  })
+
   return (
     <Switch>
       <Match when={props.input.description || props.input.subagent_type}>
         <BlockTool
-          title={"# " + Locale.titlecase(props.input.subagent_type ?? "unknown") + " Task"}
+          title={"# " + (moonName() ? `${moonName()} ` : "") + Locale.titlecase(props.input.subagent_type ?? "unknown")}
           onClick={
             props.metadata.sessionId
               ? () => navigate({ type: "session", sessionID: props.metadata.sessionId! })
@@ -1868,12 +2032,26 @@ function Task(props: ToolProps<typeof TaskTool>) {
             <text style={{ fg: theme.textMuted }}>
               {props.input.description} ({tools().length} toolcalls)
             </text>
-            <Show when={current()}>
+            <Show
+              when={current()}
+              fallback={
+                <Show when={isRunning()}>
+                  <text style={{ fg: theme.textMuted }}>└ Starting...</text>
+                </Show>
+              }
+            >
               {(item) => {
-                const title = item().state.status === "completed" ? (item().state as any).title : ""
+                const title = createMemo(() =>
+                  item().state.status === "completed" ? ((item().state as any).title ?? "") : "",
+                )
+                const detail = createMemo(() => (item().state.status === "running" ? currentToolDetail() : title()))
                 return (
                   <text style={{ fg: item().state.status === "error" ? theme.error : theme.textMuted }}>
-                    └ {Locale.titlecase(item().tool)} {title}
+                    └ {Locale.titlecase(item().tool)}
+                    <Show when={detail()}>
+                      {" "}
+                      <span style={{ fg: theme.textMuted }}>{detail()}</span>
+                    </Show>
                   </text>
                 )
               }}
@@ -1888,8 +2066,14 @@ function Task(props: ToolProps<typeof TaskTool>) {
         </BlockTool>
       </Match>
       <Match when={true}>
-        <InlineTool icon="#" pending="Delegating..." complete={props.input.subagent_type} part={props.part}>
-          {props.input.subagent_type} Task {props.input.description}
+        <InlineTool
+          icon="#"
+          pending={`${moonName() ?? ""} Delegating...`}
+          complete={props.input.subagent_type}
+          part={props.part}
+        >
+          {moonName() ? `${moonName()} ` : ""}
+          {props.input.subagent_type} {props.input.description}
         </InlineTool>
       </Match>
     </Switch>

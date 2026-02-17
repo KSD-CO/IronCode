@@ -24,6 +24,30 @@
 
 ## 🎉 What's New
 
+### Feb 15, 2026 - Code Changes Panel
+
+**Code changes viewer with inline comments and hunk revert:**
+
+- 🔍 **Code Changes Panel** - View git diffs in a side panel without leaving your session. Open via command palette or `<leader>r` keybind
+- ↩️ **Revert Diff Hunk** - Press `r` to revert individual diff hunks. Supports both uncommitted and staged changes
+- 💬 **Inline Comments** - Press `c` to add comments on specific diff lines. Navigate with `n/p`, dismiss with `d`, send to chat with `f`
+- 🔄 **Mode Cycling** - Press `m` to cycle between Uncommitted, Staged, and vs-Main diff views
+- 📊 **Change Counts in Hint Bar** - The prompt hint bar now shows `<leader>r changes +N -N` with live addition/deletion counts
+- 🤖 **Auto-open on `/review`** - The code changes panel automatically opens alongside when the `/review` command runs as a subtask
+- 🎨 **Hunk Highlighting** - The current hunk is subtly highlighted in the diff view for easy identification
+
+**Keybinds:**
+- `j/k`: Navigate files
+- `↑↓`: Navigate diff lines
+- `r`: Revert current hunk
+- `c`: Add comment on current line
+- `n/p`: Navigate between comments
+- `d`: Dismiss selected comment
+- `f`: Send comment to chat
+- `m`: Cycle mode (uncommitted/staged/vs-main)
+- `g`: Refresh diffs
+- `Esc`: Close panel
+
 ### Feb 15, 2026 - AI SDK v6 Integration
 
 **Leveraging new AI SDK v6 features for better debugging and token efficiency:**
@@ -110,6 +134,7 @@ IronCode is a **high-performance CLI fork** of [OpenCode](https://github.com/ano
 
 - ⌨️ **CLI-First**: Powerful terminal UI optimized for command-line workflows
 - 🎯 **Git Source Control**: Full Git integration - stage, commit, diff, push without leaving TUI
+- 🔍 **Code Changes Panel**: Diff viewer with inline comments, hunk revert, and live change counts
 - 🏠 **100% Local**: No cloud services, works completely offline
 - 🔒 **Privacy First**: Your code never leaves your machine
 - 🎯 **Lightweight**: Stripped down to core functionality - CLI only
@@ -475,6 +500,33 @@ gh auth login
 git config --global credential.helper '!gh auth git-credential'
 ```
 
+### Code Changes Panel
+
+IronCode includes a code changes viewer for reviewing diffs with inline comments:
+
+**Open Code Changes Panel:**
+
+- Press `<leader>r` (default: `Ctrl+X` then `R`)
+- Or use command palette (`Ctrl+P`) → "View code changes"
+- Auto-opens when `/review` command runs
+
+**Features:**
+
+- **Diff Viewer** - Color-coded diffs with hunk highlighting
+  - `j/k`: Navigate between files
+  - `↑↓`: Navigate diff lines
+  - `m`: Cycle mode (Uncommitted → Staged → vs Main)
+  - `g`: Refresh diffs
+- **Revert Hunk** - Undo individual changes
+  - `r`: Revert the current diff hunk (works for both uncommitted and staged)
+  - Active hunk is highlighted for easy identification
+- **Inline Comments** - Add notes to specific diff lines
+  - `c`: Add a comment on the current line
+  - `n/p`: Navigate between comments
+  - `d`: Dismiss selected comment
+  - `f`: Send comment to chat for AI to address
+- **Change Counts** - The hint bar shows live `+N -N` counts of total additions/deletions
+
 ### Provider-Specific Tools
 
 Enable native server-side tools from AI providers. These tools run on the provider's infrastructure (not locally), giving the model direct access to web search, code execution, and more.
@@ -699,6 +751,7 @@ Contributions are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) befo
 
 **Recent Contributions:**
 
+- ✅ **Code Changes Panel** (Diff viewer with hunk revert & inline comments - Feb 2026)
 - ✅ **Git Source Control UI** (Full TUI integration with libgit2 - Feb 2026)
 - ✅ **Streaming read optimization** (1.2-1.6x faster, 99.7% memory savings - Feb 2026)
 - ✅ **Grep streaming optimization** (90-99% memory reduction, GB-file capability - Feb 2026)
@@ -789,5 +842,5 @@ _Benchmarked on IronCode repository (dev branch, 100 iterations)_
 
 ## Acknowledgments
 
-- **OpenCode Team**: For creating the original open-source AI coding agent
+- **IronCode Team**: For creating the original open-source AI coding agent
 - All contributors to this fork
