@@ -26,10 +26,10 @@
 
 ### Feb 15, 2026 - Code Changes Panel
 
-**Warp-style code changes viewer with inline comments and hunk revert:**
+**Code changes viewer with inline comments and hunk revert:**
 
 - 🔍 **Code Changes Panel** - View git diffs in a side panel without leaving your session. Open via command palette or `<leader>r` keybind
-- ↩️ **Revert Diff Hunk** - Press `r` to revert individual diff hunks (like Warp). Supports both uncommitted and staged changes
+- ↩️ **Revert Diff Hunk** - Press `r` to revert individual diff hunks. Supports both uncommitted and staged changes
 - 💬 **Inline Comments** - Press `c` to add comments on specific diff lines. Navigate with `n/p`, dismiss with `d`, send to chat with `f`
 - 🔄 **Mode Cycling** - Press `m` to cycle between Uncommitted, Staged, and vs-Main diff views
 - 📊 **Change Counts in Hint Bar** - The prompt hint bar now shows `<leader>r changes +N -N` with live addition/deletion counts
@@ -134,7 +134,7 @@ IronCode is a **high-performance CLI fork** of [OpenCode](https://github.com/ano
 
 - ⌨️ **CLI-First**: Powerful terminal UI optimized for command-line workflows
 - 🎯 **Git Source Control**: Full Git integration - stage, commit, diff, push without leaving TUI
-- 🔍 **Code Changes Panel**: Warp-style diff viewer with inline comments, hunk revert, and live change counts
+- 🔍 **Code Changes Panel**: Diff viewer with inline comments, hunk revert, and live change counts
 - 🏠 **100% Local**: No cloud services, works completely offline
 - 🔒 **Privacy First**: Your code never leaves your machine
 - 🎯 **Lightweight**: Stripped down to core functionality - CLI only
@@ -502,7 +502,7 @@ git config --global credential.helper '!gh auth git-credential'
 
 ### Code Changes Panel
 
-IronCode includes a Warp-style code changes viewer for reviewing diffs with inline comments:
+IronCode includes a code changes viewer for reviewing diffs with inline comments:
 
 **Open Code Changes Panel:**
 
@@ -751,7 +751,7 @@ Contributions are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) befo
 
 **Recent Contributions:**
 
-- ✅ **Code Changes Panel** (Warp-style diff viewer with hunk revert & inline comments - Feb 2026)
+- ✅ **Code Changes Panel** (Diff viewer with hunk revert & inline comments - Feb 2026)
 - ✅ **Git Source Control UI** (Full TUI integration with libgit2 - Feb 2026)
 - ✅ **Streaming read optimization** (1.2-1.6x faster, 99.7% memory savings - Feb 2026)
 - ✅ **Grep streaming optimization** (90-99% memory reduction, GB-file capability - Feb 2026)
