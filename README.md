@@ -37,6 +37,7 @@
 - 🎨 **Hunk Highlighting** - The current hunk is subtly highlighted in the diff view for easy identification
 
 **Keybinds:**
+
 - `j/k`: Navigate files
 - `↑↓`: Navigate diff lines
 - `r`: Revert current hunk

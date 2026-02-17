@@ -8447,6 +8447,11 @@
             "description": "Toggle sidebar",
             "type": "string"
           },
+          "review_toggle": {
+            "default": "<leader>r",
+            "description": "Toggle code review panel",
+            "type": "string"
+          },
           "scrollbar_toggle": {
             "default": "none",
             "description": "Toggle session scrollbar",

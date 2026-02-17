@@ -683,10 +683,7 @@ export function ReviewPanel(props: {
                             : undefined
 
                       return (
-                        <box
-                          backgroundColor={bg()}
-                          onMouseUp={() => setStore("selectedDiffLine", item.index)}
-                        >
+                        <box backgroundColor={bg()} onMouseUp={() => setStore("selectedDiffLine", item.index)}>
                           <text fg={color} attributes={attrs}>
                             {item.text || " "}
                           </text>
