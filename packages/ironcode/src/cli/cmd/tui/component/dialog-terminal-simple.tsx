@@ -1,117 +1,194 @@
-import { createSignal, Show, For, onMount, createMemo } from "solid-js"
+import { createSignal, Show, For, createMemo, createEffect } from "solid-js"
 import { useDialog } from "../ui/dialog"
 import { useTheme } from "../context/theme"
 import { useKeyboard } from "@opentui/solid"
-import { TextAttributes, ScrollBoxRenderable, RGBA } from "@opentui/core"
+import { TextAttributes, type ScrollBoxRenderable, RGBA } from "@opentui/core"
 import { spawn } from "child_process"
+import { readdirSync } from "fs"
+import { resolve as pathResolve, dirname, basename } from "path"
 import { highlightLine, getLanguageFromExtension, type Theme as SyntaxTheme } from "../util/syntax-highlight"
-import { extname } from "path"
 
-interface CommandResult {
-  command: string
-  output: string
-  error?: string
-  exitCode?: number
-  collapsed?: boolean
+interface OutputLine {
+  text: string
+  type: "stdout" | "stderr" | "command" | "info"
+  language?: string
 }
 
 export function DialogTerminalSimple() {
   const dialog = useDialog()
   const { theme } = useTheme()
 
-  const [history, setHistory] = createSignal<CommandResult[]>([])
+  const [lines, setLines] = createSignal<OutputLine[]>([])
   const [input, setInput] = createSignal("")
   const [cwd, setCwd] = createSignal(process.env.IRONCODE_PROJECT_ROOT || process.cwd())
   const [running, setRunning] = createSignal(false)
-  const [historyIndex, setHistoryIndex] = createSignal<number>(-1) // -1 means not navigating
-  const [tempInput, setTempInput] = createSignal("") // Store current input when navigating
+  const [commandHistory, setCommandHistory] = createSignal<string[]>([])
+  const [historyIndex, setHistoryIndex] = createSignal<number>(-1)
+  const [tempInput, setTempInput] = createSignal("")
+  const [cursorPos, setCursorPos] = createSignal(0)
 
   let scrollBoxRef: ScrollBoxRenderable
 
-  // Reversed history - newest first
-  const reversedHistory = createMemo(() => [...history()].reverse())
-
-  // Syntax highlighting theme
-  const syntaxTheme = createMemo((): SyntaxTheme => {
-    const t = theme
-    return {
-      keyword: RGBA.fromInts(197, 134, 192, 255), // Purple
-      string: RGBA.fromInts(152, 195, 121, 255), // Green
-      comment: RGBA.fromInts(92, 99, 112, 255), // Gray
-      number: RGBA.fromInts(209, 154, 102, 255), // Orange
-      function: RGBA.fromInts(97, 175, 239, 255), // Blue
-      type: RGBA.fromInts(229, 192, 123, 255), // Yellow
-      variable: t.text,
-      operator: RGBA.fromInts(171, 178, 191, 255), // Light gray
-      punctuation: RGBA.fromInts(171, 178, 191, 255), // Light gray
-      heading: RGBA.fromInts(224, 108, 117, 255), // Red/Pink for headings
-      link: RGBA.fromInts(97, 175, 239, 255), // Blue for links
-      bold: t.text, // Normal text but will use BOLD attribute
-      italic: RGBA.fromInts(171, 178, 191, 255), // Light gray for italic
+  // Fish-style history autosuggest
+  const suggestion = createMemo(() => {
+    const current = input()
+    if (!current) return ""
+    const hist = commandHistory()
+    // Search from most recent
+    for (let i = hist.length - 1; i >= 0; i--) {
+      if (hist[i].startsWith(current) && hist[i] !== current) {
+        return hist[i].slice(current.length)
+      }
     }
+    return ""
   })
 
-  // Detect file extension from command (cat file.js, less file.md, etc)
-  function detectLanguageFromCommand(command: string): string | undefined {
-    const match = command.match(/(?:cat|less|more|head|tail)\s+(.+?)(?:\s|$)/)
-    if (match) {
-      const filename = match[1]
-      return getLanguageFromExtension(filename)
-    }
-    return undefined
-  }
+  // Tab completion for file paths
+  function completeInput() {
+    const current = input()
+    const pos = cursorPos()
+    const beforeCursor = current.slice(0, pos)
 
-  // Helper to wrap long lines
-  function wrapLine(line: string, maxWidth: number = 150): string[] {
-    if (line.length <= maxWidth) return [line]
+    // Extract the last word (the token being completed)
+    const lastSpaceIdx = beforeCursor.lastIndexOf(" ")
+    const word = beforeCursor.slice(lastSpaceIdx + 1)
 
-    const wrapped: string[] = []
-    for (let i = 0; i < line.length; i += maxWidth) {
-      wrapped.push(line.slice(i, i + maxWidth))
-    }
-    return wrapped
-  }
+    if (!word) return
 
-  // Execute command
-  async function executeCommand(cmd: string) {
-    if (!cmd.trim()) return
+    // Resolve the path relative to cwd
+    const expandedWord = word.replace(/^~/, process.env.HOME || "")
+    const fullPath = pathResolve(cwd(), expandedWord)
 
-    setRunning(true)
-    const command = cmd.trim()
+    try {
+      // Try to list directory contents for completion
+      let dir: string
+      let prefix: string
 
-    // Handle 'cd' command specially
-    if (command.startsWith("cd ")) {
-      const dir = command.slice(3).trim() || process.env.HOME || "~"
       try {
-        const { resolve } = await import("path")
-        const newDir = resolve(cwd(), dir.replace(/^~/, process.env.HOME || ""))
-        setCwd(newDir)
-        setHistory((prev) => [
-          ...prev,
-          {
-            command,
-            output: `Changed directory to: ${newDir}`,
-          },
-        ])
-      } catch (err) {
-        setHistory((prev) => [
-          ...prev,
-          {
-            command,
-            output: "",
-            error: `cd: ${err instanceof Error ? err.message : "Failed to change directory"}`,
-          },
-        ])
+        const entries = readdirSync(fullPath, { withFileTypes: true })
+        // Word is a complete directory path — list its contents
+        dir = fullPath
+        prefix = word.endsWith("/") ? word : word + "/"
+        const matches = entries
+          .filter((e) => !e.name.startsWith("."))
+          .map((e) => prefix + e.name + (e.isDirectory() ? "/" : ""))
+
+        if (matches.length === 1) {
+          const completed = matches[0]
+          const newInput = current.slice(0, lastSpaceIdx + 1) + completed + current.slice(pos)
+          setInput(newInput)
+          setCursorPos(lastSpaceIdx + 1 + completed.length)
+        }
+        return
+      } catch {
+        // Not a directory — complete in parent dir
       }
-      setRunning(false)
-      setInput("")
+
+      dir = dirname(fullPath)
+      const partial = basename(fullPath)
+      const entries = readdirSync(dir, { withFileTypes: true })
+      const matches = entries
+        .filter((e) => e.name.startsWith(partial))
+        .map((e) => e.name + (e.isDirectory() ? "/" : ""))
+
+      if (matches.length === 0) return
+
+      if (matches.length === 1) {
+        const wordDir = word.includes("/") ? word.slice(0, word.lastIndexOf("/") + 1) : ""
+        const completed = wordDir + matches[0]
+        const newInput = current.slice(0, lastSpaceIdx + 1) + completed + current.slice(pos)
+        setInput(newInput)
+        setCursorPos(lastSpaceIdx + 1 + completed.length)
+      } else {
+        // Find common prefix among matches
+        let common = matches[0]
+        for (let i = 1; i < matches.length; i++) {
+          let j = 0
+          while (j < common.length && j < matches[i].length && common[j] === matches[i][j]) j++
+          common = common.slice(0, j)
+        }
+        if (common.length > partial.length) {
+          const wordDir = word.includes("/") ? word.slice(0, word.lastIndexOf("/") + 1) : ""
+          const completed = wordDir + common
+          const newInput = current.slice(0, lastSpaceIdx + 1) + completed + current.slice(pos)
+          setInput(newInput)
+          setCursorPos(lastSpaceIdx + 1 + completed.length)
+        } else {
+          // Show possible completions
+          setLines((prev) => [
+            ...prev,
+            { text: promptPrefix() + current, type: "command" },
+            { text: matches.join("  "), type: "info" },
+          ])
+        }
+      }
+    } catch {
+      // Can't read directory
+    }
+  }
+
+  const promptPrefix = createMemo(() => {
+    const dir = cwd()
+    const home = process.env.HOME || ""
+    const display = home && dir.startsWith(home) ? "~" + dir.slice(home.length) : dir
+    return display + " $ "
+  })
+
+  function scrollToBottom() {
+    if (scrollBoxRef) {
+      scrollBoxRef.scrollTo(scrollBoxRef.scrollHeight)
+    }
+  }
+
+  createEffect(() => {
+    lines()
+    input()
+    scrollToBottom()
+  })
+
+  async function executeCommand(cmd: string) {
+    const command = cmd.trim()
+    if (!command) return
+
+    setCommandHistory((prev) => [...prev, command])
+    setHistoryIndex(-1)
+    setTempInput("")
+    setLines((prev) => [...prev, { text: promptPrefix() + command, type: "command" }])
+    setInput("")
+    setCursorPos(0)
+
+    if (command === "clear" || command === "cls") {
+      setLines([])
       return
     }
 
-    return new Promise<void>((resolve) => {
-      const stdoutChunks: Buffer[] = []
-      const stderrChunks: Buffer[] = []
+    if (command === "cd" || command.startsWith("cd ")) {
+      const dir = command.slice(3).trim() || process.env.HOME || "~"
+      try {
+        const { resolve } = await import("path")
+        const { statSync } = await import("fs")
+        const newDir = resolve(cwd(), dir.replace(/^~/, process.env.HOME || ""))
+        const stat = statSync(newDir)
+        if (!stat.isDirectory()) {
+          setLines((prev) => [...prev, { text: `cd: not a directory: ${dir}`, type: "stderr" }])
+          return
+        }
+        setCwd(newDir)
+      } catch {
+        setLines((prev) => [...prev, { text: `cd: no such file or directory: ${dir}`, type: "stderr" }])
+      }
+      return
+    }
 
+    if (command === "exit") {
+      dialog.clear()
+      return
+    }
+
+    setRunning(true)
+    const lang = detectLanguage(command)
+
+    return new Promise<void>((resolve) => {
       const shell = process.platform === "win32" ? "cmd.exe" : "/bin/sh"
       const args = process.platform === "win32" ? ["/c", command] : ["-c", command]
 
@@ -121,227 +198,249 @@ export function DialogTerminalSimple() {
       })
 
       proc.stdout?.on("data", (data: Buffer) => {
-        stdoutChunks.push(data)
+        const text = data.toString("utf-8")
+        const outputLines = text.split("\n")
+        for (const line of outputLines) {
+          if (line || outputLines.length === 1) {
+            setLines((prev) => [...prev, { text: line, type: "stdout", language: lang }])
+          }
+        }
       })
 
       proc.stderr?.on("data", (data: Buffer) => {
-        stderrChunks.push(data)
+        const text = data.toString("utf-8")
+        const outputLines = text.split("\n")
+        for (const line of outputLines) {
+          if (line || outputLines.length === 1) {
+            setLines((prev) => [...prev, { text: line, type: "stderr" }])
+          }
+        }
       })
 
       proc.on("close", (code) => {
-        const stdout = Buffer.concat(stdoutChunks).toString("utf-8")
-        const stderr = Buffer.concat(stderrChunks).toString("utf-8")
-
-        setHistory((prev) => [
-          ...prev,
-          {
-            command,
-            output: stdout,
-            error: stderr,
-            exitCode: code || undefined,
-          },
-        ])
+        if (code && code !== 0) {
+          setLines((prev) => [...prev, { text: `[exit ${code}]`, type: "info" }])
+        }
         setRunning(false)
-        setInput("")
+        resolve()
+      })
+
+      proc.on("error", (err) => {
+        setLines((prev) => [...prev, { text: err.message, type: "stderr" }])
+        setRunning(false)
         resolve()
       })
     })
   }
 
-  // Handle keyboard events
   useKeyboard((evt) => {
-    if (running()) return // Ignore input while running
+    if (running()) return
 
     const name = evt.name?.toLowerCase()
 
     if (name === "return") {
       executeCommand(input())
-      setHistoryIndex(-1) // Reset history navigation
-      setTempInput("") // Clear temp input
       evt.preventDefault()
     } else if (name === "backspace") {
-      setInput((prev) => prev.slice(0, -1))
-      setHistoryIndex(-1) // Reset history navigation when typing
+      const pos = cursorPos()
+      if (pos > 0) {
+        setInput((prev) => prev.slice(0, pos - 1) + prev.slice(pos))
+        setCursorPos(pos - 1)
+      }
+      setHistoryIndex(-1)
+      evt.preventDefault()
+    } else if (name === "delete") {
+      const pos = cursorPos()
+      setInput((prev) => prev.slice(0, pos) + prev.slice(pos + 1))
+      evt.preventDefault()
+    } else if (name === "left") {
+      setCursorPos((prev) => Math.max(0, prev - 1))
+      evt.preventDefault()
+    } else if (name === "right") {
+      if (cursorPos() >= input().length && suggestion()) {
+        // Accept suggestion
+        const s = suggestion()
+        setInput((prev) => prev + s)
+        setCursorPos(input().length + s.length)
+      } else {
+        setCursorPos((prev) => Math.min(input().length, prev + 1))
+      }
+      evt.preventDefault()
+    } else if (name === "home" || (evt.ctrl && name === "a")) {
+      setCursorPos(0)
+      evt.preventDefault()
+    } else if (name === "end" || (evt.ctrl && name === "e")) {
+      if (suggestion()) {
+        const s = suggestion()
+        setInput((prev) => prev + s)
+        setCursorPos(input().length + s.length)
+      } else {
+        setCursorPos(input().length)
+      }
       evt.preventDefault()
     } else if (name === "tab") {
-      setInput((prev) => prev + "  ")
-      setHistoryIndex(-1) // Reset history navigation when typing
+      completeInput()
+      evt.preventDefault()
+    } else if (evt.ctrl && name === "u") {
+      setInput((prev) => prev.slice(cursorPos()))
+      setCursorPos(0)
+      evt.preventDefault()
+    } else if (evt.ctrl && name === "k") {
+      setInput((prev) => prev.slice(0, cursorPos()))
+      evt.preventDefault()
+    } else if (evt.ctrl && name === "w") {
+      const pos = cursorPos()
+      const before = input().slice(0, pos)
+      const trimmed = before.replace(/\s+$/, "")
+      const lastSpace = trimmed.lastIndexOf(" ")
+      const newPos = lastSpace === -1 ? 0 : lastSpace + 1
+      setInput(input().slice(0, newPos) + input().slice(pos))
+      setCursorPos(newPos)
+      evt.preventDefault()
+    } else if (evt.ctrl && name === "l") {
+      setLines([])
       evt.preventDefault()
     } else if (name === "up") {
-      // Navigate backward in history (older commands)
-      const currentHistory = history()
-      if (currentHistory.length === 0) return
-
-      const currentIndex = historyIndex()
-
-      // First time pressing up - save current input
-      if (currentIndex === -1) {
+      const hist = commandHistory()
+      if (hist.length === 0) return
+      const idx = historyIndex()
+      if (idx === -1) {
         setTempInput(input())
         setHistoryIndex(0)
-        setInput(currentHistory[currentHistory.length - 1].command)
-      } else if (currentIndex < currentHistory.length - 1) {
-        // Go to older command
-        const newIndex = currentIndex + 1
-        setHistoryIndex(newIndex)
-        setInput(currentHistory[currentHistory.length - 1 - newIndex].command)
+        const cmd = hist[hist.length - 1]
+        setInput(cmd)
+        setCursorPos(cmd.length)
+      } else if (idx < hist.length - 1) {
+        const newIdx = idx + 1
+        setHistoryIndex(newIdx)
+        const cmd = hist[hist.length - 1 - newIdx]
+        setInput(cmd)
+        setCursorPos(cmd.length)
       }
       evt.preventDefault()
     } else if (name === "down") {
-      // Navigate forward in history (newer commands)
-      const currentIndex = historyIndex()
-
-      if (currentIndex === -1) return // Not navigating
-
-      if (currentIndex === 0) {
-        // Return to temp input
-        setInput(tempInput())
+      const idx = historyIndex()
+      if (idx === -1) return
+      if (idx === 0) {
+        const tmp = tempInput()
+        setInput(tmp)
+        setCursorPos(tmp.length)
         setHistoryIndex(-1)
         setTempInput("")
       } else {
-        // Go to newer command
-        const newIndex = currentIndex - 1
-        setHistoryIndex(newIndex)
-        const currentHistory = history()
-        setInput(currentHistory[currentHistory.length - 1 - newIndex].command)
+        const newIdx = idx - 1
+        setHistoryIndex(newIdx)
+        const hist = commandHistory()
+        const cmd = hist[hist.length - 1 - newIdx]
+        setInput(cmd)
+        setCursorPos(cmd.length)
       }
       evt.preventDefault()
     } else if (evt.sequence && !evt.ctrl && !evt.meta) {
-      setInput((prev) => prev + evt.sequence)
-      setHistoryIndex(-1) // Reset history navigation when typing
+      const pos = cursorPos()
+      setInput((prev) => prev.slice(0, pos) + evt.sequence + prev.slice(pos))
+      setCursorPos(pos + evt.sequence.length)
+      setHistoryIndex(-1)
       evt.preventDefault()
     }
   })
 
+  const syntaxTheme = createMemo((): SyntaxTheme => ({
+    keyword: RGBA.fromInts(197, 134, 192, 255),
+    string: RGBA.fromInts(152, 195, 121, 255),
+    comment: RGBA.fromInts(92, 99, 112, 255),
+    number: RGBA.fromInts(209, 154, 102, 255),
+    function: RGBA.fromInts(97, 175, 239, 255),
+    type: RGBA.fromInts(229, 192, 123, 255),
+    variable: theme.text,
+    operator: RGBA.fromInts(171, 178, 191, 255),
+    punctuation: RGBA.fromInts(171, 178, 191, 255),
+    heading: RGBA.fromInts(224, 108, 117, 255),
+    link: RGBA.fromInts(97, 175, 239, 255),
+    bold: theme.text,
+    italic: RGBA.fromInts(171, 178, 191, 255),
+  }))
+
+  function detectLanguage(command: string): string | undefined {
+    const match = command.match(/(?:cat|less|more|head|tail|bat)\s+(\S+)/)
+    if (match) return getLanguageFromExtension(match[1])
+    return undefined
+  }
+
+  const errorColor = createMemo(() => RGBA.fromInts(224, 108, 117, 255))
+  const infoColor = createMemo(() => RGBA.fromInts(92, 99, 112, 255))
+
   return (
-    <box flexDirection="column" width="100%" height="100%" gap={1}>
-      {/* Header */}
-      <box flexDirection="column" paddingLeft={2} paddingRight={2} paddingTop={1} gap={1}>
-        <box flexDirection="row" justifyContent="space-between">
-          <text attributes={TextAttributes.BOLD} fg={theme.primary}>
-            💻 Command Runner
-          </text>
-          <text fg={theme.textMuted}>Press Esc to close</text>
-        </box>
-        <box flexDirection="row" gap={1}>
-          <text fg={theme.textMuted}>Working Directory:</text>
-          <text>{cwd()}</text>
-        </box>
-      </box>
-
-      {/* Command history */}
-      <box flexDirection="column" paddingLeft={2} paddingRight={2} flexGrow={1}>
-        <scrollbox
-          ref={(ref) => (scrollBoxRef = ref)}
-          backgroundColor={theme.backgroundElement}
-          paddingLeft={2}
-          paddingRight={2}
-          paddingTop={1}
-          paddingBottom={1}
-        >
-          <box flexDirection="column">
-            {/* Current prompt - show at top */}
-            <box flexDirection="row" gap={1} paddingBottom={1}>
-              <text fg={theme.primary} attributes={TextAttributes.BOLD}>
-                $
-              </text>
-              <text fg={theme.text}>{input()}</text>
-              <text fg={theme.primary}>▊</text>
-            </box>
-
-            {/* History - newest first */}
-            <For each={reversedHistory()}>
-              {(result, index) => {
-                const outputLines = result.output.split("\n")
-                const errorLines = result.error?.split("\n") || []
-                const language = detectLanguageFromCommand(result.command)
-
+    <box flexDirection="column" width="100%" height="100%">
+      {/* Output area */}
+      <scrollbox
+        ref={(ref) => (scrollBoxRef = ref)}
+        flexGrow={1}
+        paddingLeft={1}
+        paddingRight={1}
+      >
+        <box flexDirection="column">
+          <For each={lines()}>
+            {(line) => {
+              if (line.language && line.type === "stdout") {
+                const tokens = highlightLine(line.text || " ", line.language, syntaxTheme())
                 return (
-                  <box flexDirection="column" paddingBottom={1}>
-                    {/* Command */}
-                    <box flexDirection="row" gap={1}>
-                      <text fg={theme.primary} attributes={TextAttributes.BOLD}>
-                        $
-                      </text>
-                      <text fg={theme.text}>{result.command}</text>
-                    </box>
-
-                    {/* Output */}
-                    <Show when={result.output}>
-                      <box flexDirection="column" paddingLeft={2} width="100%">
-                        <For each={outputLines}>
-                          {(line, lineIndex) => {
-                            // Apply syntax highlighting if language detected
-                            const tokens = language
-                              ? highlightLine(line || " ", language, syntaxTheme())
-                              : [{ text: line || " " }]
-
-                            return (
-                              <box flexDirection="row">
-                                <For each={tokens}>
-                                  {(token) => <text fg={token.color || theme.text}>{token.text}</text>}
-                                </For>
-                              </box>
-                            )
-                          }}
-                        </For>
-                        <text fg={theme.textMuted}>
-                          [{result.output.length} bytes, {outputLines.length} lines]
-                          {language && ` | ${language}`}
-                        </text>
-                      </box>
-                    </Show>
-
-                    {/* Error */}
-                    <Show when={result.error}>
-                      <box flexDirection="column" paddingLeft={2}>
-                        <For each={errorLines}>
-                          {(line, lineIndex) => {
-                            // Wrap long lines to multiple display lines
-                            const maxWidth = 140
-                            const wrappedLines: string[] = []
-
-                            if (line.length <= maxWidth) {
-                              wrappedLines.push(line || " ")
-                            } else {
-                              for (let i = 0; i < line.length; i += maxWidth) {
-                                wrappedLines.push(line.slice(i, i + maxWidth))
-                              }
-                            }
-
-                            return (
-                              <For each={wrappedLines}>
-                                {(wrappedLine) => (
-                                  <box flexDirection="row">
-                                    <text fg={theme.error}>{wrappedLine}</text>
-                                  </box>
-                                )}
-                              </For>
-                            )
-                          }}
-                        </For>
-                      </box>
-                    </Show>
-
-                    {/* Exit code */}
-                    <Show when={result.exitCode !== undefined && result.exitCode !== 0}>
-                      <text fg={theme.error} paddingLeft={2}>
-                        [Exit code: {result.exitCode}]
-                      </text>
-                    </Show>
+                  <box flexDirection="row">
+                    <For each={tokens}>
+                      {(token) => <text fg={token.color || theme.text}>{token.text}</text>}
+                    </For>
                   </box>
                 )
-              }}
-            </For>
-          </box>
-        </scrollbox>
-      </box>
+              }
+              return (
+                <box flexDirection="row">
+                  <text
+                    fg={
+                      line.type === "stderr"
+                        ? errorColor()
+                        : line.type === "command"
+                          ? theme.primary
+                          : line.type === "info"
+                            ? infoColor()
+                            : theme.text
+                    }
+                    attributes={line.type === "command" ? TextAttributes.BOLD : 0}
+                  >
+                    {line.text || " "}
+                  </text>
+                </box>
+              )
+            }}
+          </For>
+        </box>
+      </scrollbox>
 
-      {/* Footer */}
-      <box flexDirection="column" paddingLeft={2} paddingRight={2}>
-        <text fg={theme.textMuted}>
-          {running() ? "Running command..." : "Type command and press Enter | ↑↓: history | Esc: close"}
+      {/* Prompt line at bottom */}
+      <box flexDirection="row" paddingLeft={1} paddingRight={1}>
+        <text fg={theme.primary} attributes={TextAttributes.BOLD}>
+          {promptPrefix()}
         </text>
-        <text fg={theme.textMuted}>Note: Interactive commands (vim, nano, etc) not supported</text>
+        <Show when={!running()} fallback={<text fg={theme.textMuted}>running...</text>}>
+          <text fg={theme.text}>{input().slice(0, cursorPos())}</text>
+          <Show
+            when={cursorPos() < input().length}
+            fallback={
+              <>
+                <box backgroundColor={theme.text}>
+                  <text fg={theme.background}>{suggestion() ? suggestion()[0] : " "}</text>
+                </box>
+                <Show when={suggestion().length > 1}>
+                  <text fg={theme.textMuted}>{suggestion().slice(1)}</text>
+                </Show>
+              </>
+            }
+          >
+            <box backgroundColor={theme.text}>
+              <text fg={theme.background}>{input()[cursorPos()]}</text>
+            </box>
+            <text fg={theme.text}>{input().slice(cursorPos() + 1)}</text>
+          </Show>
+        </Show>
       </box>
     </box>
   )

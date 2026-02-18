@@ -16,7 +16,6 @@ import { DialogStash } from "../dialog-stash"
 import { type AutocompleteRef, Autocomplete } from "./autocomplete"
 import { useCommandDialog } from "../dialog-command"
 import { useRenderer } from "@opentui/solid"
-import { Editor } from "@tui/util/editor"
 import { useExit } from "../../context/exit"
 import { Clipboard } from "../../util/clipboard"
 import type { FilePart } from "@ironcode-ai/sdk/v2"
@@ -28,10 +27,12 @@ import { createColors, createFrames } from "../../ui/spinner.ts"
 import { useDialog } from "@tui/ui/dialog"
 import { DialogProvider as DialogProviderConnect } from "../dialog-provider"
 import { DialogAlert } from "../../ui/dialog-alert"
+import { DialogConfirm } from "../../ui/dialog-confirm"
 import { useToast } from "../../ui/toast"
 import { useKV } from "../../context/kv"
 import { useTextareaKeybindings } from "../textarea-keybindings"
 import { DialogSkill } from "../dialog-skill"
+import { Editor } from "@tui/util/editor"
 
 export type PromptProps = {
   sessionID?: string
@@ -239,6 +240,27 @@ export function Prompt(props: PromptProps) {
         },
         onSelect: async (dialog) => {
           dialog.clear()
+
+          let { found } = Editor.resolve()
+          if (!found) {
+            const installInfo = Editor.installCommand()
+            const install = await DialogConfirm.show(
+              dialog,
+              "Editor not found",
+              installInfo
+                ? `No editor found. Install Neovim now?\n\n  ${installInfo.hint}\n\nOr set the EDITOR environment variable.`
+                : "No editor found. Please install Neovim manually and try again.\n\nOr set the EDITOR environment variable.",
+            )
+            if (!install || !installInfo) return
+
+            const success = await Editor.install(renderer)
+            if (!success) {
+              await DialogAlert.show(dialog, "Install failed", `Neovim installation failed. Please install manually:\n\n  ${installInfo.hint}`)
+              return
+            }
+            ;({ found } = Editor.resolve())
+            if (!found) return
+          }
 
           // replace summarized text parts with the actual text
           const text = store.prompt.parts

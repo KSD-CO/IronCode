@@ -24,6 +24,28 @@
 
 ## 🎉 What's New
 
+### Feb 18, 2026 - Editor & Terminal Improvements
+
+**External editor with auto-install + redesigned built-in terminal:**
+
+- **`/editor` - External Editor Integration**
+  - Opens `$VISUAL` or `$EDITOR` or `nvim` by default
+  - Auto-detects if editor is installed via `which`
+  - Shows install popup if Neovim not found (cross-platform: brew, apt, dnf, pacman, apk, winget, choco, scoop)
+  - One-click install button directly from the popup
+
+- **`/terminal` - Redesigned Built-in Terminal**
+  - Clean terminal-like UI with no header/footer chrome
+  - Prompt at bottom with `~/path $ ` prefix (like real shell)
+  - Block cursor with left/right movement
+  - Streaming output (stdout/stderr appear in real-time)
+  - Syntax highlighting for file output (`cat file.ts`, `head file.py`, etc.)
+  - Fish-style history autosuggest (dim text, accept with Right/End)
+  - Tab completion for file/directory paths (single match auto-completes, multiple shows common prefix + options)
+  - Shell keybindings: Ctrl+A/E (home/end), Ctrl+U/K (clear line), Ctrl+W (delete word), Ctrl+L (clear screen)
+  - `cd` with directory validation, `clear`, `exit` commands
+  - Color-coded output: commands (primary+bold), errors (red), info (dim)
+
 ### Feb 15, 2026 - Code Changes Panel
 
 **Code changes viewer with inline comments and hunk revert:**
@@ -136,6 +158,8 @@ IronCode is a **high-performance CLI fork** of [OpenCode](https://github.com/ano
 - ⌨️ **CLI-First**: Powerful terminal UI optimized for command-line workflows
 - 🎯 **Git Source Control**: Full Git integration - stage, commit, diff, push without leaving TUI
 - 🔍 **Code Changes Panel**: Diff viewer with inline comments, hunk revert, and live change counts
+- 📝 **External Editor**: Opens `$EDITOR`/nvim with auto-install popup if not found
+- 💻 **Built-in Terminal**: Real terminal feel with syntax highlighting, fish-style autosuggest, and tab completion
 - 🏠 **100% Local**: No cloud services, works completely offline
 - 🔒 **Privacy First**: Your code never leaves your machine
 - 🎯 **Lightweight**: Stripped down to core functionality - CLI only
@@ -752,6 +776,7 @@ Contributions are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) befo
 
 **Recent Contributions:**
 
+- ✅ **Editor & Terminal** (External editor with auto-install + redesigned terminal with autosuggest - Feb 2026)
 - ✅ **Code Changes Panel** (Diff viewer with hunk revert & inline comments - Feb 2026)
 - ✅ **Git Source Control UI** (Full TUI integration with libgit2 - Feb 2026)
 - ✅ **Streaming read optimization** (1.2-1.6x faster, 99.7% memory savings - Feb 2026)
