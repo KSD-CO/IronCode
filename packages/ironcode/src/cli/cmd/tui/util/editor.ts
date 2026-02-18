@@ -20,9 +20,11 @@ export namespace Editor {
       return null
     }
     if (os === "linux") {
-      if (which("apt-get")) return { cmd: ["sudo", "apt-get", "install", "-y", "neovim"], hint: "sudo apt-get install -y neovim" }
+      if (which("apt-get"))
+        return { cmd: ["sudo", "apt-get", "install", "-y", "neovim"], hint: "sudo apt-get install -y neovim" }
       if (which("dnf")) return { cmd: ["sudo", "dnf", "install", "-y", "neovim"], hint: "sudo dnf install -y neovim" }
-      if (which("pacman")) return { cmd: ["sudo", "pacman", "-S", "--noconfirm", "neovim"], hint: "sudo pacman -S neovim" }
+      if (which("pacman"))
+        return { cmd: ["sudo", "pacman", "-S", "--noconfirm", "neovim"], hint: "sudo pacman -S neovim" }
       if (which("apk")) return { cmd: ["sudo", "apk", "add", "neovim"], hint: "sudo apk add neovim" }
       return null
     }

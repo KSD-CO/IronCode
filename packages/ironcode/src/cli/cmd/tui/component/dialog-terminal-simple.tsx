@@ -345,21 +345,23 @@ export function DialogTerminalSimple() {
     }
   })
 
-  const syntaxTheme = createMemo((): SyntaxTheme => ({
-    keyword: RGBA.fromInts(197, 134, 192, 255),
-    string: RGBA.fromInts(152, 195, 121, 255),
-    comment: RGBA.fromInts(92, 99, 112, 255),
-    number: RGBA.fromInts(209, 154, 102, 255),
-    function: RGBA.fromInts(97, 175, 239, 255),
-    type: RGBA.fromInts(229, 192, 123, 255),
-    variable: theme.text,
-    operator: RGBA.fromInts(171, 178, 191, 255),
-    punctuation: RGBA.fromInts(171, 178, 191, 255),
-    heading: RGBA.fromInts(224, 108, 117, 255),
-    link: RGBA.fromInts(97, 175, 239, 255),
-    bold: theme.text,
-    italic: RGBA.fromInts(171, 178, 191, 255),
-  }))
+  const syntaxTheme = createMemo(
+    (): SyntaxTheme => ({
+      keyword: RGBA.fromInts(197, 134, 192, 255),
+      string: RGBA.fromInts(152, 195, 121, 255),
+      comment: RGBA.fromInts(92, 99, 112, 255),
+      number: RGBA.fromInts(209, 154, 102, 255),
+      function: RGBA.fromInts(97, 175, 239, 255),
+      type: RGBA.fromInts(229, 192, 123, 255),
+      variable: theme.text,
+      operator: RGBA.fromInts(171, 178, 191, 255),
+      punctuation: RGBA.fromInts(171, 178, 191, 255),
+      heading: RGBA.fromInts(224, 108, 117, 255),
+      link: RGBA.fromInts(97, 175, 239, 255),
+      bold: theme.text,
+      italic: RGBA.fromInts(171, 178, 191, 255),
+    }),
+  )
 
   function detectLanguage(command: string): string | undefined {
     const match = command.match(/(?:cat|less|more|head|tail|bat)\s+(\S+)/)
@@ -373,12 +375,7 @@ export function DialogTerminalSimple() {
   return (
     <box flexDirection="column" width="100%" height="100%">
       {/* Output area */}
-      <scrollbox
-        ref={(ref) => (scrollBoxRef = ref)}
-        flexGrow={1}
-        paddingLeft={1}
-        paddingRight={1}
-      >
+      <scrollbox ref={(ref) => (scrollBoxRef = ref)} flexGrow={1} paddingLeft={1} paddingRight={1}>
         <box flexDirection="column">
           <For each={lines()}>
             {(line) => {
@@ -386,9 +383,7 @@ export function DialogTerminalSimple() {
                 const tokens = highlightLine(line.text || " ", line.language, syntaxTheme())
                 return (
                   <box flexDirection="row">
-                    <For each={tokens}>
-                      {(token) => <text fg={token.color || theme.text}>{token.text}</text>}
-                    </For>
+                    <For each={tokens}>{(token) => <text fg={token.color || theme.text}>{token.text}</text>}</For>
                   </box>
                 )
               }

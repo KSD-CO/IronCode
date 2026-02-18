@@ -255,7 +255,11 @@ export function Prompt(props: PromptProps) {
 
             const success = await Editor.install(renderer)
             if (!success) {
-              await DialogAlert.show(dialog, "Install failed", `Neovim installation failed. Please install manually:\n\n  ${installInfo.hint}`)
+              await DialogAlert.show(
+                dialog,
+                "Install failed",
+                `Neovim installation failed. Please install manually:\n\n  ${installInfo.hint}`,
+              )
               return
             }
             ;({ found } = Editor.resolve())
