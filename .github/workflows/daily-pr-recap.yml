@@ -17,8 +17,18 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install Bun (required by ironcode postinstall)
+        run: |
+          curl -fsSL https://bun.sh/install | bash
+          # Ensure bun is available on PATH for the rest of the job
+          echo "PATH=$HOME/.bun/bin:$PATH" >> $GITHUB_ENV
+          bun --version || true
+
       - name: Install IronCode
-        run: npm install -g ironcode-ai
+        run: |
+          # Prefer to let the postinstall use bun (installed above). Also allow
+          # postinstall scripts to run with elevated npm permissions when needed.
+          npm install -g ironcode-ai
 
       - name: Generate daily PR recap
         id: recap
