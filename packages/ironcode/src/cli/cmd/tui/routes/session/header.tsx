@@ -96,6 +96,14 @@ export function Header() {
   const dimensions = useTerminalDimensions()
   const narrow = createMemo(() => dimensions().width < 80)
 
+  // Guard repeat() inputs — ensure a finite integer between 0 and 5
+  const safeBarCount = (value: number) => {
+    const n = Number(value)
+    if (!Number.isFinite(n)) return 0
+    const rounded = Math.round(n)
+    return Math.max(0, Math.min(5, rounded))
+  }
+
   return (
     <box flexShrink={0}>
       <box
@@ -189,12 +197,14 @@ export function Header() {
                 <text fg={theme.textMuted}>
                   CPU {stats().cpu_usage.toFixed(2)}%{" "}
                   {(() => {
-                    const bars = Math.round(stats().cpu_usage / 20)
+                    const bars = safeBarCount(stats().cpu_usage / 20)
                     return "▓".repeat(bars) + "░".repeat(5 - bars)
                   })()}{" "}
                   Mem {(stats().memory_used_mb / 1024).toFixed(2)}/{(stats().memory_total_mb / 1024).toFixed(2)}G{" "}
                   {(() => {
-                    const bars = Math.round((stats().memory_used_mb / stats().memory_total_mb) * 5)
+                    const ratio =
+                      stats().memory_total_mb > 0 ? (stats().memory_used_mb / stats().memory_total_mb) * 5 : 0
+                    const bars = safeBarCount(ratio)
                     return "▓".repeat(bars) + "░".repeat(5 - bars)
                   })()}
                 </text>
