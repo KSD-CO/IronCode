@@ -20,9 +20,11 @@ jobs:
       - name: Install Bun (required by ironcode postinstall)
         run: |
           curl -fsSL https://bun.sh/install | bash
-          # Ensure bun is available on PATH for the rest of the job
+          # Add bun to PATH for the remainder of this step and subsequent steps
+          export PATH="$HOME/.bun/bin:$PATH"
           echo "PATH=$HOME/.bun/bin:$PATH" >> $GITHUB_ENV
-          bun --version || true
+          # Verify installation (fail the step if bun not available)
+          bun --version
 
       - name: Install IronCode
         run: |
