@@ -44,12 +44,12 @@
 
 **Performance (tested on IronCode src, ~1638 symbols):**
 
-| Metric | Value |
-|--------|-------|
-| Initial index time | ~450ms |
-| Search time | <1ms |
-| Memory overhead | ~0 (BM25 inverted index only) |
-| Binary size added | 0 MB (no ML model) |
+| Metric             | Value                         |
+| ------------------ | ----------------------------- |
+| Initial index time | ~450ms                        |
+| Search time        | <1ms                          |
+| Memory overhead    | ~0 (BM25 inverted index only) |
+| Binary size added  | 0 MB (no ML model)            |
 
 ### Feb 18, 2026 - Editor & Terminal Improvements
 

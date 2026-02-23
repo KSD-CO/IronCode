@@ -1,7 +1,13 @@
 import z from "zod"
 import { Tool } from "./tool"
 import { Instance } from "../project/instance"
-import { codesearchIndexFFI, codesearchSearchFFI, codesearchStatsFFI, codesearchUpdateFFI, codesearchRemoveFFI } from "./ffi"
+import {
+  codesearchIndexFFI,
+  codesearchSearchFFI,
+  codesearchStatsFFI,
+  codesearchUpdateFFI,
+  codesearchRemoveFFI,
+} from "./ffi"
 import { Bus } from "@/bus"
 import { FileWatcher } from "@/file/watcher"
 
@@ -30,17 +36,33 @@ Examples:
 Returns the source code of the top matching symbols with file paths and line numbers.`
 
 const CODE_EXTENSIONS = new Set([
-  ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs",
-  ".py", ".pyw",
+  ".ts",
+  ".tsx",
+  ".js",
+  ".jsx",
+  ".mjs",
+  ".cjs",
+  ".py",
+  ".pyw",
   ".rs",
   ".go",
   ".java",
   ".cs",
-  ".rb", ".rake", ".gemspec",
-  ".c", ".h",
-  ".cpp", ".cc", ".cxx", ".hpp", ".hxx",
-  ".php", ".php8", ".php7",
-  ".scala", ".sc",
+  ".rb",
+  ".rake",
+  ".gemspec",
+  ".c",
+  ".h",
+  ".cpp",
+  ".cc",
+  ".cxx",
+  ".hpp",
+  ".hxx",
+  ".php",
+  ".php8",
+  ".php7",
+  ".scala",
+  ".sc",
 ])
 
 function isCodeFile(filePath: string): boolean {
@@ -83,13 +105,7 @@ export const LocalCodeSearchTool = Tool.define("search_codebase", {
       .describe(
         "Natural language or identifier query. E.g. 'authentication middleware', 'getUserById', 'database connection pool'",
       ),
-    top_k: z
-      .number()
-      .int()
-      .min(1)
-      .max(20)
-      .default(5)
-      .describe("Number of top results to return (1-20, default 5)"),
+    top_k: z.number().int().min(1).max(20).default(5).describe("Number of top results to return (1-20, default 5)"),
   }),
   async execute(params, ctx) {
     await ctx.ask({
@@ -126,7 +142,9 @@ export const LocalCodeSearchTool = Tool.define("search_codebase", {
     for (const r of results) {
       const { symbol, score } = r
       const rel = symbol.file_path.replace(projectPath, "").replace(/^\//, "")
-      lines.push(`### ${symbol.kind} \`${symbol.name}\` — ${rel}:${symbol.line_start}-${symbol.line_end} (score: ${score.toFixed(3)})`)
+      lines.push(
+        `### ${symbol.kind} \`${symbol.name}\` — ${rel}:${symbol.line_start}-${symbol.line_end} (score: ${score.toFixed(3)})`,
+      )
       lines.push("```" + symbol.language)
       lines.push(symbol.content.trimEnd())
       lines.push("```")
