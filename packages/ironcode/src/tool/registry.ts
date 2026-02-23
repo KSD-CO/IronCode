@@ -21,6 +21,7 @@ import z from "zod"
 import { Plugin } from "../plugin"
 import { WebSearchTool } from "./websearch"
 import { CodeSearchTool } from "./codesearch"
+import { LocalCodeSearchTool } from "./codesearch-local"
 import { Flag } from "@/flag/flag"
 import { Log } from "@/util/log"
 import { LspTool } from "./lsp"
@@ -127,6 +128,7 @@ export namespace ToolRegistry {
       // TodoReadTool,
       WebSearchTool,
       CodeSearchTool,
+      LocalCodeSearchTool,
       SkillTool,
       ApplyPatchTool,
       ...(Flag.IRONCODE_EXPERIMENTAL_LSP_TOOL ? [LspTool] : []),

@@ -231,6 +231,26 @@ const lib = dlopen(libPath, {
     args: [],
     returns: FFIType.ptr,
   },
+  codesearch_index_ffi: {
+    args: [FFIType.cstring],
+    returns: FFIType.ptr,
+  },
+  codesearch_search_ffi: {
+    args: [FFIType.cstring, FFIType.i32],
+    returns: FFIType.ptr,
+  },
+  codesearch_update_ffi: {
+    args: [FFIType.cstring],
+    returns: FFIType.i32,
+  },
+  codesearch_remove_ffi: {
+    args: [FFIType.cstring],
+    returns: FFIType.i32,
+  },
+  codesearch_stats_ffi: {
+    args: [],
+    returns: FFIType.ptr,
+  },
   git_status_detailed_ffi: {
     args: [FFIType.cstring],
     returns: FFIType.ptr,
@@ -973,4 +993,63 @@ export function gitPushFFI(cwd: string = "."): GitPushResult {
   }
 
   return result
+}
+
+// ============================================================================
+// Local Code Search FFI (BM25 + tree-sitter)
+// ============================================================================
+
+export interface CodeIndexStats {
+  total_files: number
+  total_symbols: number
+  total_terms: number
+  languages: Record<string, number>
+  index_time_ms: number
+}
+
+export interface CodeSymbol {
+  file_path: string
+  line_start: number
+  line_end: number
+  name: string
+  kind: string
+  content: string
+  language: string
+}
+
+export interface LocalSearchResult {
+  symbol: CodeSymbol
+  score: number
+}
+
+export function codesearchIndexFFI(projectPath: string): CodeIndexStats {
+  const ptr = lib.symbols.codesearch_index_ffi(Buffer.from(projectPath + "\0"))
+  if (!ptr) throw new Error("codesearch_index_ffi returned null")
+  const json = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+  return JSON.parse(json)
+}
+
+export function codesearchSearchFFI(query: string, topK: number = 10): LocalSearchResult[] {
+  const ptr = lib.symbols.codesearch_search_ffi(Buffer.from(query + "\0"), topK)
+  if (!ptr) return []
+  const json = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+  return JSON.parse(json)
+}
+
+export function codesearchUpdateFFI(filePath: string): void {
+  lib.symbols.codesearch_update_ffi(Buffer.from(filePath + "\0"))
+}
+
+export function codesearchRemoveFFI(filePath: string): void {
+  lib.symbols.codesearch_remove_ffi(Buffer.from(filePath + "\0"))
+}
+
+export function codesearchStatsFFI(): CodeIndexStats {
+  const ptr = lib.symbols.codesearch_stats_ffi()
+  if (!ptr) throw new Error("codesearch_stats_ffi returned null")
+  const json = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+  return JSON.parse(json)
 }
