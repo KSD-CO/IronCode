@@ -2,11 +2,14 @@ use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
 pub mod archive;
+pub mod bm25;
+pub mod codesearch;
 pub mod edit;
 pub mod file_list;
 pub mod fuzzy;
 pub mod glob;
 pub mod grep;
+pub mod indexer;
 pub mod lock;
 pub mod ls;
 pub mod read;
@@ -1728,6 +1731,109 @@ pub unsafe extern "C" fn lock_get_stats_ffi() -> *mut c_char {
     });
     match serde_json::to_string(&result) {
         Ok(json) => CString::new(json).unwrap().into_raw(),
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+// ============================================================================
+// Code Search FFI (BM25 + tree-sitter)
+// ============================================================================
+
+/// Index a project directory for local code search.
+/// Returns JSON IndexStats on success, null on error.
+#[no_mangle]
+/// # Safety
+/// `project_path` must be a valid, non-null, null-terminated C string.
+pub unsafe extern "C" fn codesearch_index_ffi(project_path: *const c_char) -> *mut c_char {
+    let path_str = unsafe {
+        if project_path.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(project_path).to_str().unwrap_or(".")
+    };
+
+    match codesearch::index_project(path_str) {
+        Ok(stats) => match serde_json::to_string(&stats) {
+            Ok(json) => CString::new(json).unwrap().into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        },
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// Search the local code index.
+/// Returns JSON array of SearchResult on success, null on error.
+#[no_mangle]
+/// # Safety
+/// `query` must be a valid, non-null, null-terminated C string.
+pub unsafe extern "C" fn codesearch_search_ffi(
+    query: *const c_char,
+    top_k: i32,
+) -> *mut c_char {
+    let query_str = unsafe {
+        if query.is_null() {
+            return std::ptr::null_mut();
+        }
+        CStr::from_ptr(query).to_str().unwrap_or("")
+    };
+    let k = if top_k <= 0 { 10 } else { top_k as usize };
+
+    match codesearch::search(query_str, k) {
+        Ok(results) => match serde_json::to_string(&results) {
+            Ok(json) => CString::new(json).unwrap().into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        },
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// Re-index a single file (after create/change).
+/// Returns 0 on success, -1 on error.
+#[no_mangle]
+/// # Safety
+/// `file_path` must be a valid, non-null, null-terminated C string.
+pub unsafe extern "C" fn codesearch_update_ffi(file_path: *const c_char) -> i32 {
+    let path_str = unsafe {
+        if file_path.is_null() {
+            return -1;
+        }
+        CStr::from_ptr(file_path).to_str().unwrap_or("")
+    };
+    match codesearch::update_file(path_str) {
+        Ok(_) => 0,
+        Err(_) => -1,
+    }
+}
+
+/// Remove a file from the index.
+/// Returns 0 on success, -1 on error.
+#[no_mangle]
+/// # Safety
+/// `file_path` must be a valid, non-null, null-terminated C string.
+pub unsafe extern "C" fn codesearch_remove_ffi(file_path: *const c_char) -> i32 {
+    let path_str = unsafe {
+        if file_path.is_null() {
+            return -1;
+        }
+        CStr::from_ptr(file_path).to_str().unwrap_or("")
+    };
+    match codesearch::remove_file(path_str) {
+        Ok(_) => 0,
+        Err(_) => -1,
+    }
+}
+
+/// Get current index statistics.
+/// Returns JSON IndexStats on success, null on error.
+#[no_mangle]
+/// # Safety
+/// This function is safe to call from C as it takes no pointer arguments.
+pub unsafe extern "C" fn codesearch_stats_ffi() -> *mut c_char {
+    match codesearch::get_stats() {
+        Ok(stats) => match serde_json::to_string(&stats) {
+            Ok(json) => CString::new(json).unwrap().into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        },
         Err(_) => std::ptr::null_mut(),
     }
 }
