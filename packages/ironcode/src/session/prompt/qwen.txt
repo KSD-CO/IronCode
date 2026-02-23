@@ -6,7 +6,7 @@ IMPORTANT: You must NEVER generate or guess URLs for the user unless you are con
 
 If the user asks for help or wants to give feedback inform them of the following: 
 - /help: Get help with using ironcode
-- To give feedback, users should report the issue at https://github.com/anomalyco/ironcode/issues
+- To give feedback, users should report the issue at https://github.com/KSD-CO/ironcode/issues
 
 When the user directly asks about ironcode (eg 'can ironcode do...', 'does ironcode have...') or asks in second person (eg 'are you able...', 'can you do...'), first use the WebFetch tool to gather information to answer the question from ironcode docs at https://ironcode.cloud
 

@@ -15,7 +15,7 @@ This extension requires the [ironcode CLI](https://ironcode.cloud) to be install
 
 ## Support
 
-This is an early release. If you encounter issues or have feedback, please create an issue at https://github.com/anomalyco/ironcode/issues.
+This is an early release. If you encounter issues or have feedback, please create an issue at https://github.com/KSD-CO/ironcode/issues.
 
 ## Development
 

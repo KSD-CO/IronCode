@@ -121,8 +121,8 @@ export namespace Installation {
   )
 
   async function getBrewFormula() {
-    const tapFormula = await $`brew list --formula anomalyco/tap/ironcode`.throws(false).quiet().text()
-    if (tapFormula.includes("ironcode")) return "anomalyco/tap/ironcode"
+    const tapFormula = await $`brew list --formula KSD-CO/tap/ironcode`.throws(false).quiet().text()
+    if (tapFormula.includes("ironcode")) return "KSD-CO/tap/ironcode"
     const coreFormula = await $`brew list --formula ironcode`.throws(false).quiet().text()
     if (coreFormula.includes("ironcode")) return "ironcode"
     return "ironcode"

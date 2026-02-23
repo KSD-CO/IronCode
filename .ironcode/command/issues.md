@@ -3,7 +3,7 @@ description: "find issue(s) on github"
 model: ironcode/claude-haiku-4-5
 ---
 
-Search through existing issues in anomalyco/ironcode using the gh cli to find issues matching this query:
+Search through existing issues in KSD-CO/ironcode using the gh cli to find issues matching this query:
 
 $ARGUMENTS
 

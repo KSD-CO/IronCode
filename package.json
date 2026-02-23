@@ -74,7 +74,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/anomalyco/ironcode"
+    "url": "https://github.com/KSD-CO/ironcode"
   },
   "license": "MIT",
   "prettier": {
