@@ -25,7 +25,10 @@ jobs:
           echo "PATH=$HOME/.bun/bin:$PATH" >> $GITHUB_ENV
           # Verify installation (fail the step if bun not available)
           bun --version
-
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
       - name: Install IronCode
         run: |
           npm install -g ironcode-ai@latest
