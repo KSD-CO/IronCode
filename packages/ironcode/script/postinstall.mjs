@@ -49,7 +49,12 @@ function detectPlatformAndArch() {
 
 function findBinary() {
   const { platform, arch } = detectPlatformAndArch()
-  const packageName = `ironcode-${platform}-${arch}`
+  // const packageName = `ironcode-${platform}-${arch}`
+  let packageName = `ironcode-${platform}-${arch}`
+
+  if (arch === "x64") {
+    packageName += "-modern"
+  }
   const binaryName = platform === "windows" ? "ironcode.exe" : "ironcode"
 
   try {
