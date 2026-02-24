@@ -1,7 +1,6 @@
 use crate::types::{Metadata, Output};
 use globset::{GlobBuilder, GlobSetBuilder};
 use ignore::WalkBuilder;
-use std::fs;
 use std::time::UNIX_EPOCH;
 
 pub fn execute(pattern: &str, search: &str) -> Result<Output, String> {
@@ -33,17 +32,18 @@ pub fn execute(pattern: &str, search: &str) -> Result<Output, String> {
         if !entry.file_type().map(|ft| ft.is_file()).unwrap_or(false) {
             continue;
         }
-        let path = entry.path().to_path_buf();
-        let rel = path
-            .strip_prefix(search)
-            .unwrap_or(path.as_path())
-            .to_path_buf();
-        if !(matcher.is_match(path.as_path()) || matcher.is_match(rel.as_path())) {
+        // Check match on borrowed path first — avoid allocating PathBuf for non-matching files
+        let path = entry.path();
+        let rel = path.strip_prefix(search).unwrap_or(path);
+        if !(matcher.is_match(path) || matcher.is_match(rel)) {
             continue;
         }
 
-        let mtime = fs::metadata(&path)
-            .and_then(|m| m.modified())
+        // Use cached DirEntry metadata instead of an extra fs::metadata syscall
+        let mtime = entry
+            .metadata()
+            .ok()
+            .and_then(|m| m.modified().ok())
             .map(|t| t.duration_since(UNIX_EPOCH).unwrap_or_default().as_millis())
             .unwrap_or(0);
 
