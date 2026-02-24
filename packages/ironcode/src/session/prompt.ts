@@ -42,6 +42,7 @@ import { SessionProcessor } from "./processor"
 import { TaskTool } from "@/tool/task"
 import { Tool } from "@/tool/tool"
 import { PermissionNext } from "@/permission/next"
+import { Question } from "@/question"
 import { SessionStatus } from "./status"
 import { LLM } from "./llm"
 import { iife } from "@/util/iife"
@@ -751,6 +752,10 @@ export namespace SessionPrompt {
         async needsApproval(args: any, { toolCallId }: { toolCallId: string }) {
           // question tool must never require permission — it IS the mechanism for asking the user
           if (item.id === "question") return false
+          // In ai@6, tools execute in parallel. If the question tool is pending (waiting for user
+          // input), block all other tools so they don't run before the user answers.
+          // This restores the sequential behavior that existed in ai@5.
+          if (await Question.hasPending(input.session.id)) return true
           const permission = editPermissionTools.has(item.id) ? "edit" : item.id
           const ruleset = PermissionNext.merge(input.agent.permission, input.session.permission ?? [])
           const rule = PermissionNext.evaluate(permission, "*", ruleset)
@@ -811,6 +816,8 @@ export namespace SessionPrompt {
       item.inputSchema = jsonSchema(transformed)
       // Permission check via needsApproval (runs before execute, blocks until user decides)
       ;(item as any).needsApproval = async (_args: any, { toolCallId }: { toolCallId: string }) => {
+        // Block MCP tools too if question tool is pending (ai@6 parallel execution fix)
+        if (await Question.hasPending(input.session.id)) return true
         const ruleset = PermissionNext.merge(input.agent.permission, input.session.permission ?? [])
         const rule = PermissionNext.evaluate(key, "*", ruleset)
         if (rule.action === "allow") return false

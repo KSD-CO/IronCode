@@ -168,4 +168,9 @@ export namespace Question {
   export async function list() {
     return state().then((x) => Object.values(x.pending).map((x) => x.info))
   }
+
+  export async function hasPending(sessionID: string): Promise<boolean> {
+    const s = await state()
+    return Object.values(s.pending).some((p) => p.info.sessionID === sessionID)
+  }
 }
