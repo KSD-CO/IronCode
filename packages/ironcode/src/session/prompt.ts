@@ -749,6 +749,8 @@ export namespace SessionPrompt {
         description: item.description,
         inputSchema: jsonSchema(schema as any),
         async needsApproval(args: any, { toolCallId }: { toolCallId: string }) {
+          // question tool must never require permission — it IS the mechanism for asking the user
+          if (item.id === "question") return false
           const permission = editPermissionTools.has(item.id) ? "edit" : item.id
           const ruleset = PermissionNext.merge(input.agent.permission, input.session.permission ?? [])
           const rule = PermissionNext.evaluate(permission, "*", ruleset)
@@ -795,7 +797,7 @@ export namespace SessionPrompt {
           )
           return result
         },
-        toModelOutput(output) {
+        toModelOutput({ output }: { toolCallId: string; input: unknown; output: any }) {
           return { type: "text", value: output.output }
         },
       })
