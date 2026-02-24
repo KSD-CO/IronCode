@@ -462,12 +462,12 @@ export namespace MessageV2 {
       return false
     })()
 
-    const toModelOutput = (output: unknown) => {
+    const toModelOutput = ({ output }: { toolCallId: string; input: unknown; output: unknown }) => {
       if (typeof output === "string") {
         return { type: "text", value: output }
       }
 
-      if (typeof output === "object") {
+      if (typeof output === "object" && output !== null) {
         const outputObject = output as {
           text: string
           attachments?: Array<{ mime: string; url: string }>

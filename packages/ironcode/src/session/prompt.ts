@@ -736,6 +736,9 @@ export namespace SessionPrompt {
       },
     })
 
+    // Tools that use the "edit" permission (matches PermissionNext.disabled logic)
+    const editPermissionTools = new Set(["edit", "write", "patch", "multiedit"])
+
     for (const item of await ToolRegistry.tools(
       { modelID: input.model.api.id, providerID: input.model.providerID },
       input.agent,
@@ -745,6 +748,28 @@ export namespace SessionPrompt {
         id: item.id as any,
         description: item.description,
         inputSchema: jsonSchema(schema as any),
+        async needsApproval(args: any, { toolCallId }: { toolCallId: string }) {
+          const permission = editPermissionTools.has(item.id) ? "edit" : item.id
+          const ruleset = PermissionNext.merge(input.agent.permission, input.session.permission ?? [])
+          const rule = PermissionNext.evaluate(permission, "*", ruleset)
+          if (rule.action === "allow") return false
+          if (rule.action === "deny") return true
+          // rule.action === "ask" → block until user decides
+          try {
+            await PermissionNext.ask({
+              permission,
+              patterns: ["*"],
+              always: ["*"],
+              metadata: {},
+              sessionID: input.session.id,
+              tool: { messageID: input.processor.message.id, callID: toolCallId },
+              ruleset,
+            })
+            return false
+          } catch {
+            return true
+          }
+        },
         async execute(args, options) {
           const ctx = context(args, options)
           await Plugin.trigger(
@@ -782,6 +807,27 @@ export namespace SessionPrompt {
 
       const transformed = ProviderTransform.schema(input.model, (asSchema(item.inputSchema) as any).jsonSchema)
       item.inputSchema = jsonSchema(transformed)
+      // Permission check via needsApproval (runs before execute, blocks until user decides)
+      ;(item as any).needsApproval = async (_args: any, { toolCallId }: { toolCallId: string }) => {
+        const ruleset = PermissionNext.merge(input.agent.permission, input.session.permission ?? [])
+        const rule = PermissionNext.evaluate(key, "*", ruleset)
+        if (rule.action === "allow") return false
+        if (rule.action === "deny") return true
+        try {
+          await PermissionNext.ask({
+            permission: key,
+            patterns: ["*"],
+            always: ["*"],
+            metadata: {},
+            sessionID: input.session.id,
+            tool: { messageID: input.processor.message.id, callID: toolCallId },
+            ruleset,
+          })
+          return false
+        } catch {
+          return true
+        }
+      }
       // Wrap execute to add plugin hooks and format output
       item.execute = async (args, opts) => {
         const ctx = context(args, opts)
@@ -797,13 +843,6 @@ export namespace SessionPrompt {
             args,
           },
         )
-
-        await ctx.ask({
-          permission: key,
-          metadata: {},
-          patterns: ["*"],
-          always: ["*"],
-        })
 
         const result = await execute(args, opts)
 

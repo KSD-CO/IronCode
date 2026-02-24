@@ -239,12 +239,12 @@ export namespace SessionProcessor {
                     usage: value.usage,
                     metadata: value.providerMetadata,
                   })
-                  input.assistantMessage.finish = value.finishReason
+                  input.assistantMessage.finish = value.finishReason ?? "unknown"
                   input.assistantMessage.cost += usage.cost
                   input.assistantMessage.tokens = usage.tokens
                   await Session.updatePart({
                     id: Identifier.ascending("part"),
-                    reason: value.finishReason,
+                    reason: value.finishReason ?? "unknown",
                     snapshot: await Snapshot.track(),
                     messageID: input.assistantMessage.id,
                     sessionID: input.assistantMessage.sessionID,
@@ -327,6 +327,31 @@ export namespace SessionProcessor {
 
                 case "finish":
                   break
+
+                case "tool-approval-request": {
+                  // needsApproval returned true (user rejected or config denied)
+                  // tool-call is never emitted in this path, so the part is still "pending"
+                  const approvalRequest = value as { type: "tool-approval-request"; toolCall: { toolCallId: string } }
+                  const approvedMatch = toolcalls[approvalRequest.toolCall.toolCallId]
+                  if (approvedMatch) {
+                    const now = Date.now()
+                    await Session.updatePart({
+                      ...approvedMatch,
+                      state: {
+                        status: "error",
+                        input: approvedMatch.state.input,
+                        error: "The user rejected permission to use this specific tool call.",
+                        time: {
+                          start: approvedMatch.state.status === "running" ? approvedMatch.state.time.start : now,
+                          end: now,
+                        },
+                      },
+                    })
+                    delete toolcalls[approvalRequest.toolCall.toolCallId]
+                    blocked = shouldBreak
+                  }
+                  break
+                }
 
                 default:
                   log.info("unhandled", {

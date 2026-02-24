@@ -24,11 +24,31 @@
 
 ## 🎉 What's New
 
+### Feb 25, 2026 - Human-in-the-loop Tool Approval (`needsApproval`)
+
+**All tools now check `PermissionNext` rules before executing — approval dialog shows before the tool starts:**
+
+- `needsApproval` callback wired into every ToolRegistry tool (bash, edit, write, ...) and MCP tool
+- Checks your `permission` config: `"allow"` → runs immediately, `"deny"` → blocked, `"ask"` → shows approval dialog
+- Dialog appears **before** `execute` starts (previously it paused mid-execution)
+- MCP tools moved permission check from inside `execute` to `needsApproval`
+- Rejected/denied tools properly marked as error in the UI
+
+**Configure in `ironcode.jsonc`:**
+```jsonc
+{
+  "permission": {
+    "bash": "ask",   // prompt before every bash command
+    "edit": "ask",   // prompt before every file edit
+    "*": "allow"     // allow everything else (default)
+  }
+}
+```
+
 ### Feb 24, 2026 - AI SDK v6
 
-**Upgraded to `ai@6` (latest Vercel AI SDK) for new capabilities:**
+**Upgraded to `ai@6` (latest Vercel AI SDK):**
 
-- **`needsApproval`** — human-in-the-loop tool execution approval now available; tools can prompt user before running
 - **`LanguageModelV3` protocol** — all bundled providers updated to latest V3 API; copilot custom provider uses V2 via compat shim (deprecation warning only, fully functional)
 - **Token tracking** — migrated to new structured fields: `inputTokenDetails.cacheReadTokens` and `outputTokenDetails.reasoningTokens`, with fallback to deprecated flat fields for backward compatibility with older providers
 - Provider packages updated: `@ai-sdk/anthropic@3`, `@ai-sdk/openai@3`, `@ai-sdk/google@3`, `@ai-sdk/groq@3`, `@ai-sdk/mistral@3`, `@ai-sdk/xai@3`, `@ai-sdk/gateway@3`, `@ai-sdk/perplexity@3`, `@openrouter/ai-sdk-provider@2`, `ai-gateway-provider@3`, and more
