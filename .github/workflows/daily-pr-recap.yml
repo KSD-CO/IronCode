@@ -28,9 +28,7 @@ jobs:
 
       - name: Install IronCode
         run: |
-          # Prefer to let the postinstall use bun (installed above). Also allow
-          # postinstall scripts to run with elevated npm permissions when needed.
-          npm install -g ironcode-ai
+          npm install -g ironcode-ai@latest
 
       - name: Generate daily PR recap
         id: recap
