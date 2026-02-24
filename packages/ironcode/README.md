@@ -84,6 +84,15 @@ packages/ironcode/
 
 ## Changelog
 
+### Feb 24, 2026 — AI SDK v6 upgrade
+
+Upgraded from `ai@5` to `ai@6` (latest) along with all `@ai-sdk/*` provider packages:
+
+- **`needsApproval`** — human-in-the-loop tool execution approval is now available
+- **Token tracking** — migrated to new `inputTokenDetails.cacheReadTokens` and `outputTokenDetails.reasoningTokens` fields (with fallback to deprecated fields for provider compat)
+- **`LanguageModelV3` protocol** — all bundled providers now return V3 models; copilot custom provider still uses V2 via compat shim
+- Provider packages bumped: `@ai-sdk/anthropic@3`, `@ai-sdk/openai@3`, `@ai-sdk/google@3`, `@ai-sdk/groq@3`, `@ai-sdk/mistral@3`, `@ai-sdk/xai@3`, `@ai-sdk/gateway@3`, `@ai-sdk/perplexity@3`, `@openrouter/ai-sdk-provider@2`, `ai-gateway-provider@3`, and others
+
 ### Feb 23, 2026 — Local Code Search (BM25 + tree-sitter)
 
 Added `search_codebase` tool backed by a Rust native library:

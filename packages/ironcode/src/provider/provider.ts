@@ -24,7 +24,8 @@ import { createVertex } from "@ai-sdk/google-vertex"
 import { createVertexAnthropic } from "@ai-sdk/google-vertex/anthropic"
 import { createOpenAI } from "@ai-sdk/openai"
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible"
-import { createOpenRouter, type LanguageModelV2 } from "@openrouter/ai-sdk-provider"
+import { createOpenRouter } from "@openrouter/ai-sdk-provider"
+import type { LanguageModelV2 } from "@ai-sdk/provider"
 import { createOpenaiCompatible as createGitHubCopilotOpenAICompatible } from "./sdk/copilot"
 import { createXai } from "@ai-sdk/xai"
 import { createMistral } from "@ai-sdk/mistral"
@@ -55,7 +56,7 @@ export namespace Provider {
     return isGpt5OrLater(modelID) && !modelID.startsWith("gpt-5-mini")
   }
 
-  const BUNDLED_PROVIDERS: Record<string, (options: any) => SDK> = {
+  const BUNDLED_PROVIDERS: Record<string, (options: any) => any> = {
     "@ai-sdk/amazon-bedrock": createAmazonBedrock,
     "@ai-sdk/anthropic": createAnthropic,
     "@ai-sdk/azure": createAzure,

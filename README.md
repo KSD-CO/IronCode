@@ -24,6 +24,15 @@
 
 ## 🎉 What's New
 
+### Feb 24, 2026 - AI SDK v6
+
+**Upgraded to `ai@6` (latest Vercel AI SDK) for new capabilities:**
+
+- **`needsApproval`** — human-in-the-loop tool execution approval now available; tools can prompt user before running
+- **`LanguageModelV3` protocol** — all bundled providers updated to latest V3 API; copilot custom provider uses V2 via compat shim (deprecation warning only, fully functional)
+- **Token tracking** — migrated to new structured fields: `inputTokenDetails.cacheReadTokens` and `outputTokenDetails.reasoningTokens`, with fallback to deprecated flat fields for backward compatibility with older providers
+- Provider packages updated: `@ai-sdk/anthropic@3`, `@ai-sdk/openai@3`, `@ai-sdk/google@3`, `@ai-sdk/groq@3`, `@ai-sdk/mistral@3`, `@ai-sdk/xai@3`, `@ai-sdk/gateway@3`, `@ai-sdk/perplexity@3`, `@openrouter/ai-sdk-provider@2`, `ai-gateway-provider@3`, and more
+
 ### Feb 23, 2026 - Local Code Search (BM25 + tree-sitter)
 
 **Offline semantic code search — no embeddings, no ML model download required:**
@@ -36,7 +45,7 @@
   - ~400ms initial indexing, <1ms search on indexed data
   - Zero binary size overhead (no ML model bundled)
 
-- **Languages supported:** TypeScript, JavaScript, Python, Rust, Go, Java, C#
+- **Languages supported (12):** TypeScript, JavaScript, Python, Rust, Go, Java, C#, Ruby, C, C++, PHP, Scala
 
 - **AI behavior improved:** Model now prefers `search_codebase` for conceptual queries and reserves grep for exact text matching — no more `\b(auth|login|token|...)\b` mega-patterns
 
@@ -807,7 +816,8 @@ Contributions are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) befo
 
 **Recent Contributions:**
 
-- ✅ **Local Code Search** (BM25 + tree-sitter semantic search, 7 languages, offline - Feb 2026)
+- ✅ **AI SDK v6 upgrade** (`needsApproval`, LanguageModelV3, token tracking - Feb 2026)
+- ✅ **Local Code Search** (BM25 + tree-sitter semantic search, 12 languages, offline - Feb 2026)
 - ✅ **Editor & Terminal** (External editor with auto-install + redesigned terminal with autosuggest - Feb 2026)
 - ✅ **Code Changes Panel** (Diff viewer with hunk revert & inline comments - Feb 2026)
 - ✅ **Git Source Control UI** (Full TUI integration with libgit2 - Feb 2026)

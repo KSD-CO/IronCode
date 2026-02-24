@@ -443,7 +443,7 @@ export namespace Session {
       metadata: z.custom<ProviderMetadata>().optional(),
     }),
     (input) => {
-      const cacheReadInputTokens = input.usage.cachedInputTokens ?? 0
+      const cacheReadInputTokens = input.usage.inputTokenDetails?.cacheReadTokens ?? input.usage.cachedInputTokens ?? 0
       const cacheWriteInputTokens = (input.metadata?.["anthropic"]?.["cacheCreationInputTokens"] ??
         // @ts-expect-error
         input.metadata?.["bedrock"]?.["usage"]?.["cacheWriteInputTokens"] ??
@@ -463,7 +463,7 @@ export namespace Session {
       const tokens = {
         input: safe(adjustedInputTokens),
         output: safe(input.usage.outputTokens ?? 0),
-        reasoning: safe(input.usage?.reasoningTokens ?? 0),
+        reasoning: safe(input.usage?.outputTokenDetails?.reasoningTokens ?? input.usage?.reasoningTokens ?? 0),
         cache: {
           write: safe(cacheWriteInputTokens),
           read: safe(cacheReadInputTokens),

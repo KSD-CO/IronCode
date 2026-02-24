@@ -171,6 +171,8 @@ describe("session.getUsage", () => {
         inputTokens: 1000,
         outputTokens: 500,
         totalTokens: 1500,
+        inputTokenDetails: {} as any,
+        outputTokenDetails: {} as any,
       },
     })
 
@@ -189,7 +191,8 @@ describe("session.getUsage", () => {
         inputTokens: 1000,
         outputTokens: 500,
         totalTokens: 1500,
-        cachedInputTokens: 200,
+        inputTokenDetails: { cacheReadTokens: 200 } as any,
+        outputTokenDetails: {} as any,
       },
     })
 
@@ -205,6 +208,8 @@ describe("session.getUsage", () => {
         inputTokens: 1000,
         outputTokens: 500,
         totalTokens: 1500,
+        inputTokenDetails: {} as any,
+        outputTokenDetails: {} as any,
       },
       metadata: {
         anthropic: {
@@ -224,7 +229,8 @@ describe("session.getUsage", () => {
         inputTokens: 1000,
         outputTokens: 500,
         totalTokens: 1500,
-        cachedInputTokens: 200,
+        inputTokenDetails: { cacheReadTokens: 200 } as any,
+        outputTokenDetails: {} as any,
       },
       metadata: {
         anthropic: {},
@@ -243,7 +249,8 @@ describe("session.getUsage", () => {
         inputTokens: 1000,
         outputTokens: 500,
         totalTokens: 1500,
-        reasoningTokens: 100,
+        inputTokenDetails: {} as any,
+        outputTokenDetails: { reasoningTokens: 100 } as any,
       },
     })
 
@@ -258,6 +265,8 @@ describe("session.getUsage", () => {
         inputTokens: 0,
         outputTokens: 0,
         totalTokens: 0,
+        inputTokenDetails: {} as any,
+        outputTokenDetails: {} as any,
       },
     })
 
@@ -285,6 +294,8 @@ describe("session.getUsage", () => {
         inputTokens: 1_000_000,
         outputTokens: 100_000,
         totalTokens: 1_100_000,
+        inputTokenDetails: {} as any,
+        outputTokenDetails: {} as any,
       },
     })
 

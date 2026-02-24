@@ -780,7 +780,7 @@ export namespace SessionPrompt {
       const execute = item.execute
       if (!execute) continue
 
-      const transformed = ProviderTransform.schema(input.model, asSchema(item.inputSchema).jsonSchema)
+      const transformed = ProviderTransform.schema(input.model, (asSchema(item.inputSchema) as any).jsonSchema)
       item.inputSchema = jsonSchema(transformed)
       // Wrap execute to add plugin hooks and format output
       item.execute = async (args, opts) => {
@@ -1895,7 +1895,7 @@ NOTE: At any point in time through this workflow you should feel free to ask the
           : await MessageV2.toModelMessages(contextMessages, model)),
       ],
     })
-    const text = await result.text.catch((err) => log.error("failed to generate title", { error: err }))
+    const text = await Promise.resolve(result.text).catch((err: any) => log.error("failed to generate title", { error: err }))
     if (text)
       return Session.update(
         input.session.id,

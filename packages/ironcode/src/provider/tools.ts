@@ -7,7 +7,7 @@ import type { Provider } from "./provider"
 
 type ProviderToolEntry = {
   sdk: string
-  tools: Record<string, () => Promise<Tool>>
+  tools: Record<string, () => Promise<any>>
 }
 
 const PROVIDER_TOOLS: Record<string, ProviderToolEntry> = {
@@ -70,7 +70,7 @@ export async function resolveProviderTools(
   model: Provider.Model,
   enabledTools: string[],
 ): Promise<Record<string, Tool>> {
-  const result: Record<string, Tool> = {}
+  const result: Record<string, any> = {}
 
   for (const entry of enabledTools) {
     const [providerKey, toolName] = entry.split(":")

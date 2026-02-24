@@ -79,7 +79,7 @@ export namespace ProviderTransform {
               }
             }
             return part
-          })
+          }) as typeof msg.content
         }
         return msg
       })
@@ -109,7 +109,7 @@ export namespace ProviderTransform {
               }
             }
             return part
-          })
+          }) as typeof msg.content
         }
 
         result.push(msg)
@@ -197,7 +197,7 @@ export namespace ProviderTransform {
       if (shouldUseContentOptions) {
         const lastContent = msg.content[msg.content.length - 1]
         if (lastContent && typeof lastContent === "object") {
-          lastContent.providerOptions = mergeDeep(lastContent.providerOptions ?? {}, providerOptions)
+          ;(lastContent as any).providerOptions = mergeDeep((lastContent as any).providerOptions ?? {}, providerOptions)
           continue
         }
       }
@@ -277,7 +277,7 @@ export namespace ProviderTransform {
         return {
           ...msg,
           providerOptions: remap(msg.providerOptions),
-          content: msg.content.map((part) => ({ ...part, providerOptions: remap(part.providerOptions) })),
+          content: msg.content.map((part) => ({ ...part, providerOptions: remap((part as any).providerOptions) })),
         } as typeof msg
       })
     }

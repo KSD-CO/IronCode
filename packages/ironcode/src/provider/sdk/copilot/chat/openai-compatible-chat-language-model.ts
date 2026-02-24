@@ -57,7 +57,7 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
 
   readonly modelId: OpenAICompatibleChatModelId
   private readonly config: OpenAICompatibleChatConfig
-  private readonly failedResponseHandler: ResponseHandler<APICallError>
+  private readonly failedResponseHandler: ResponseHandler<any>
   private readonly chunkSchema // type inferred via constructor
 
   constructor(modelId: OpenAICompatibleChatModelId, config: OpenAICompatibleChatConfig) {
@@ -198,7 +198,7 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
 
     const {
       responseHeaders,
-      value: responseBody,
+      value: _responseBody,
       rawValue: rawResponse,
     } = await postJsonToApi({
       url: this.config.url({
@@ -212,6 +212,7 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
       abortSignal: options.abortSignal,
       fetch: this.config.fetch,
     })
+    const responseBody = _responseBody as z.infer<typeof OpenAICompatibleChatResponseSchema>
 
     const choice = responseBody.choices[0]
     const content: Array<LanguageModelV2Content> = []
@@ -309,7 +310,7 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
 
     const metadataExtractor = this.config.metadataExtractor?.createStreamExtractor()
 
-    const { responseHeaders, value: response } = await postJsonToApi({
+    const { responseHeaders, value: _response } = await postJsonToApi({
       url: this.config.url({
         path: "/chat/completions",
         modelId: this.modelId,
@@ -321,6 +322,7 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
       abortSignal: options.abortSignal,
       fetch: this.config.fetch,
     })
+    const response = _response as ReadableStream<ParseResult<z.infer<typeof this.chunkSchema>>>
 
     const toolCalls: Array<{
       id: string
