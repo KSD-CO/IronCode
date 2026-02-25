@@ -360,6 +360,10 @@ export namespace SessionProcessor {
                   continue
               }
               if (needsCompaction) break
+              // When a tool is denied, stop processing the stream immediately so
+              // the SDK's multi-step loop doesn't start another LLM call with
+              // incomplete tool results.
+              if (blocked) break
             }
           } catch (e: any) {
             log.error("process", {

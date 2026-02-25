@@ -89,10 +89,54 @@ export namespace Question {
       }
     > = {}
 
+    // Sessions where a question tool call has been approved (needsApproval=false)
+    // but execute hasn't started yet (Question.ask not called). Prevents race
+    // condition in ai@6 parallel execution where other tools' needsApproval runs
+    // before question's execute registers the actual pending entry.
+    const preAsk: Set<string> = new Set()
+
+    // Sessions where the user dismissed/rejected a question without answering.
+    // When this is set, other tools that were waiting should also be blocked
+    // instead of auto-running once the question clears.
+    const rejected: Set<string> = new Set()
+
     return {
       pending,
+      preAsk,
+      rejected,
     }
   })
+
+  // Signal that the question tool has been approved and is about to execute.
+  // Called from needsApproval before execute runs, so other tools see the
+  // signal immediately and wait (fixes ai@6 parallel execution race condition).
+  // Also clears any previous rejected flag so a new question cycle is fresh.
+  export async function preAsk(sessionID: string): Promise<void> {
+    const s = await state()
+    s.preAsk.add(sessionID)
+    s.rejected.delete(sessionID) // reset for a new question cycle
+  }
+
+  // Returns true if the user dismissed/rejected a question in this session
+  // without answering. Used by needsApproval so other tools don't auto-run.
+  export async function wasRejected(sessionID: string): Promise<boolean> {
+    const s = await state()
+    return s.rejected.has(sessionID)
+  }
+
+  // Clear the rejected flag (e.g. when the session step is done and the outer
+  // loop starts fresh so the next user turn isn't inadvertently blocked).
+  export async function clearRejected(sessionID: string): Promise<void> {
+    const s = await state()
+    s.rejected.delete(sessionID)
+  }
+
+  // Remove the pre-ask signal. Called inside ask() when registering actual
+  // pending (atomic transition), and as safety cleanup in execute wrapper.
+  export async function clearPreAsk(sessionID: string): Promise<void> {
+    const s = await state()
+    s.preAsk.delete(sessionID)
+  }
 
   export async function ask(input: {
     sessionID: string
@@ -111,6 +155,9 @@ export namespace Question {
         questions: input.questions,
         tool: input.tool,
       }
+      // Clear preAsk and register actual pending atomically so there is no
+      // window where hasPending returns false between the two states.
+      s.preAsk.delete(input.sessionID)
       s.pending[id] = {
         info,
         resolve,
@@ -151,6 +198,11 @@ export namespace Question {
 
     log.info("rejected", { requestID })
 
+    // Mark the session so that other tools waiting in needsApproval don't
+    // auto-run now that hasPending has cleared. They will see wasRejected=true
+    // and return true (block) instead of proceeding.
+    s.rejected.add(existing.info.sessionID)
+
     Bus.publish(Event.Rejected, {
       sessionID: existing.info.sessionID,
       requestID: existing.info.id,
@@ -171,6 +223,6 @@ export namespace Question {
 
   export async function hasPending(sessionID: string): Promise<boolean> {
     const s = await state()
-    return Object.values(s.pending).some((p) => p.info.sessionID === sessionID)
+    return s.preAsk.has(sessionID) || Object.values(s.pending).some((p) => p.info.sessionID === sessionID)
   }
 }

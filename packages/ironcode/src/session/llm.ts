@@ -10,6 +10,7 @@ import {
   type ToolSet,
   tool,
   jsonSchema,
+  stepCountIs,
 } from "ai"
 import { devToolsMiddleware } from "@ai-sdk/devtools"
 import { clone, mergeDeep, pipe } from "remeda"
@@ -40,6 +41,10 @@ export namespace LLM {
     small?: boolean
     tools: Record<string, Tool>
     retries?: number
+    /** Max tool-call steps the SDK should run before stopping. Default: 1 (current behaviour). */
+    maxSteps?: number
+    /** Message to inject as the last assistant turn when we're on the final step. */
+    lastStepMessage?: string
   }
 
   export type StreamOutput = StreamTextResult<ToolSet, any>
@@ -181,7 +186,30 @@ export namespace LLM {
       })
     }
 
+    // Use AI SDK v6 native tool loop: run up to maxSteps LLM→tools cycles before
+    // stopping. Default is 1 (legacy single-step behaviour) so existing callers
+    // that don't pass maxSteps are unaffected.
+    const maxStepsValue = input.maxSteps ?? 1
+    const lastStepMsg = input.lastStepMessage
+
     return streamText({
+      stopWhen: [({ steps }) => steps.length >= maxStepsValue],
+      // On the final step, inject the "you're about to run out of steps" message
+      // so the model wraps up instead of requesting more tools.
+      prepareStep:
+        lastStepMsg && maxStepsValue > 1
+          ? async ({ steps, messages }) => {
+              if (steps.length >= maxStepsValue - 1) {
+                return {
+                  messages: [
+                    ...messages,
+                    { role: "assistant" as const, content: [{ type: "text" as const, text: lastStepMsg }] },
+                  ],
+                }
+              }
+              return undefined
+            }
+          : undefined,
       onError(error) {
         l.error("stream error", {
           error,

@@ -42,7 +42,6 @@ import { SessionProcessor } from "./processor"
 import { TaskTool } from "@/tool/task"
 import { Tool } from "@/tool/tool"
 import { PermissionNext } from "@/permission/next"
-import { Question } from "@/question"
 import { SessionStatus } from "./status"
 import { LLM } from "./llm"
 import { iife } from "@/util/iife"
@@ -532,7 +531,14 @@ export namespace SessionPrompt {
 
       // normal processing
       const agent = await Agent.get(lastUser.agent)
+      // Total step budget for this agent. The SDK now runs the full tool loop
+      // internally up to this limit; the outer loop only re-runs for session-
+      // level events (compaction, new user messages, errors).
       const maxSteps = agent.steps ?? Infinity
+      // Remaining steps for this outer-loop iteration.
+      // If agent.steps is Infinity we pass Infinity; the SDK loop still ends
+      // naturally when the model stops requesting tools.
+      const remainingSteps = maxSteps === Infinity ? Infinity : Math.max(1, maxSteps - step + 1)
       const isLastStep = step >= maxSteps
       msgs = await insertReminders({
         messages: msgs,
@@ -648,17 +654,19 @@ export namespace SessionPrompt {
         system: [...(await SystemPrompt.environment(model)), ...(await InstructionPrompt.system())],
         messages: [
           ...(await MessageV2.toModelMessages(sessionMessages, model)),
-          ...(isLastStep
-            ? [
-                {
-                  role: "assistant" as const,
-                  content: MAX_STEPS,
-                },
-              ]
+          // isLastStep fallback: if the outer loop is already on the last step
+          // (e.g. agent.steps = 1 and remainingSteps = 1), inject MAX_STEPS here
+          // directly since prepareStep won't run for a single-step SDK call.
+          ...(isLastStep && remainingSteps <= 1
+            ? [{ role: "assistant" as const, content: MAX_STEPS }]
             : []),
         ],
         tools,
         model,
+        // Let the AI SDK v6 native tool loop run up to remainingSteps LLM→tools
+        // cycles instead of the outer loop calling process() for every step.
+        maxSteps: remainingSteps,
+        lastStepMessage: remainingSteps > 1 ? MAX_STEPS : undefined,
       })
       if (result === "stop") break
       if (result === "compact") {
@@ -701,6 +709,46 @@ export namespace SessionPrompt {
   }) {
     using _ = log.time("resolveTools")
     const tools: Record<string, AITool> = {}
+
+    // Micro-batch scheduler: ai@6 fires executeToolCall() for all tools in a step
+    // concurrently (non-awaited). We collect all execute() calls from the same
+    // event-loop macrotask, move the question tool to the front, then run them
+    // serially. This fixes the race condition where bash's tool-call chunk arrives
+    // before question's in the LLM stream — the setTimeout(0) fires AFTER all
+    // tool executeToolCall microtasks complete, by which point every tool in the
+    // step has added itself to the batch.
+    type BatchEntry = { toolId: string; run: () => Promise<void> }
+    const batch: BatchEntry[] = []
+    let batchScheduled = false
+
+    function batchedExecute<T>(toolId: string, fn: () => Promise<T>): Promise<T> {
+      return new Promise<T>((resolve, reject) => {
+        batch.push({
+          toolId,
+          run: async () => {
+            try {
+              resolve(await fn())
+            } catch (e) {
+              reject(e)
+            }
+          },
+        })
+        if (!batchScheduled) {
+          batchScheduled = true
+          setTimeout(() => {
+            batchScheduled = false
+            const entries = batch.splice(0)
+            // question tool must run first so other tools wait for the user's answer
+            entries.sort((a, b) => (a.toolId === "question" ? -1 : b.toolId === "question" ? 1 : 0))
+            // Chain entries serially so only one tool runs at a time
+            let chain = Promise.resolve<void>(undefined)
+            for (const entry of entries) {
+              chain = chain.then(() => entry.run())
+            }
+          }, 0)
+        }
+      })
+    }
 
     const context = (args: any, options: ToolCallOptions): Tool.Context => ({
       sessionID: input.session.id,
@@ -750,12 +798,10 @@ export namespace SessionPrompt {
         description: item.description,
         inputSchema: jsonSchema(schema as any),
         async needsApproval(args: any, { toolCallId }: { toolCallId: string }) {
-          // question tool must never require permission — it IS the mechanism for asking the user
-          if (item.id === "question") return false
-          // In ai@6, tools execute in parallel. If the question tool is pending (waiting for user
-          // input), block all other tools so they don't run before the user answers.
-          // This restores the sequential behavior that existed in ai@5.
-          if (await Question.hasPending(input.session.id)) return true
+          // question tool never requires permission — it IS the user-input mechanism.
+          if (item.id === "question") {
+            return false
+          }
           const permission = editPermissionTools.has(item.id) ? "edit" : item.id
           const ruleset = PermissionNext.merge(input.agent.permission, input.session.permission ?? [])
           const rule = PermissionNext.evaluate(permission, "*", ruleset)
@@ -777,30 +823,22 @@ export namespace SessionPrompt {
             return true
           }
         },
-        async execute(args, options) {
+        execute(args, options) {
           const ctx = context(args, options)
-          await Plugin.trigger(
-            "tool.execute.before",
-            {
-              tool: item.id,
-              sessionID: ctx.sessionID,
-              callID: ctx.callID,
-            },
-            {
-              args,
-            },
-          )
-          const result = await item.execute(args, ctx)
-          await Plugin.trigger(
-            "tool.execute.after",
-            {
-              tool: item.id,
-              sessionID: ctx.sessionID,
-              callID: ctx.callID,
-            },
-            result,
-          )
-          return result
+          return batchedExecute(item.id, async () => {
+            await Plugin.trigger(
+              "tool.execute.before",
+              { tool: item.id, sessionID: ctx.sessionID, callID: ctx.callID },
+              { args },
+            )
+            const result = await item.execute(args, ctx)
+            await Plugin.trigger(
+              "tool.execute.after",
+              { tool: item.id, sessionID: ctx.sessionID, callID: ctx.callID },
+              result,
+            )
+            return result
+          })
         },
         toModelOutput({ output }: { toolCallId: string; input: unknown; output: any }) {
           return { type: "text", value: output.output }
@@ -816,8 +854,6 @@ export namespace SessionPrompt {
       item.inputSchema = jsonSchema(transformed)
       // Permission check via needsApproval (runs before execute, blocks until user decides)
       ;(item as any).needsApproval = async (_args: any, { toolCallId }: { toolCallId: string }) => {
-        // Block MCP tools too if question tool is pending (ai@6 parallel execution fix)
-        if (await Question.hasPending(input.session.id)) return true
         const ruleset = PermissionNext.merge(input.agent.permission, input.session.permission ?? [])
         const rule = PermissionNext.evaluate(key, "*", ruleset)
         if (rule.action === "allow") return false
@@ -838,81 +874,73 @@ export namespace SessionPrompt {
         }
       }
       // Wrap execute to add plugin hooks and format output
-      item.execute = async (args, opts) => {
+      item.execute = (args, opts) => {
         const ctx = context(args, opts)
+        return batchedExecute(key, async () => {
+          await Plugin.trigger(
+            "tool.execute.before",
+            { tool: key, sessionID: ctx.sessionID, callID: opts.toolCallId },
+            { args },
+          )
 
-        await Plugin.trigger(
-          "tool.execute.before",
-          {
-            tool: key,
-            sessionID: ctx.sessionID,
-            callID: opts.toolCallId,
-          },
-          {
-            args,
-          },
-        )
+          const result = await execute(args, opts)
 
-        const result = await execute(args, opts)
+          await Plugin.trigger(
+            "tool.execute.after",
+            { tool: key, sessionID: ctx.sessionID, callID: opts.toolCallId },
+            result,
+          )
 
-        await Plugin.trigger(
-          "tool.execute.after",
-          {
-            tool: key,
-            sessionID: ctx.sessionID,
-            callID: opts.toolCallId,
-          },
-          result,
-        )
+          // Process MCP result into standard format
+          const textParts: string[] = []
+          const attachments: MessageV2.FilePart[] = []
 
-        const textParts: string[] = []
-        const attachments: MessageV2.FilePart[] = []
-
-        for (const contentItem of result.content) {
-          if (contentItem.type === "text") {
-            textParts.push(contentItem.text)
-          } else if (contentItem.type === "image") {
-            attachments.push({
-              id: Identifier.ascending("part"),
-              sessionID: input.session.id,
-              messageID: input.processor.message.id,
-              type: "file",
-              mime: contentItem.mimeType,
-              url: `data:${contentItem.mimeType};base64,${contentItem.data}`,
-            })
-          } else if (contentItem.type === "resource") {
-            const { resource } = contentItem
-            if (resource.text) {
-              textParts.push(resource.text)
-            }
-            if (resource.blob) {
+          for (const contentItem of result.content) {
+            if (contentItem.type === "text") {
+              textParts.push(contentItem.text)
+            } else if (contentItem.type === "image") {
               attachments.push({
                 id: Identifier.ascending("part"),
                 sessionID: input.session.id,
                 messageID: input.processor.message.id,
                 type: "file",
-                mime: resource.mimeType ?? "application/octet-stream",
-                url: `data:${resource.mimeType ?? "application/octet-stream"};base64,${resource.blob}`,
-                filename: resource.uri,
+                mime: contentItem.mimeType,
+                url: `data:${contentItem.mimeType};base64,${contentItem.data}`,
               })
+            } else if (contentItem.type === "resource") {
+              const { resource } = contentItem
+              if (resource.text) {
+                textParts.push(resource.text)
+              }
+              if (resource.blob) {
+                attachments.push({
+                  id: Identifier.ascending("part"),
+                  sessionID: input.session.id,
+                  messageID: input.processor.message.id,
+                  type: "file",
+                  mime: resource.mimeType ?? "application/octet-stream",
+                  url: `data:${resource.mimeType ?? "application/octet-stream"};base64,${resource.blob}`,
+                  filename: resource.uri,
+                })
+              }
             }
           }
-        }
 
-        const truncated = await Truncate.output(textParts.join("\n\n"), {}, input.agent)
-        const metadata = {
-          ...(result.metadata ?? {}),
-          truncated: truncated.truncated,
-          ...(truncated.truncated && { outputPath: truncated.outputPath }),
-        }
+          const truncated = await Truncate.output(textParts.join("\n\n"), {}, input.agent)
+          const metadata = {
+            ...(result.metadata ?? {}),
+            truncated: truncated.truncated,
+            ...(truncated.truncated && { outputPath: truncated.outputPath }),
+          }
 
-        return {
-          title: "",
-          metadata,
-          output: truncated.content,
-          attachments,
-          content: result.content, // directly return content to preserve ordering when outputting to model
-        }
+          return {
+            title: "",
+            metadata,
+            output: truncated.content,
+            attachments,
+            content: result.content, // directly return content to preserve ordering when outputting to model
+          }
+        })
       }
       item.toModelOutput = (output: any) => {
         return { type: "text" as const, value: output.output ?? "" }
