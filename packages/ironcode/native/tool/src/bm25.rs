@@ -6,13 +6,78 @@ const MIN_TOKEN_LEN: usize = 2;
 
 /// Common code keywords that don't add meaningful search signal
 const STOP_WORDS: &[&str] = &[
-    "fn", "let", "const", "var", "if", "else", "return", "pub", "use", "mod", "impl",
-    "struct", "enum", "trait", "type", "async", "await", "match", "true", "false",
-    "null", "undefined", "void", "new", "class", "extends", "import", "export", "from",
-    "default", "function", "this", "self", "super", "of", "as", "with", "not", "do",
-    "while", "for", "try", "catch", "throw", "get", "set", "the", "a", "an", "and",
-    "or", "but", "in", "on", "at", "to", "is", "it", "be", "was", "are", "has",
-    "have", "had", "that", "this", "mut", "ref", "pub", "priv", "crate", "super",
+    "fn",
+    "let",
+    "const",
+    "var",
+    "if",
+    "else",
+    "return",
+    "pub",
+    "use",
+    "mod",
+    "impl",
+    "struct",
+    "enum",
+    "trait",
+    "type",
+    "async",
+    "await",
+    "match",
+    "true",
+    "false",
+    "null",
+    "undefined",
+    "void",
+    "new",
+    "class",
+    "extends",
+    "import",
+    "export",
+    "from",
+    "default",
+    "function",
+    "this",
+    "self",
+    "super",
+    "of",
+    "as",
+    "with",
+    "not",
+    "do",
+    "while",
+    "for",
+    "try",
+    "catch",
+    "throw",
+    "get",
+    "set",
+    "the",
+    "a",
+    "an",
+    "and",
+    "or",
+    "but",
+    "in",
+    "on",
+    "at",
+    "to",
+    "is",
+    "it",
+    "be",
+    "was",
+    "are",
+    "has",
+    "have",
+    "had",
+    "that",
+    "this",
+    "mut",
+    "ref",
+    "pub",
+    "priv",
+    "crate",
+    "super",
 ];
 
 pub struct Bm25Index {
@@ -117,8 +182,8 @@ impl Bm25Index {
                     }
                     let tf_f = tf as f64;
                     let dl_f = dl as f64;
-                    let score = idf * (tf_f * (K1 + 1.0))
-                        / (tf_f + K1 * (1.0 - B + B * dl_f / avgdl));
+                    let score =
+                        idf * (tf_f * (K1 + 1.0)) / (tf_f + K1 * (1.0 - B + B * dl_f / avgdl));
                     *scores.entry(doc_id).or_insert(0.0) += score;
                 }
             }
@@ -149,9 +214,36 @@ pub fn tokenize(text: &str) -> Vec<String> {
         c.is_whitespace()
             || matches!(
                 c,
-                '.' | ',' | ';' | ':' | '!' | '?' | '(' | ')' | '[' | ']' | '{' | '}'
-                    | '"' | '\'' | '`' | '/' | '\\' | '|' | '<' | '>' | '@' | '#' | '$'
-                    | '%' | '^' | '&' | '*' | '+' | '=' | '~' | '-'
+                '.' | ','
+                    | ';'
+                    | ':'
+                    | '!'
+                    | '?'
+                    | '('
+                    | ')'
+                    | '['
+                    | ']'
+                    | '{'
+                    | '}'
+                    | '"'
+                    | '\''
+                    | '`'
+                    | '/'
+                    | '\\'
+                    | '|'
+                    | '<'
+                    | '>'
+                    | '@'
+                    | '#'
+                    | '$'
+                    | '%'
+                    | '^'
+                    | '&'
+                    | '*'
+                    | '+'
+                    | '='
+                    | '~'
+                    | '-'
             )
     };
 
@@ -249,5 +341,4 @@ mod tests {
         // Document 0 should rank highest for "user authentication"
         assert_eq!(results[0].0, 0);
     }
-
 }

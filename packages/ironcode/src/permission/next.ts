@@ -9,6 +9,7 @@ import { Log } from "@/util/log"
 import { Wildcard } from "@/util/wildcard"
 import os from "os"
 import z from "zod"
+import { evaluateRulesFFI } from "@/tool/ffi"
 
 export namespace PermissionNext {
   const log = Log.create({ service: "permission" })
@@ -231,9 +232,19 @@ export namespace PermissionNext {
   export function evaluate(permission: string, pattern: string, ...rulesets: Ruleset[]): Rule {
     const merged = merge(...rulesets)
     log.info("evaluate", { permission, pattern, ruleset: merged })
+    // Try native FFI evaluation first (if available)
+    try {
+      const rulesJson = JSON.stringify(merged)
+      const res = evaluateRulesFFI(rulesJson, permission, pattern)
+      if (res && typeof res.action === "string") return { action: res.action as Action, permission, pattern }
+    } catch (e) {
+      // ignore and fallback to JS impl
+    }
+
     const match = merged.findLast(
       (rule) => Wildcard.match(permission, rule.permission) && Wildcard.match(pattern, rule.pattern),
     )
+
     return match ?? { action: "ask", permission, pattern: "*" }
   }
 

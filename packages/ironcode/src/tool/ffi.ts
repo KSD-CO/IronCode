@@ -287,6 +287,11 @@ const lib = dlopen(libPath, {
     args: [FFIType.ptr],
     returns: FFIType.void,
   },
+  // rule engine evaluation (optional - provided when native lib built with rule_engine feature)
+  evaluate_rules_json: {
+    args: [FFIType.cstring, FFIType.cstring, FFIType.cstring],
+    returns: FFIType.ptr,
+  },
 })
 
 export function globFFI(pattern: string, search: string = ".") {
@@ -371,6 +376,23 @@ export function readRawFFI(filepath: string): string {
   lib.symbols.free_string(ptr)
 
   return content
+}
+
+export function evaluateRulesFFI(rulesJson: string, permission: string, pattern: string) {
+  try {
+    const ptr = lib.symbols.evaluate_rules_json(
+      Buffer.from(rulesJson + "\0"),
+      Buffer.from(permission + "\0"),
+      Buffer.from(pattern + "\0"),
+    )
+    if (!ptr) return null
+    const jsonStr = new CString(ptr).toString()
+    lib.symbols.free_string(ptr)
+    return JSON.parse(jsonStr)
+  } catch (e) {
+    // If symbol not present or lib not built with feature, return null to allow fallback
+    return null
+  }
 }
 
 // Write file with automatic parent directory creation

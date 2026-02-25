@@ -58,6 +58,10 @@ tree-sitter-cpp = "0.23"
 tree-sitter-php = "0.23.11"
 tree-sitter-scala = "0.24"
 notify = "6.1"  # Cross-platform file system watching
+regex = "1.10"
+
+# Rule engine optional integration (we'll use Rust-side evaluation via FFI)
+rust-rule-engine = { version = "1.19.1", default-features = false }
 
 # Webfetch dependencies (experimental - NOT recommended for production)
 # Benchmark results show TypeScript is better for this use case

@@ -277,7 +277,11 @@ fn block_anchor_replacer(content: &str, find: &str, content_lines: &[&str]) -> V
 }
 
 /// Whitespace normalized replacer
-fn whitespace_normalized_replacer(_content: &str, find: &str, content_lines: &[&str]) -> Vec<String> {
+fn whitespace_normalized_replacer(
+    _content: &str,
+    find: &str,
+    content_lines: &[&str],
+) -> Vec<String> {
     let mut results = Vec::new();
 
     let normalized_find = normalize_whitespace(find);
@@ -320,7 +324,11 @@ fn whitespace_normalized_replacer(_content: &str, find: &str, content_lines: &[&
 }
 
 /// Indentation flexible replacer
-fn indentation_flexible_replacer(_content: &str, find: &str, content_lines: &[&str]) -> Vec<String> {
+fn indentation_flexible_replacer(
+    _content: &str,
+    find: &str,
+    content_lines: &[&str],
+) -> Vec<String> {
     let mut results = Vec::new();
 
     let remove_indentation = |text: &str| -> String {

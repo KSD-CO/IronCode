@@ -266,31 +266,66 @@ fn extract_js_ts_node(
         "function_declaration" | "generator_function_declaration" => {
             if let Some(n) = child.child_by_field_name("name") {
                 let name = qualify(ns_prefix, node_text(&n, source));
-                symbols.push(make_symbol(&child, source, &name, SymbolKind::Function, file_path, lang_name));
+                symbols.push(make_symbol(
+                    &child,
+                    source,
+                    &name,
+                    SymbolKind::Function,
+                    file_path,
+                    lang_name,
+                ));
             }
         }
         "class_declaration" => {
             if let Some(n) = child.child_by_field_name("name") {
                 let name = qualify(ns_prefix, node_text(&n, source));
-                symbols.push(make_symbol(&child, source, &name, SymbolKind::Class, file_path, lang_name));
+                symbols.push(make_symbol(
+                    &child,
+                    source,
+                    &name,
+                    SymbolKind::Class,
+                    file_path,
+                    lang_name,
+                ));
             }
         }
         "interface_declaration" => {
             if let Some(n) = child.child_by_field_name("name") {
                 let name = qualify(ns_prefix, node_text(&n, source));
-                symbols.push(make_symbol(&child, source, &name, SymbolKind::Interface, file_path, lang_name));
+                symbols.push(make_symbol(
+                    &child,
+                    source,
+                    &name,
+                    SymbolKind::Interface,
+                    file_path,
+                    lang_name,
+                ));
             }
         }
         "type_alias_declaration" => {
             if let Some(n) = child.child_by_field_name("name") {
                 let name = qualify(ns_prefix, node_text(&n, source));
-                symbols.push(make_symbol(&child, source, &name, SymbolKind::Type, file_path, lang_name));
+                symbols.push(make_symbol(
+                    &child,
+                    source,
+                    &name,
+                    SymbolKind::Type,
+                    file_path,
+                    lang_name,
+                ));
             }
         }
         "enum_declaration" => {
             if let Some(n) = child.child_by_field_name("name") {
                 let name = qualify(ns_prefix, node_text(&n, source));
-                symbols.push(make_symbol(&child, source, &name, SymbolKind::Enum, file_path, lang_name));
+                symbols.push(make_symbol(
+                    &child,
+                    source,
+                    &name,
+                    SymbolKind::Enum,
+                    file_path,
+                    lang_name,
+                ));
             }
         }
         // export namespace Foo { ... }  or  namespace Foo { ... }
@@ -301,7 +336,14 @@ fn extract_js_ts_node(
                 let qualified_ns = qualify(ns_prefix, ns_name);
                 // body is a statement_block — recurse into it
                 if let Some(body) = child.child_by_field_name("body") {
-                    extract_js_ts_scope(source, body, file_path, lang_name, Some(&qualified_ns), symbols);
+                    extract_js_ts_scope(
+                        source,
+                        body,
+                        file_path,
+                        lang_name,
+                        Some(&qualified_ns),
+                        symbols,
+                    );
                 }
             }
         }
@@ -310,12 +352,21 @@ fn extract_js_ts_node(
             for export_child in child.children(&mut ec) {
                 // Pass `in_export = true` by using a dedicated call so that
                 // exported const declarations are always indexed.
-                extract_js_ts_node_exported(source, export_child, file_path, lang_name, ns_prefix, symbols);
+                extract_js_ts_node_exported(
+                    source,
+                    export_child,
+                    file_path,
+                    lang_name,
+                    ns_prefix,
+                    symbols,
+                );
             }
         }
         "lexical_declaration" | "variable_declaration" => {
             // Non-exported: only index const foo = () => { ... } or const foo = function() { ... }
-            extract_js_ts_var_decl(source, child, file_path, lang_name, ns_prefix, false, symbols);
+            extract_js_ts_var_decl(
+                source, child, file_path, lang_name, ns_prefix, false, symbols,
+            );
         }
         _ => {}
     }
@@ -333,7 +384,9 @@ fn extract_js_ts_node_exported(
 ) {
     match child.kind() {
         "lexical_declaration" | "variable_declaration" => {
-            extract_js_ts_var_decl(source, child, file_path, lang_name, ns_prefix, true, symbols);
+            extract_js_ts_var_decl(
+                source, child, file_path, lang_name, ns_prefix, true, symbols,
+            );
         }
         _ => {
             extract_js_ts_node(source, child, file_path, lang_name, ns_prefix, symbols);
@@ -369,12 +422,29 @@ fn extract_js_ts_var_decl(
         let name = qualify(ns_prefix, node_text(&name_node, source));
         let vk = value_node.kind();
         if matches!(vk, "arrow_function" | "function" | "function_expression") {
-            symbols.push(make_symbol(&declarator, source, &name, SymbolKind::Function, file_path, lang_name));
+            symbols.push(make_symbol(
+                &declarator,
+                source,
+                &name,
+                SymbolKind::Function,
+                file_path,
+                lang_name,
+            ));
         } else if exported {
             // e.g. `export const TaskTool = Tool.define(...)` or `export const Schema = z.object(...)`
             // Skip trivial primitives (string/number/boolean/null/undefined literals)
-            if !matches!(vk, "string" | "number" | "true" | "false" | "null" | "undefined") {
-                symbols.push(make_symbol(&declarator, source, &name, SymbolKind::Variable, file_path, lang_name));
+            if !matches!(
+                vk,
+                "string" | "number" | "true" | "false" | "null" | "undefined"
+            ) {
+                symbols.push(make_symbol(
+                    &declarator,
+                    source,
+                    &name,
+                    SymbolKind::Variable,
+                    file_path,
+                    lang_name,
+                ));
             }
         }
     }
@@ -394,13 +464,27 @@ fn extract_python(
             "function_definition" | "async_function_definition" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = node_text(&n, source).to_string();
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Function, file_path, "python"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Function,
+                        file_path,
+                        "python",
+                    ));
                 }
             }
             "class_definition" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = node_text(&n, source).to_string();
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Class, file_path, "python"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Class,
+                        file_path,
+                        "python",
+                    ));
                 }
             }
             "decorated_definition" => {
@@ -410,13 +494,27 @@ fn extract_python(
                         "function_definition" | "async_function_definition" => {
                             if let Some(n) = inner.child_by_field_name("name") {
                                 let name = node_text(&n, source).to_string();
-                                symbols.push(make_symbol(&child, source, &name, SymbolKind::Function, file_path, "python"));
+                                symbols.push(make_symbol(
+                                    &child,
+                                    source,
+                                    &name,
+                                    SymbolKind::Function,
+                                    file_path,
+                                    "python",
+                                ));
                             }
                         }
                         "class_definition" => {
                             if let Some(n) = inner.child_by_field_name("name") {
                                 let name = node_text(&n, source).to_string();
-                                symbols.push(make_symbol(&child, source, &name, SymbolKind::Class, file_path, "python"));
+                                symbols.push(make_symbol(
+                                    &child,
+                                    source,
+                                    &name,
+                                    SymbolKind::Class,
+                                    file_path,
+                                    "python",
+                                ));
                             }
                         }
                         _ => {}
@@ -442,31 +540,66 @@ fn extract_rust(
             "function_item" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = node_text(&n, source).to_string();
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Function, file_path, "rust"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Function,
+                        file_path,
+                        "rust",
+                    ));
                 }
             }
             "struct_item" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = node_text(&n, source).to_string();
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Struct, file_path, "rust"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Struct,
+                        file_path,
+                        "rust",
+                    ));
                 }
             }
             "enum_item" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = node_text(&n, source).to_string();
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Enum, file_path, "rust"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Enum,
+                        file_path,
+                        "rust",
+                    ));
                 }
             }
             "trait_item" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = node_text(&n, source).to_string();
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Trait, file_path, "rust"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Trait,
+                        file_path,
+                        "rust",
+                    ));
                 }
             }
             "type_item" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = node_text(&n, source).to_string();
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Type, file_path, "rust"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Type,
+                        file_path,
+                        "rust",
+                    ));
                 }
             }
             "impl_item" => {
@@ -518,13 +651,27 @@ fn extract_go(
             "function_declaration" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = node_text(&n, source).to_string();
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Function, file_path, "go"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Function,
+                        file_path,
+                        "go",
+                    ));
                 }
             }
             "method_declaration" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = node_text(&n, source).to_string();
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Method, file_path, "go"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Method,
+                        file_path,
+                        "go",
+                    ));
                 }
             }
             "type_declaration" => {
@@ -541,7 +688,9 @@ fn extract_go(
                                     _ => SymbolKind::Type,
                                 })
                                 .unwrap_or(SymbolKind::Type);
-                            symbols.push(make_symbol(&type_spec, source, &name, kind, file_path, "go"));
+                            symbols.push(make_symbol(
+                                &type_spec, source, &name, kind, file_path, "go",
+                            ));
                         }
                     }
                 }
@@ -575,7 +724,14 @@ fn extract_java_scope(
             "class_declaration" | "record_declaration" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(class_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Class, file_path, "java"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Class,
+                        file_path,
+                        "java",
+                    ));
                     // Recurse into class body for methods
                     if let Some(body) = child.child_by_field_name("body") {
                         let class_name = qualify(class_prefix, node_text(&n, source));
@@ -586,31 +742,66 @@ fn extract_java_scope(
             "interface_declaration" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(class_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Interface, file_path, "java"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Interface,
+                        file_path,
+                        "java",
+                    ));
                 }
             }
             "enum_declaration" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(class_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Enum, file_path, "java"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Enum,
+                        file_path,
+                        "java",
+                    ));
                 }
             }
             "annotation_type_declaration" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(class_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Interface, file_path, "java"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Interface,
+                        file_path,
+                        "java",
+                    ));
                 }
             }
             "method_declaration" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(class_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Method, file_path, "java"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Method,
+                        file_path,
+                        "java",
+                    ));
                 }
             }
             "constructor_declaration" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(class_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Function, file_path, "java"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Function,
+                        file_path,
+                        "java",
+                    ));
                 }
             }
             _ => {}
@@ -659,7 +850,9 @@ fn extract_csharp_scope(
                 };
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(ns_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, kind, file_path, "csharp"));
+                    symbols.push(make_symbol(
+                        &child, source, &name, kind, file_path, "csharp",
+                    ));
                     // Recurse for nested methods
                     if let Some(body) = child.child_by_field_name("body") {
                         let class_name = qualify(ns_prefix, node_text(&n, source));
@@ -670,25 +863,53 @@ fn extract_csharp_scope(
             "interface_declaration" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(ns_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Interface, file_path, "csharp"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Interface,
+                        file_path,
+                        "csharp",
+                    ));
                 }
             }
             "enum_declaration" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(ns_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Enum, file_path, "csharp"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Enum,
+                        file_path,
+                        "csharp",
+                    ));
                 }
             }
             "method_declaration" | "local_function_statement" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(ns_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Method, file_path, "csharp"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Method,
+                        file_path,
+                        "csharp",
+                    ));
                 }
             }
             "constructor_declaration" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(ns_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Function, file_path, "csharp"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Function,
+                        file_path,
+                        "csharp",
+                    ));
                 }
             }
             _ => {}
@@ -720,7 +941,14 @@ fn extract_ruby_scope(
             "class" | "singleton_class" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(class_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Class, file_path, "ruby"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Class,
+                        file_path,
+                        "ruby",
+                    ));
                     if let Some(body) = child.child_by_field_name("body") {
                         let class_name = qualify(class_prefix, node_text(&n, source));
                         extract_ruby_scope(source, body, file_path, Some(&class_name), symbols);
@@ -730,7 +958,14 @@ fn extract_ruby_scope(
             "module" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(class_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Module, file_path, "ruby"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Module,
+                        file_path,
+                        "ruby",
+                    ));
                     if let Some(body) = child.child_by_field_name("body") {
                         let mod_name = qualify(class_prefix, node_text(&n, source));
                         extract_ruby_scope(source, body, file_path, Some(&mod_name), symbols);
@@ -740,13 +975,27 @@ fn extract_ruby_scope(
             "method" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(class_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Method, file_path, "ruby"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Method,
+                        file_path,
+                        "ruby",
+                    ));
                 }
             }
             "singleton_method" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(class_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Method, file_path, "ruby"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Method,
+                        file_path,
+                        "ruby",
+                    ));
                 }
             }
             _ => {}
@@ -759,14 +1008,15 @@ fn extract_ruby_scope(
 /// Walk declarator chain to find the innermost function/identifier name.
 fn c_declarator_name<'a>(node: tree_sitter::Node<'a>, source: &'a [u8]) -> Option<&'a str> {
     match node.kind() {
-        "identifier" | "field_identifier" | "type_identifier" => {
-            Some(node_text(&node, source))
-        }
-        "function_declarator" | "pointer_declarator" | "reference_declarator"
-        | "abstract_declarator" | "abstract_function_declarator" | "qualified_identifier" => {
-            node.child_by_field_name("declarator")
-                .and_then(|d| c_declarator_name(d, source))
-        }
+        "identifier" | "field_identifier" | "type_identifier" => Some(node_text(&node, source)),
+        "function_declarator"
+        | "pointer_declarator"
+        | "reference_declarator"
+        | "abstract_declarator"
+        | "abstract_function_declarator"
+        | "qualified_identifier" => node
+            .child_by_field_name("declarator")
+            .and_then(|d| c_declarator_name(d, source)),
         _ => None,
     }
 }
@@ -783,7 +1033,14 @@ fn extract_c(
             "function_definition" => {
                 if let Some(decl) = child.child_by_field_name("declarator") {
                     if let Some(name) = c_declarator_name(decl, source) {
-                        symbols.push(make_symbol(&child, source, name, SymbolKind::Function, file_path, "c"));
+                        symbols.push(make_symbol(
+                            &child,
+                            source,
+                            name,
+                            SymbolKind::Function,
+                            file_path,
+                            "c",
+                        ));
                     }
                 }
             }
@@ -797,7 +1054,14 @@ fn extract_c(
                             if let Some(n) = decl_child.child_by_field_name("name") {
                                 if decl_child.child_by_field_name("body").is_some() {
                                     let name = node_text(&n, source);
-                                    symbols.push(make_symbol(&decl_child, source, name, SymbolKind::Struct, file_path, "c"));
+                                    symbols.push(make_symbol(
+                                        &decl_child,
+                                        source,
+                                        name,
+                                        SymbolKind::Struct,
+                                        file_path,
+                                        "c",
+                                    ));
                                 }
                             }
                         }
@@ -805,15 +1069,38 @@ fn extract_c(
                             if let Some(n) = decl_child.child_by_field_name("name") {
                                 if decl_child.child_by_field_name("body").is_some() {
                                     let name = node_text(&n, source);
-                                    symbols.push(make_symbol(&decl_child, source, name, SymbolKind::Enum, file_path, "c"));
+                                    symbols.push(make_symbol(
+                                        &decl_child,
+                                        source,
+                                        name,
+                                        SymbolKind::Enum,
+                                        file_path,
+                                        "c",
+                                    ));
                                 }
                             }
                         }
                         "type_identifier" => {
                             // typedef struct { ... } TypeName; — the TypeName is the last declarator
-                            if child.child_by_field_name("type").map(|t| matches!(t.kind(), "struct_specifier" | "union_specifier" | "enum_specifier")).unwrap_or(false) {
+                            if child
+                                .child_by_field_name("type")
+                                .map(|t| {
+                                    matches!(
+                                        t.kind(),
+                                        "struct_specifier" | "union_specifier" | "enum_specifier"
+                                    )
+                                })
+                                .unwrap_or(false)
+                            {
                                 let name = node_text(&decl_child, source);
-                                symbols.push(make_symbol(&child, source, name, SymbolKind::Type, file_path, "c"));
+                                symbols.push(make_symbol(
+                                    &child,
+                                    source,
+                                    name,
+                                    SymbolKind::Type,
+                                    file_path,
+                                    "c",
+                                ));
                             }
                         }
                         _ => {}
@@ -875,7 +1162,11 @@ fn extract_cpp_scope(
                 if let Some(decl) = child.child_by_field_name("declarator") {
                     if let Some(name) = c_declarator_name(decl, source) {
                         let full = qualify(ns_prefix, name);
-                        let kind = if ns_prefix.is_some() { SymbolKind::Method } else { SymbolKind::Function };
+                        let kind = if ns_prefix.is_some() {
+                            SymbolKind::Method
+                        } else {
+                            SymbolKind::Function
+                        };
                         symbols.push(make_symbol(&child, source, &full, kind, file_path, "cpp"));
                     }
                 }
@@ -883,13 +1174,27 @@ fn extract_cpp_scope(
             "enum_specifier" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(ns_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Enum, file_path, "cpp"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Enum,
+                        file_path,
+                        "cpp",
+                    ));
                 }
             }
             "type_alias_declaration" | "alias_declaration" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(ns_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Type, file_path, "cpp"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Type,
+                        file_path,
+                        "cpp",
+                    ));
                 }
             }
             _ => {}
@@ -921,13 +1226,27 @@ fn extract_php_scope(
             "function_definition" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(class_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Function, file_path, "php"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Function,
+                        file_path,
+                        "php",
+                    ));
                 }
             }
             "class_declaration" | "abstract_class_declaration" | "final_class_declaration" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(class_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Class, file_path, "php"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Class,
+                        file_path,
+                        "php",
+                    ));
                     if let Some(body) = child.child_by_field_name("body") {
                         let class_name = qualify(class_prefix, node_text(&n, source));
                         extract_php_scope(source, body, file_path, Some(&class_name), symbols);
@@ -937,25 +1256,53 @@ fn extract_php_scope(
             "interface_declaration" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(class_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Interface, file_path, "php"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Interface,
+                        file_path,
+                        "php",
+                    ));
                 }
             }
             "trait_declaration" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(class_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Trait, file_path, "php"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Trait,
+                        file_path,
+                        "php",
+                    ));
                 }
             }
             "method_declaration" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(class_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Method, file_path, "php"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Method,
+                        file_path,
+                        "php",
+                    ));
                 }
             }
             "enum_declaration" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(class_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Enum, file_path, "php"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Enum,
+                        file_path,
+                        "php",
+                    ));
                 }
             }
             // PHP wraps content in several container nodes — recurse into them
@@ -993,7 +1340,14 @@ fn extract_scala_scope(
             "class_definition" | "case_class_definition" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(ns_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Class, file_path, "scala"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Class,
+                        file_path,
+                        "scala",
+                    ));
                     if let Some(body) = child.child_by_field_name("body") {
                         let class_name = qualify(ns_prefix, node_text(&n, source));
                         extract_scala_scope(source, body, file_path, Some(&class_name), symbols);
@@ -1003,7 +1357,14 @@ fn extract_scala_scope(
             "object_definition" | "case_object_definition" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(ns_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Module, file_path, "scala"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Module,
+                        file_path,
+                        "scala",
+                    ));
                     if let Some(body) = child.child_by_field_name("body") {
                         let obj_name = qualify(ns_prefix, node_text(&n, source));
                         extract_scala_scope(source, body, file_path, Some(&obj_name), symbols);
@@ -1013,26 +1374,51 @@ fn extract_scala_scope(
             "trait_definition" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(ns_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Trait, file_path, "scala"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Trait,
+                        file_path,
+                        "scala",
+                    ));
                 }
             }
             "function_definition" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(ns_prefix, node_text(&n, source));
-                    let kind = if ns_prefix.is_some() { SymbolKind::Method } else { SymbolKind::Function };
+                    let kind = if ns_prefix.is_some() {
+                        SymbolKind::Method
+                    } else {
+                        SymbolKind::Function
+                    };
                     symbols.push(make_symbol(&child, source, &name, kind, file_path, "scala"));
                 }
             }
             "val_definition" | "var_definition" => {
                 if let Some(n) = child.child_by_field_name("pattern") {
                     let name = qualify(ns_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Variable, file_path, "scala"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Variable,
+                        file_path,
+                        "scala",
+                    ));
                 }
             }
             "type_definition" => {
                 if let Some(n) = child.child_by_field_name("name") {
                     let name = qualify(ns_prefix, node_text(&n, source));
-                    symbols.push(make_symbol(&child, source, &name, SymbolKind::Type, file_path, "scala"));
+                    symbols.push(make_symbol(
+                        &child,
+                        source,
+                        &name,
+                        SymbolKind::Type,
+                        file_path,
+                        "scala",
+                    ));
                 }
             }
             _ => {}

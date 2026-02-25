@@ -22,6 +22,114 @@ pub mod watcher;
 #[cfg(feature = "webfetch")]
 pub mod webfetch;
 
+// Optional integration point for rule evaluation using `rust-rule-engine`.
+// We keep it behind a cargo feature to avoid pulling heavy optional deps by default.
+#[cfg(feature = "rule_engine")]
+mod rule_engine_integration {
+    use serde_json::json;
+    use std::ffi::{CStr, CString};
+    use std::os::raw::c_char;
+
+    use rust_rule_engine::{Facts, GRLParser, KnowledgeBase, RustRuleEngine};
+
+    #[no_mangle]
+    pub unsafe extern "C" fn evaluate_rules_json(
+        rules_json: *const c_char,
+        permission: *const c_char,
+        pattern: *const c_char,
+    ) -> *mut c_char {
+        if rules_json.is_null() || permission.is_null() || pattern.is_null() {
+            return std::ptr::null_mut();
+        }
+
+        let rules_str = match CStr::from_ptr(rules_json).to_str() {
+            Ok(s) => s,
+            Err(_) => return std::ptr::null_mut(),
+        };
+        let permission_str = match CStr::from_ptr(permission).to_str() {
+            Ok(s) => s,
+            Err(_) => return std::ptr::null_mut(),
+        };
+        let pattern_str = match CStr::from_ptr(pattern).to_str() {
+            Ok(s) => s,
+            Err(_) => return std::ptr::null_mut(),
+        };
+
+        // Parse incoming rules JSON into facts or GRL as needed. For now we support two forms:
+        // 1) JSON array of objects { permission, pattern, action }
+        // 2) GRL string (if rules_json contains 'rule ' token we'll try parsing as GRL)
+
+        // Prepare engine and facts
+        let kb = KnowledgeBase::new("IronCode");
+        let mut engine = RustRuleEngine::new(kb);
+        let mut facts = Facts::new();
+        facts.set("permission", permission_str.to_string()).ok();
+        facts.set("pattern", pattern_str.to_string()).ok();
+
+        // If GRL-looking input, parse it
+        if rules_str.contains("rule ") {
+            if let Ok(parsed) = GRLParser::parse_rules(rules_str) {
+                for r in parsed {
+                    if let Err(_) = engine.knowledge_base().add_rule(r) {}
+                }
+            }
+        } else {
+            // Try parse JSON rules and convert to GRL-like rules with salience
+            if let Ok(arr) = serde_json::from_str::<serde_json::Value>(rules_str) {
+                if let Some(vec) = arr.as_array() {
+                    let mut salience = 0i32;
+                    for item in vec.iter() {
+                        salience += 1;
+                        let permission_val = item
+                            .get("permission")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("*");
+                        let pattern_val =
+                            item.get("pattern").and_then(|v| v.as_str()).unwrap_or("*");
+                        let action_val =
+                            item.get("action").and_then(|v| v.as_str()).unwrap_or("ask");
+                        // Create a simple GRL rule text that sets facts.result = action
+                        let grl = format!(
+                            r#"
+                            rule "r_{salience}" salience {salience} {{
+                                when
+                                    permission == "{perm}" && pattern == "{pat}"
+                                then
+                                    facts.result = "{act}";
+                            }}
+                        "#,
+                            salience = salience,
+                            perm = permission_val,
+                            pat = pattern_val,
+                            act = action_val
+                        );
+                        if let Ok(parsed) = GRLParser::parse_rules(&grl) {
+                            for r in parsed {
+                                let _ = engine.knowledge_base().add_rule(r);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Execute engine
+        let _ = engine.execute(&facts);
+
+        // Read result from facts
+        let result = facts
+            .get("result")
+            .and_then(|v| v.as_string())
+            .unwrap_or("ask".to_string());
+
+        let out = json!({ "action": result });
+        match serde_json::to_string(&out) {
+            Ok(s) => CString::new(s).unwrap().into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        }
+    }
+}
+
 /// # Safety
 /// This function is unsafe because it dereferences raw C string pointers.
 /// The caller must ensure that both `pattern` and `search` are valid, non-null,
@@ -1766,10 +1874,7 @@ pub unsafe extern "C" fn codesearch_index_ffi(project_path: *const c_char) -> *m
 #[no_mangle]
 /// # Safety
 /// `query` must be a valid, non-null, null-terminated C string.
-pub unsafe extern "C" fn codesearch_search_ffi(
-    query: *const c_char,
-    top_k: i32,
-) -> *mut c_char {
+pub unsafe extern "C" fn codesearch_search_ffi(query: *const c_char, top_k: i32) -> *mut c_char {
     let query_str = unsafe {
         if query.is_null() {
             return std::ptr::null_mut();

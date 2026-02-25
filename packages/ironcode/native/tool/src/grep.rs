@@ -159,7 +159,11 @@ fn grep(
         }
 
         if m.line_text.len() > MAX_LINE_LENGTH {
-            output_lines.push(format!("  Line {}: {}...", m.line_num, &m.line_text[..MAX_LINE_LENGTH]));
+            output_lines.push(format!(
+                "  Line {}: {}...",
+                m.line_num,
+                &m.line_text[..MAX_LINE_LENGTH]
+            ));
         } else {
             output_lines.push(format!("  Line {}: {}", m.line_num, &m.line_text));
         }
