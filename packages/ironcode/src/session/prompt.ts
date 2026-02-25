@@ -531,14 +531,7 @@ export namespace SessionPrompt {
 
       // normal processing
       const agent = await Agent.get(lastUser.agent)
-      // Total step budget for this agent. The SDK now runs the full tool loop
-      // internally up to this limit; the outer loop only re-runs for session-
-      // level events (compaction, new user messages, errors).
       const maxSteps = agent.steps ?? Infinity
-      // Remaining steps for this outer-loop iteration.
-      // If agent.steps is Infinity we pass Infinity; the SDK loop still ends
-      // naturally when the model stops requesting tools.
-      const remainingSteps = maxSteps === Infinity ? Infinity : Math.max(1, maxSteps - step + 1)
       const isLastStep = step >= maxSteps
       msgs = await insertReminders({
         messages: msgs,
@@ -654,19 +647,10 @@ export namespace SessionPrompt {
         system: [...(await SystemPrompt.environment(model)), ...(await InstructionPrompt.system())],
         messages: [
           ...(await MessageV2.toModelMessages(sessionMessages, model)),
-          // isLastStep fallback: if the outer loop is already on the last step
-          // (e.g. agent.steps = 1 and remainingSteps = 1), inject MAX_STEPS here
-          // directly since prepareStep won't run for a single-step SDK call.
-          ...(isLastStep && remainingSteps <= 1
-            ? [{ role: "assistant" as const, content: MAX_STEPS }]
-            : []),
+          ...(isLastStep ? [{ role: "assistant" as const, content: MAX_STEPS }] : []),
         ],
         tools,
         model,
-        // Let the AI SDK v6 native tool loop run up to remainingSteps LLM→tools
-        // cycles instead of the outer loop calling process() for every step.
-        maxSteps: remainingSteps,
-        lastStepMessage: remainingSteps > 1 ? MAX_STEPS : undefined,
       })
       if (result === "stop") break
       if (result === "compact") {

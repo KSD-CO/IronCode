@@ -384,6 +384,16 @@ export namespace SessionProcessor {
               await SessionRetry.sleep(delay, input.abort).catch(() => {})
               continue
             }
+            // Context-length errors mean the prompt is too large to send.
+            // Trigger compaction so the outer loop can summarise before retrying.
+            if (isContextLengthError(error)) {
+              log.warn("context length exceeded — triggering compaction", {
+                sessionID: input.sessionID,
+                message: error.data?.message,
+              })
+              needsCompaction = true
+              break
+            }
             input.assistantMessage.error = error
             Bus.publish(Session.Event.Error, {
               sessionID: input.assistantMessage.sessionID,
@@ -432,5 +442,23 @@ export namespace SessionProcessor {
       },
     }
     return result
+  }
+
+  /** Detect errors that mean the prompt is too long for the model to process. */
+  function isContextLengthError(error: ReturnType<typeof MessageV2.fromError>): boolean {
+    const msg: string = (error as any)?.data?.message ?? ""
+    if (!msg) return false
+    // OpenAI: code = "context_length_exceeded"; message contains "maximum context length"
+    // LiteLLM / custom providers: "prompt token count of X exceeds the limit of Y"
+    // Anthropic: "prompt is too long"
+    return (
+      msg.includes("context_length_exceeded") ||
+      msg.includes("maximum context length") ||
+      msg.includes("prompt token count") ||
+      msg.includes("prompt is too long") ||
+      msg.includes("Request too large") ||
+      msg.includes("context window") ||
+      msg.includes("token limit")
+    )
   }
 }
