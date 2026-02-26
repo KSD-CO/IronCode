@@ -58,6 +58,7 @@ tree-sitter-cpp = "0.23"
 tree-sitter-php = "0.23.11"
 tree-sitter-scala = "0.24"
 notify = "6.1"  # Cross-platform file system watching
+rust-rule-engine = "1.19.0"  # GRL rule engine for BashArity command prefix lookup
 
 # Webfetch dependencies (experimental - NOT recommended for production)
 # Benchmark results show TypeScript is better for this use case

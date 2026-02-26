@@ -11,7 +11,6 @@ import { Filesystem } from "@/util/filesystem"
 import { Flag } from "@/flag/flag.ts"
 import { Shell } from "@/shell/shell"
 
-import { BashArity } from "@/permission/arity"
 import { Truncate } from "./truncation"
 import { Plugin } from "@/plugin"
 import { parseBashCommandFFI } from "./ffi"

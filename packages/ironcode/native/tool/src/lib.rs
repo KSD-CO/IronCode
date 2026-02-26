@@ -19,6 +19,7 @@ pub mod terminal;
 pub mod types;
 pub mod vcs;
 pub mod watcher;
+pub mod wildcard;
 #[cfg(feature = "webfetch")]
 pub mod webfetch;
 
@@ -1834,6 +1835,60 @@ pub unsafe extern "C" fn codesearch_stats_ffi() -> *mut c_char {
             Ok(json) => CString::new(json).unwrap().into_raw(),
             Err(_) => std::ptr::null_mut(),
         },
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// Match a string against a wildcard pattern.
+/// Returns 1 if matches, 0 if not, -1 on null input.
+///
+/// # Safety
+/// The caller must ensure `s` and `pattern` are valid, non-null, null-terminated C strings.
+#[no_mangle]
+pub unsafe extern "C" fn wildcard_match_ffi(s: *const c_char, pattern: *const c_char) -> i32 {
+    let s_str = unsafe {
+        if s.is_null() {
+            return -1;
+        }
+        CStr::from_ptr(s).to_str().unwrap_or("")
+    };
+    let pattern_str = unsafe {
+        if pattern.is_null() {
+            return -1;
+        }
+        CStr::from_ptr(pattern).to_str().unwrap_or("")
+    };
+    if wildcard::wildcard_match(s_str, pattern_str) {
+        1
+    } else {
+        0
+    }
+}
+
+/// Extract command prefix using rust-rule-engine (mirrors BashArity.prefix from TS).
+/// Input: JSON array of tokens e.g. `["git", "checkout", "main"]`
+/// Output: prefix string e.g. `"git checkout"`
+///
+/// # Safety
+/// The caller must ensure `tokens_json` is a valid, non-null, null-terminated C string.
+#[no_mangle]
+pub unsafe extern "C" fn extract_prefix_ffi(tokens_json: *const c_char) -> *mut c_char {
+    let json_str = unsafe {
+        if tokens_json.is_null() {
+            return std::ptr::null_mut();
+        }
+        match CStr::from_ptr(tokens_json).to_str() {
+            Ok(s) => s,
+            Err(_) => return std::ptr::null_mut(),
+        }
+    };
+    let tokens: Vec<String> = match serde_json::from_str(json_str) {
+        Ok(v) => v,
+        Err(_) => return std::ptr::null_mut(),
+    };
+    let result = shell::extract_command_prefix(&tokens);
+    match CString::new(result) {
+        Ok(c) => c.into_raw(),
         Err(_) => std::ptr::null_mut(),
     }
 }
