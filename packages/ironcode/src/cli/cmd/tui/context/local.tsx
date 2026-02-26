@@ -231,7 +231,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           return {
             provider: provider?.name ?? value.providerID,
             model: info?.name ?? value.modelID,
-            reasoning: info?.capabilities?.reasoning ?? false,
+            reasoning: (info as any)?.reasoning ?? false,
           }
         }),
         cycle(direction: 1 | -1) {
