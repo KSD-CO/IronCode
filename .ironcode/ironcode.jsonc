@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ironcode.cloud/config.json",
+  // "enterprise": {
+  //   "url": "https://enterprise.dev.ironcode.cloud",
+  // },
+  "provider": {
+    "ironcode": {
+      "options": {},
+    },
+  },
+  "mcp": {},
+  "tools": {
+    "github-triage": false,
+    "github-pr-search": false,
+  },
+}

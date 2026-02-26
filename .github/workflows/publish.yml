@@ -1,0 +1,180 @@
+name: publish
+run-name: "${{ format('release {0}', inputs.bump) }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Bump major, minor, or patch"
+        required: false
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+      version:
+        description: "Override version (optional)"
+        required: false
+        type: string
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.version || inputs.bump }}
+
+permissions:
+  id-token: write
+  contents: write
+  packages: write
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    if: github.repository == 'KSD-CO/IronCode'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup-bun
+
+      - id: version
+        run: bun ./script/version.ts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          IRONCODE_BUMP: ${{ inputs.bump }}
+          IRONCODE_VERSION: ${{ inputs.version }}
+          IRONCODE_API_KEY: ${{ secrets.IRONCODE_API_KEY }}
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      release: ${{ steps.version.outputs.release }}
+      tag: ${{ steps.version.outputs.tag }}
+
+  build-cli:
+    needs: version
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: macos-latest
+            platform: darwin
+          - os: windows-latest
+            platform: win32
+    runs-on: ${{ matrix.os }}
+    if: github.repository == 'KSD-CO/IronCode'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+
+      - uses: ./.github/actions/setup-bun
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: packages/ironcode/native/tool
+          shared-key: cli-${{ matrix.platform }}
+
+      - name: Build native Rust library
+        run: |
+          cd packages/ironcode/native/tool
+          cargo build --release
+
+      - name: Build
+        id: build
+        run: bun ./packages/ironcode/script/build.ts --single
+        env:
+          IRONCODE_VERSION: ${{ needs.version.outputs.version }}
+          IRONCODE_RELEASE: ${{ needs.version.outputs.release }}
+          GH_TOKEN: ${{ github.token }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ironcode-cli-${{ matrix.platform }}
+          path: packages/ironcode/dist
+
+      - name: Upload Rust library (Linux only)
+        if: matrix.platform == 'linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-native-library
+          path: packages/ironcode/native/tool/target/release/libironcode_tool.so
+
+    outputs:
+      version: ${{ needs.version.outputs.version }}
+
+  publish:
+    needs:
+      - version
+      - build-cli
+    if: ${{ always() && needs.version.result == 'success' && needs.build-cli.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-bun
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Setup git user
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Download all CLI artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ironcode-cli-*
+          path: packages/ironcode/dist
+          merge-multiple: true
+
+      - name: Download Rust native library
+        uses: actions/download-artifact@v4
+        with:
+          name: rust-native-library
+          path: packages/ironcode/native/tool/target/release
+
+      - name: Verify artifacts
+        run: |
+          echo "=== Checking dist folder ==="
+          ls -la packages/ironcode/dist || echo "dist not found"
+          echo "=== Checking dist contents ==="
+          find packages/ironcode/dist -type f | head -20 || echo "no files"
+
+      # AUR publishing temporarily disabled - uncomment when AUR_KEY secret is configured
+      # - name: Cache apt packages (AUR)
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: /var/cache/apt/archives
+      #     key: ${{ runner.os }}-apt-aur-${{ hashFiles('.github/workflows/publish.yml') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-apt-aur-
+
+      # - name: Setup SSH for AUR
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install -y pacman-package-manager
+      #     mkdir -p ~/.ssh
+      #     echo "${{ secrets.AUR_KEY }}" > ~/.ssh/id_rsa
+      #     chmod 600 ~/.ssh/id_rsa
+      #     git config --global user.email "ttvuhm@gmail.com"
+      #     git config --global user.name "ironcode"
+      #     ssh-keyscan -H aur.archlinux.org >> ~/.ssh/known_hosts || true
+
+      - run: bun ./script/publish.ts
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          IRONCODE_VERSION: ${{ needs.version.outputs.version }}
+          IRONCODE_RELEASE: ${{ needs.version.outputs.release }}
+          SKIP_AUR: "true" # Temporarily disable AUR publishing - remove when AUR_KEY is configured
+          AUR_KEY: ${{ secrets.AUR_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          NPM_CONFIG_PROVENANCE: false
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
