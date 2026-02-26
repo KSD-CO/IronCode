@@ -251,6 +251,14 @@ const lib = dlopen(libPath, {
     args: [],
     returns: FFIType.ptr,
   },
+  wildcard_match_ffi: {
+    args: [FFIType.cstring, FFIType.cstring],
+    returns: FFIType.i32,
+  },
+  extract_prefix_ffi: {
+    args: [FFIType.cstring],
+    returns: FFIType.ptr,
+  },
   git_status_detailed_ffi: {
     args: [FFIType.cstring],
     returns: FFIType.ptr,
@@ -1052,4 +1060,23 @@ export function codesearchStatsFFI(): CodeIndexStats {
   const json = new CString(ptr).toString()
   lib.symbols.free_string(ptr)
   return JSON.parse(json)
+}
+
+// Match a string against a wildcard pattern using native Rust implementation.
+// Returns true if matches, false otherwise.
+export function wildcardMatchFFI(s: string, pattern: string): boolean {
+  const result = lib.symbols.wildcard_match_ffi(Buffer.from(s + "\0"), Buffer.from(pattern + "\0"))
+  return result === 1
+}
+
+// Extract command prefix using rust-rule-engine (mirrors BashArity.prefix).
+// tokens: array of command parts e.g. ["git", "checkout", "main"]
+// Returns the prefix string e.g. "git checkout"
+export function extractPrefixFFI(tokens: string[]): string {
+  const json = JSON.stringify(tokens)
+  const ptr = lib.symbols.extract_prefix_ffi(Buffer.from(json + "\0"))
+  if (!ptr) return tokens[0] ?? ""
+  const result = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+  return result
 }

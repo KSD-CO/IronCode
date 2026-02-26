@@ -14,13 +14,16 @@ An AI coding assistant with a native Rust backend for high-performance local too
 
 All performance-critical components are compiled to a native `.dylib` via FFI:
 
-| Component          | Status | Description                                |
-| ------------------ | ------ | ------------------------------------------ |
-| File Watcher       | ✅     | Cross-platform via `notify` crate          |
-| Fuzzy Match        | ✅     | `nucleo-matcher` for fast scoring          |
-| Code Search (BM25) | ✅     | tree-sitter symbol indexing + BM25 ranking |
-| VCS (git2)         | ✅     | Native git operations                      |
-| PTY                | ✅     | `portable-pty` for terminal emulation      |
+| Component              | Status | Description                                           |
+| ---------------------- | ------ | ----------------------------------------------------- |
+| File Watcher           | ✅     | Cross-platform via `notify` crate                     |
+| Fuzzy Match            | ✅     | `nucleo-matcher` for fast scoring                     |
+| Code Search (BM25)     | ✅     | tree-sitter symbol indexing + BM25 ranking            |
+| VCS (git2)             | ✅     | Native git operations                                 |
+| PTY                    | ✅     | `portable-pty` for terminal emulation                 |
+| Wildcard Matching      | ✅     | `*`/`?` glob patterns via `rexile`, replaces JS impl  |
+| Bash Parser            | ✅     | tree-sitter bash — extracts dirs, patterns, always    |
+| Command Prefix (RETE)  | ✅     | GRL rule engine maps commands → arity for prefix      |
 
 ## Local Code Search (BM25 + tree-sitter)
 
@@ -69,20 +72,43 @@ Use `grep` only for exact known strings or regex patterns.
 packages/ironcode/
 ├── src/
 │   ├── tool/
+│   │   ├── bash.ts               # Bash tool (uses native parser via FFI)
 │   │   ├── codesearch-local.ts   # BM25 search tool (FFI wrapper)
 │   │   ├── grep.ts               # Exact text search
 │   │   └── ffi.ts                # Native library bindings
+│   ├── util/
+│   │   └── wildcard.ts           # Wildcard matching (delegates to FFI)
 │   ├── project/instance.ts       # Project context / AsyncLocalStorage
 │   └── bus/                      # Event bus (file watcher events)
 └── native/tool/
     ├── src/
     │   ├── indexer.rs            # tree-sitter symbol extractor
     │   ├── codesearch.rs         # BM25 index + search
+    │   ├── shell.rs              # Bash parser + command prefix (RETE)
+    │   ├── wildcard.rs           # Wildcard matching via rexile
     │   └── ffi.rs                # C FFI exports
     └── Cargo.toml
 ```
 
 ## Changelog
+
+### Feb 26, 2026 — Native Wildcard, Bash Parser, Command Prefix (RETE)
+
+Moved three performance-sensitive subsystems into the native Rust library:
+
+- **Wildcard matching** — `wildcard.rs` uses `rexile` for `*`/`?` glob patterns.
+  Handles the special `" *"` trailing-wildcard form (e.g. `"ls *"` matches both
+  `"ls"` and `"ls -la"`). `util/wildcard.ts` now delegates to `wildcardMatchFFI`.
+
+- **Bash command parser** — `shell.rs` uses tree-sitter-bash to walk the AST and
+  extract directories, full command patterns, and `always`-allow prefixes.
+  `bash.ts` calls `parseBashCommandFFI` instead of the WASM tree-sitter path.
+
+- **Command prefix extraction (RETE rule engine)** — `extract_command_prefix` in
+  `shell.rs` loads 137 GRL rules into an `IncrementalEngine` (rust-rule-engine).
+  Each rule fires with `no-loop`; taking `max(rule_name_to_arity)` over all fired
+  rule names gives the correct longest-prefix arity regardless of activation order.
+  Mirrors `BashArity.prefix()` from `permission/arity.ts` exactly.
 
 ### Feb 23, 2026 — Local Code Search (BM25 + tree-sitter)
 

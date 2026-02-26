@@ -24,6 +24,16 @@
 
 ## 🎉 What's New
 
+### Feb 26, 2026 - Native Bash Permissions Layer
+
+**Shell permission checks are now fully native — faster and more accurate:**
+
+- **Wildcard matching** — Ported from JS to native Rust (`rexile`). Handles `*`/`?` glob patterns including the tricky `"ls *"` form that matches both `"ls"` and `"ls -la"`. Zero JS overhead on every permission check.
+
+- **Bash command parser** — `shell.rs` replaces the old WASM tree-sitter path with a native tree-sitter-bash parser. Extracts filesystem arguments, full command patterns, and `always`-allow prefixes (`"npm run *"`) used by the permission system. **50-100x faster** than WASM.
+
+- **Smart command prefix (RETE rule engine)** — 137 GRL rules loaded into a RETE `IncrementalEngine` classify every command to its correct prefix length. `npm run dev` → `"npm run *"`, `docker compose up` → `"docker compose *"`, `git config --global` → `"git config *"`. Longest-match always wins regardless of rule firing order.
+
 ### Feb 23, 2026 - Local Code Search (BM25 + tree-sitter)
 
 **Offline semantic code search — no embeddings, no ML model download required:**
@@ -297,6 +307,8 @@ IronCode rewrites key operations in native Rust with **measured real-world perfo
 - ✅ **Directory Listing**: Fast recursive directory traversal
 - ✅ **VCS Info**: Lightning-fast git repository information (libgit2 vs subprocess)
 - ✅ **Code Search (BM25)**: Local semantic code search with tree-sitter symbol extraction — finds functions by concept, not just exact text
+- ✅ **Wildcard Matching**: `*`/`?` glob patterns via `rexile`, including trailing `" *"` form — replaces JS impl
+- ✅ **Command Prefix (RETE)**: GRL rule engine (137 rules) maps commands → arity for permission `always`-allow prefixes
 - ✅ **System Stats**: CPU and memory monitoring
 
 **Benefits:**
@@ -776,6 +788,8 @@ IronCode is built with:
 │  │  • Glob/Grep (optimized)        │   │
 │  │  • Git operations (libgit2)     │   │
 │  │  • BM25 + tree-sitter search    │   │
+│  │  • Wildcard matching (rexile)   │   │
+│  │  • Command prefix (RETE)        │   │
 │  │  • System stats (sysinfo)       │   │
 │  └─────────────────────────────────┘   │
 └─────────────────────────────────────────┘
@@ -807,6 +821,7 @@ Contributions are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) befo
 
 **Recent Contributions:**
 
+- ✅ **Native Wildcard + Bash Parser + Command Prefix (RETE)** (wildcard matching, tree-sitter bash, RETE rule engine - Feb 2026)
 - ✅ **Local Code Search** (BM25 + tree-sitter semantic search, 7 languages, offline - Feb 2026)
 - ✅ **Editor & Terminal** (External editor with auto-install + redesigned terminal with autosuggest - Feb 2026)
 - ✅ **Code Changes Panel** (Diff viewer with hunk revert & inline comments - Feb 2026)
