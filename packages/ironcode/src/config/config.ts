@@ -1190,6 +1190,10 @@ export namespace Config {
             .boolean()
             .optional()
             .describe("Enable OpenTelemetry spans for AI SDK calls (using the 'experimental_telemetry' flag)"),
+          provider_round_robin: z
+            .boolean()
+            .optional()
+            .describe("Enable experimental provider round-robin selection for compatible models"),
           provider_tools: z
             .array(z.string())
             .optional()

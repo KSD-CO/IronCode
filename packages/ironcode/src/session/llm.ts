@@ -161,6 +161,88 @@ export namespace LLM {
 
     const tools = await resolveTools(input)
 
+    // Round-robin wrapper implementation (local to this call).
+    class RoundRobinLanguageModel {
+      specificationVersion = "v2"
+      modelId: string
+      private backends: any[]
+      private counter = 0
+      constructor(backends: any[], modelId: string) {
+        this.backends = backends
+        this.modelId = modelId
+      }
+      get provider() {
+        return "round-robin"
+      }
+      get supportedUrls() {
+        // Merge supportedUrls from first backend if present
+        return this.backends[0]?.supportedUrls ?? {}
+      }
+      private select() {
+        const idx = ((this.counter++ % this.backends.length) + this.backends.length) % this.backends.length
+        return this.backends[idx]
+      }
+      async doGenerate(opts: any) {
+        const b = this.select()
+        return b.doGenerate(opts)
+      }
+      async doStream(opts: any) {
+        const b = this.select()
+        return b.doStream(opts)
+      }
+    }
+
+    // If enabled, attempt best-effort discovery of compatible models and build
+    // a RoundRobinLanguageModel that delegates to multiple providers.
+    let modelToUse: any = language
+    if (cfg.experimental?.provider_round_robin) {
+      try {
+        const all = await Provider.list()
+        const token = String(input.model.id).split(/[._\-\\/]/)[0]
+        const found: { providerID: string; modelID: string }[] = []
+        for (const [providerID, info] of Object.entries(all)) {
+          for (const modelID of Object.keys(info.models)) {
+            const model = info.models[modelID]
+            if (model.providerID === input.model.providerID && model.id === input.model.id) {
+              found.push({ providerID, modelID })
+              continue
+            }
+            if (model.family && input.model.family && model.family === input.model.family) {
+              found.push({ providerID, modelID })
+              continue
+            }
+            if (modelID.includes(token)) {
+              found.push({ providerID, modelID })
+              continue
+            }
+          }
+        }
+        const unique: string[] = []
+        const results: { providerID: string; modelID: string }[] = []
+        for (const f of found) {
+          const key = `${f.providerID}/${f.modelID}`
+          if (!unique.includes(key)) {
+            unique.push(key)
+            results.push(f)
+          }
+          if (results.length >= 3) break
+        }
+        const langs: any[] = []
+        for (const item of results) {
+          try {
+            const m = await Provider.getModel(item.providerID, item.modelID)
+            const lang = await Provider.getLanguage(m)
+            langs.push(lang)
+          } catch (err) {
+            // ignore
+          }
+        }
+        if (langs.length > 1) modelToUse = new RoundRobinLanguageModel(langs, input.model.id)
+      } catch (err) {
+        l.warn("round-robin discovery failed", { error: err })
+      }
+    }
+
     // LiteLLM and some Anthropic proxies require the tools parameter to be present
     // when message history contains tool calls, even if no tools are being used.
     // Add a dummy tool that is never called to satisfy this validation.
@@ -242,8 +324,9 @@ export namespace LLM {
         ),
         ...input.messages,
       ],
+      // model already selected earlier (potentially wrapped with round-robin)
       model: wrapLanguageModel({
-        model: language,
+        model: modelToUse,
         middleware: [
           {
             async transformParams(args) {
