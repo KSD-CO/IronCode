@@ -122,7 +122,7 @@ for (const item of targets) {
     // changing to win32 flags npm for some reason
     item.os === "win32" ? "windows" : item.os,
     item.arch,
-    item.avx2 === false ? "baseline" : item.arch === "x64" ? "modern" : undefined,
+    item.avx2 === false ? "baseline" : undefined,
     item.abi === undefined ? undefined : item.abi,
   ]
     .filter(Boolean)
