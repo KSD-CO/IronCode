@@ -14,16 +14,16 @@ An AI coding assistant with a native Rust backend for high-performance local too
 
 All performance-critical components are compiled to a native `.dylib` via FFI:
 
-| Component              | Status | Description                                           |
-| ---------------------- | ------ | ----------------------------------------------------- |
-| File Watcher           | ✅     | Cross-platform via `notify` crate                     |
-| Fuzzy Match            | ✅     | `nucleo-matcher` for fast scoring                     |
-| Code Search (BM25)     | ✅     | tree-sitter symbol indexing + BM25 ranking            |
-| VCS (git2)             | ✅     | Native git operations                                 |
-| PTY                    | ✅     | `portable-pty` for terminal emulation                 |
-| Wildcard Matching      | ✅     | `*`/`?` glob patterns via `rexile`, replaces JS impl  |
-| Bash Parser            | ✅     | tree-sitter bash — extracts dirs, patterns, always    |
-| Command Prefix (RETE)  | ✅     | GRL rule engine maps commands → arity for prefix      |
+| Component             | Status | Description                                          |
+| --------------------- | ------ | ---------------------------------------------------- |
+| File Watcher          | ✅     | Cross-platform via `notify` crate                    |
+| Fuzzy Match           | ✅     | `nucleo-matcher` for fast scoring                    |
+| Code Search (BM25)    | ✅     | tree-sitter symbol indexing + BM25 ranking           |
+| VCS (git2)            | ✅     | Native git operations                                |
+| PTY                   | ✅     | `portable-pty` for terminal emulation                |
+| Wildcard Matching     | ✅     | `*`/`?` glob patterns via `rexile`, replaces JS impl |
+| Bash Parser           | ✅     | tree-sitter bash — extracts dirs, patterns, always   |
+| Command Prefix (RETE) | ✅     | GRL rule engine maps commands → arity for prefix     |
 
 ## Local Code Search (BM25 + tree-sitter)
 
