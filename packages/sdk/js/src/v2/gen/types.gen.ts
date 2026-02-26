@@ -1832,6 +1832,10 @@ export type Config = {
      */
     openTelemetry?: boolean
     /**
+     * Enable experimental provider round-robin selection for compatible models
+     */
+    provider_round_robin?: boolean
+    /**
      * Enable provider-specific tools (e.g. 'anthropic:web_search', 'openai:web_search', 'google:google_search', 'xai:x_search'). Use 'anthropic:*' to enable all tools for a provider.
      */
     provider_tools?: Array<string>
