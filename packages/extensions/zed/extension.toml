@@ -1,7 +1,7 @@
 id = "ironcode"
 name = "IronCode"
 description = "The open source coding agent."
-version = "1.15.1"
+version = "1.15.2"
 schema_version = 1
 authors = ["Anomaly"]
 repository = "https://github.com/KSD-CO/ironcode"
@@ -11,26 +11,26 @@ name = "IronCode"
 icon = "./icons/ironcode.svg"
 
 [agent_servers.ironcode.targets.darwin-aarch64]
-archive = "https://github.com/KSD-CO/ironcode/releases/download/v1.15.1/ironcode-darwin-arm64.zip"
+archive = "https://github.com/KSD-CO/ironcode/releases/download/v1.15.2/ironcode-darwin-arm64.zip"
 cmd = "./ironcode"
 args = ["acp"]
 
 [agent_servers.ironcode.targets.darwin-x86_64]
-archive = "https://github.com/KSD-CO/ironcode/releases/download/v1.15.1/ironcode-darwin-x64.zip"
+archive = "https://github.com/KSD-CO/ironcode/releases/download/v1.15.2/ironcode-darwin-x64.zip"
 cmd = "./ironcode"
 args = ["acp"]
 
 [agent_servers.ironcode.targets.linux-aarch64]
-archive = "https://github.com/KSD-CO/ironcode/releases/download/v1.15.1/ironcode-linux-arm64.tar.gz"
+archive = "https://github.com/KSD-CO/ironcode/releases/download/v1.15.2/ironcode-linux-arm64.tar.gz"
 cmd = "./ironcode"
 args = ["acp"]
 
 [agent_servers.ironcode.targets.linux-x86_64]
-archive = "https://github.com/KSD-CO/ironcode/releases/download/v1.15.1/ironcode-linux-x64.tar.gz"
+archive = "https://github.com/KSD-CO/ironcode/releases/download/v1.15.2/ironcode-linux-x64.tar.gz"
 cmd = "./ironcode"
 args = ["acp"]
 
 [agent_servers.ironcode.targets.windows-x86_64]
-archive = "https://github.com/KSD-CO/ironcode/releases/download/v1.15.1/ironcode-windows-x64.zip"
+archive = "https://github.com/KSD-CO/ironcode/releases/download/v1.15.2/ironcode-windows-x64.zip"
 cmd = "./ironcode.exe"
 args = ["acp"]
