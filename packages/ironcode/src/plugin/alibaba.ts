@@ -153,11 +153,26 @@ export async function AlibabaAuthPlugin(input: PluginInput): Promise<Hooks> {
             }
 
             // verification_uri_complete embeds the user_code in the URL — user just opens it and logs in
-            const url =
+            // If the provider returns a verification_uri but it doesn't include the user_code,
+            // append the code as a query parameter so the link opens pre-filled.
+            let url =
               deviceData.verification_uri_complete ??
               deviceData.verification_uri ??
               deviceData.verification_url ??
               "https://chat.qwen.ai"
+
+            // If we only have a verification_uri (not the complete one), try to append the
+            // user_code as `user_code` query param when it's not already present.
+            if (!deviceData.verification_uri_complete && deviceData.verification_uri && deviceData.user_code) {
+              try {
+                const hasUserCodeParam = url.includes("user_code=") || url.includes("user-code=")
+                if (!hasUserCodeParam) {
+                  const sep = url.includes("?") ? "&" : "?"
+                  url = `${url}${sep}user_code=${encodeURIComponent(deviceData.user_code)}`
+                }
+              } catch {}
+            }
+
             const interval = (deviceData.interval ?? 5) * 1000
             const hasCompleteUri = Boolean(deviceData.verification_uri_complete)
 

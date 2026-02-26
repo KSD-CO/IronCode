@@ -1177,6 +1177,35 @@ export namespace Provider {
       s.models.set(key, language)
       return language
     } catch (e) {
+      // Log full error details to help debug provider/model issues (dev only)
+      try {
+        const info: any = { providerID: model.providerID, model: model.api.id }
+        // include common error fields if present
+        if (e && typeof e === "object") {
+          for (const k of Object.getOwnPropertyNames(e)) {
+            try {
+              const v = (e as any)[k]
+              if (k === "response" && v && typeof v.text === "function") {
+                // attempt to read response body if available
+                try {
+                  info.response_text = await v.text()
+                } catch {}
+              } else if (k === "responseBody" || k === "body") {
+                info[k] = v
+              } else if (k === "statusCode" || k === "status") {
+                info[k] = v
+              } else if (typeof v !== "function") {
+                info[k] = v
+              }
+            } catch {}
+          }
+        }
+        log.error("getLanguage failed", info)
+      } catch (logErr) {
+        // fallthrough
+        log.error("getLanguage failed (unable to serialize error)")
+      }
+
       if (e instanceof NoSuchModelError)
         throw new ModelNotFoundError(
           {
@@ -1293,8 +1322,7 @@ export namespace Provider {
     const allProviders = await list().then((val) => Object.values(val))
     const pool = allProviders.filter(
       (p) =>
-        (p.id === baseID ||
-          (p.id.startsWith(`${baseID}-`) && /^\d+$/.test(p.id.slice(baseID.length + 1)))) &&
+        (p.id === baseID || (p.id.startsWith(`${baseID}-`) && /^\d+$/.test(p.id.slice(baseID.length + 1)))) &&
         Object.keys(p.models).length > 0,
     )
     if (pool.length <= 1) return model
