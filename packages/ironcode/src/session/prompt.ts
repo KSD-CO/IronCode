@@ -888,7 +888,9 @@ export namespace SessionPrompt {
   async function createUserMessage(input: PromptInput) {
     const agent = await Agent.get(input.agent ?? (await Agent.defaultAgent()))
 
-    const model = input.model ?? agent.model ?? (await lastModel(input.sessionID))
+    const resolvedModel = input.model ?? agent.model ?? (await lastModel(input.sessionID))
+    // Round-robin across multi-account providers, preserving the user's chosen modelID
+    const model = await Provider.nextAccountModel(resolvedModel)
     const variant =
       input.variant ??
       (agent.variant &&

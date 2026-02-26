@@ -224,12 +224,14 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
               reasoning: false,
             }
           }
-          const provider = sync.data.provider.find((x) => x.id === value.providerID)
+          const provider =
+            sync.data.provider.find((x) => x.id === value.providerID) ??
+            sync.data.provider_next.all.find((x) => x.id === value.providerID)
           const info = provider?.models[value.modelID]
           return {
             provider: provider?.name ?? value.providerID,
             model: info?.name ?? value.modelID,
-            reasoning: info?.capabilities?.reasoning ?? false,
+            reasoning: (info as any)?.reasoning ?? false,
           }
         }),
         cycle(direction: 1 | -1) {

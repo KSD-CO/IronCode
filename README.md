@@ -24,6 +24,27 @@
 
 ## 🎉 What's New
 
+### Feb 26, 2026 - Multi-Account Providers & Round-Robin Load Balancing
+
+**Connect multiple API keys per provider and distribute load automatically:**
+
+- **Any provider supported** — Anthropic, OpenAI, Google, GitHub Copilot, MiniMax, Qwen, and any other API-key provider
+- **Automatic round-robin** — every message rotates to the next account; no configuration needed
+- **Preserves your model choice** — only the account rotates, the model you selected stays the same
+- **Per-message indicator** — message header shows which account was used: `Build · claude-sonnet-4 · Anthropic (Account 2) · 1.2s`
+- **TUI add/replace flow** — clicking a connected provider shows "Add another account" or "Replace existing"; once 2+ accounts exist, the dialog shows individual rows per account
+- **CLI support** — `ironcode auth login` prompts "Add another account" or "Replace existing" when credentials already exist
+
+**Setup:**
+```bash
+# First account (normal flow)
+ironcode auth login → Select "Anthropic" → Enter API key
+
+# Second account
+ironcode auth login → Select "Anthropic" → "Add another account" → Enter key
+# Saved as "anthropic-2" in auth.json — auto-discovered at startup, no config needed
+```
+
 ### Feb 26, 2026 - Native Bash Permissions Layer
 
 **Shell permission checks are now fully native — faster and more accurate:**
@@ -193,6 +214,7 @@ IronCode is a **high-performance CLI fork** of [OpenCode](https://github.com/ano
 ### Key Features
 
 - ⌨️ **CLI-First**: Powerful terminal UI optimized for command-line workflows
+- 🔀 **Multi-Account Round-Robin**: Connect multiple API keys per provider for automatic load balancing — Anthropic, OpenAI, Google, Copilot, and more
 - 🎯 **Git Source Control**: Full Git integration - stage, commit, diff, push without leaving TUI
 - 🔍 **Code Changes Panel**: Diff viewer with inline comments, hunk revert, and live change counts
 - 📝 **External Editor**: Opens `$EDITOR`/nvim with auto-install popup if not found
@@ -821,6 +843,7 @@ Contributions are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) befo
 
 **Recent Contributions:**
 
+- ✅ **Multi-Account Providers + Round-Robin** (Anthropic, OpenAI, Google, Copilot, any API-key provider - Feb 2026)
 - ✅ **Native Wildcard + Bash Parser + Command Prefix (RETE)** (wildcard matching, tree-sitter bash, RETE rule engine - Feb 2026)
 - ✅ **Local Code Search** (BM25 + tree-sitter semantic search, 7 languages, offline - Feb 2026)
 - ✅ **Editor & Terminal** (External editor with auto-install + redesigned terminal with autosuggest - Feb 2026)

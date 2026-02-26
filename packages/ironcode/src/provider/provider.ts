@@ -732,6 +732,44 @@ export namespace Provider {
           providerID: "github-copilot-enterprise",
         })),
       }
+
+      // Auto-discover additional GitHub Copilot accounts (github-copilot-2, github-copilot-3, ...)
+      const allAuthForVirtual = await Auth.all()
+      for (const virtualID of Object.keys(allAuthForVirtual)) {
+        if (!/^github-copilot-\d+$/.test(virtualID)) continue
+        const accountNum = virtualID.replace("github-copilot-", "")
+        database[virtualID] = {
+          ...githubCopilot,
+          id: virtualID,
+          name: `GitHub Copilot (Account ${accountNum})`,
+          models: mapValues(githubCopilot.models, (model) => ({
+            ...model,
+            providerID: virtualID,
+          })),
+        }
+      }
+    }
+
+    // Auto-discover additional API-key accounts for any provider (e.g. anthropic-2, openai-2, google-2)
+    {
+      const allAuthEntries = await Auth.all()
+      for (const virtualID of Object.keys(allAuthEntries)) {
+        if (database[virtualID]) continue // already exists (e.g. github-copilot-enterprise, github-copilot-2)
+        const suffixMatch = virtualID.match(/-(\d+)$/)
+        if (!suffixMatch) continue
+        const baseID = virtualID.slice(0, virtualID.length - suffixMatch[0].length)
+        const base = database[baseID]
+        if (!base) continue
+        database[virtualID] = {
+          ...base,
+          id: virtualID,
+          name: `${base.name} (Account ${suffixMatch[1]})`,
+          models: mapValues(base.models, (model) => ({
+            ...model,
+            providerID: virtualID,
+          })),
+        }
+      }
     }
 
     function mergeProvider(providerID: string, provider: Partial<Info>) {
@@ -897,6 +935,19 @@ export namespace Provider {
             mergeProvider(enterpriseProviderID, patch)
           }
         }
+
+        // Register virtual github-copilot-{N} accounts
+        const allAuthEntries = await Auth.all()
+        for (const virtualID of Object.keys(allAuthEntries)) {
+          if (!/^github-copilot-\d+$/.test(virtualID)) continue
+          if (disabled.has(virtualID)) continue
+          const virtualAuth = await Auth.get(virtualID)
+          if (!virtualAuth) continue
+          const virtualOptions = await plugin.auth.loader(() => Auth.get(virtualID) as any, database[virtualID])
+          const opts = virtualOptions ?? {}
+          const patch: Partial<Info> = providers[virtualID] ? { options: opts } : { source: "custom", options: opts }
+          mergeProvider(virtualID, patch)
+        }
       }
     }
 
@@ -913,6 +964,15 @@ export namespace Provider {
         const opts = result.options ?? {}
         const patch: Partial<Info> = providers[providerID] ? { options: opts } : { source: "custom", options: opts }
         mergeProvider(providerID, patch)
+      }
+    }
+
+    // Add model loaders for virtual github-copilot-{N} providers (same logic as github-copilot)
+    for (const providerID of Object.keys(providers)) {
+      if (!/^github-copilot-\d+$/.test(providerID) || modelLoaders[providerID]) continue
+      modelLoaders[providerID] = async (sdk: any, modelID: string, _options?: Record<string, any>) => {
+        if (sdk.responses === undefined && sdk.chat === undefined) return sdk.languageModel(modelID)
+        return shouldUseCopilotResponsesApi(modelID) ? sdk.responses(modelID) : sdk.chat(modelID)
       }
     }
 
@@ -1117,6 +1177,35 @@ export namespace Provider {
       s.models.set(key, language)
       return language
     } catch (e) {
+      // Log full error details to help debug provider/model issues (dev only)
+      try {
+        const info: any = { providerID: model.providerID, model: model.api.id }
+        // include common error fields if present
+        if (e && typeof e === "object") {
+          for (const k of Object.getOwnPropertyNames(e)) {
+            try {
+              const v = (e as any)[k]
+              if (k === "response" && v && typeof v.text === "function") {
+                // attempt to read response body if available
+                try {
+                  info.response_text = await v.text()
+                } catch {}
+              } else if (k === "responseBody" || k === "body") {
+                info[k] = v
+              } else if (k === "statusCode" || k === "status") {
+                info[k] = v
+              } else if (typeof v !== "function") {
+                info[k] = v
+              }
+            } catch {}
+          }
+        }
+        log.error("getLanguage failed", info)
+      } catch (logErr) {
+        // fallthrough
+        log.error("getLanguage failed (unable to serialize error)")
+      }
+
       if (e instanceof NoSuchModelError)
         throw new ModelNotFoundError(
           {
@@ -1220,13 +1309,57 @@ export namespace Provider {
     )
   }
 
+  const rrCounters: Record<string, number> = {}
+
+  /**
+   * Round-robin across multiple accounts of the same provider, preserving the user's chosen modelID.
+   * Works for any provider that has numbered variants (e.g. anthropic-2, openai-2, github-copilot-2).
+   * Returns the same model unchanged if there is only one (or zero) accounts.
+   */
+  export async function nextAccountModel(model: { providerID: string; modelID: string }) {
+    // Derive base provider ID (strips trailing -N suffix, e.g. "github-copilot-2" → "github-copilot")
+    const baseID = model.providerID.replace(/-\d+$/, "")
+    const allProviders = await list().then((val) => Object.values(val))
+    const pool = allProviders.filter(
+      (p) =>
+        (p.id === baseID || (p.id.startsWith(`${baseID}-`) && /^\d+$/.test(p.id.slice(baseID.length + 1)))) &&
+        Object.keys(p.models).length > 0,
+    )
+    if (pool.length <= 1) return model
+
+    const idx = rrCounters[baseID] ?? 0
+    const picked = pool[idx % pool.length]
+    rrCounters[baseID] = idx + 1
+    log.info("account round-robin", { baseID, providerID: picked.id, modelID: model.modelID, index: idx })
+    return { providerID: picked.id, modelID: model.modelID }
+  }
+
   export async function defaultModel() {
     const cfg = await Config.get()
     if (cfg.model) return parseModel(cfg.model)
 
-    const provider = await list()
-      .then((val) => Object.values(val))
-      .then((x) => x.find((p) => !cfg.provider || Object.keys(cfg.provider).includes(p.id)))
+    const allProviders = await list().then((val) => Object.values(val))
+
+    // Round-robin across multiple GitHub Copilot accounts when available
+    const copilotBaseID = "github-copilot"
+    const copilotPool = allProviders.filter(
+      (p) =>
+        (p.id === copilotBaseID ||
+          (p.id.startsWith(`${copilotBaseID}-`) && /^\d+$/.test(p.id.slice(copilotBaseID.length + 1)))) &&
+        Object.keys(p.models).length > 0,
+    )
+    if (copilotPool.length > 1) {
+      const idx = rrCounters[copilotBaseID] ?? 0
+      const picked = copilotPool[idx % copilotPool.length]
+      rrCounters[copilotBaseID] = idx + 1
+      const [model] = sort(Object.values(picked.models))
+      if (model) {
+        log.info("copilot round-robin", { providerID: picked.id, index: idx })
+        return { providerID: picked.id, modelID: model.id }
+      }
+    }
+
+    const provider = allProviders.find((p) => !cfg.provider || Object.keys(cfg.provider).includes(p.id))
     if (!provider) throw new Error("no providers found")
     const [model] = sort(Object.values(provider.models))
     if (!model) throw new Error("no models found")

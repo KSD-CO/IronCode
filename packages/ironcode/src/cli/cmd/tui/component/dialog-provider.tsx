@@ -1,6 +1,6 @@
 import { createMemo, createSignal, onMount, Show } from "solid-js"
 import { useSync } from "@tui/context/sync"
-import { map, pipe, sortBy } from "remeda"
+import { filter, map, pipe } from "remeda"
 import { DialogSelect } from "@tui/ui/dialog-select"
 import { useDialog } from "@tui/ui/dialog"
 import { useSDK } from "../context/sdk"
@@ -20,6 +20,7 @@ const PROVIDER_PRIORITY: Record<string, number> = {
   "github-copilot": 2,
   openai: 3,
   google: 4,
+  alibaba: 5,
 }
 
 export function createDialogProviderOptions() {
@@ -27,83 +28,173 @@ export function createDialogProviderOptions() {
   const dialog = useDialog()
   const sdk = useSDK()
   const connected = createMemo(() => new Set(sync.data.provider_next.connected))
-  const options = createMemo(() => {
-    return pipe(
-      sync.data.provider_next.all,
-      sortBy((x) => PROVIDER_PRIORITY[x.id] ?? 99),
-      map((provider) => {
-        const isConnected = connected().has(provider.id)
-        return {
-          title: provider.name,
-          value: provider.id,
-          description: {
-            ironcode: "(Recommended)",
-            anthropic: "(Claude Max or API key)",
-            openai: "(ChatGPT Plus/Pro or API key)",
-          }[provider.id],
-          category: provider.id in PROVIDER_PRIORITY ? "Popular" : "Other",
-          footer: isConnected ? "Connected" : undefined,
-          async onSelect() {
-            const methods = sync.data.provider_auth[provider.id] ?? [
-              {
-                type: "api",
-                label: "API key",
-              },
-            ]
-            let index: number | null = 0
-            if (methods.length > 1) {
-              index = await new Promise<number | null>((resolve) => {
-                dialog.replace(
-                  () => (
-                    <DialogSelect
-                      title="Select auth method"
-                      options={methods.map((x, index) => ({
-                        title: x.label,
-                        value: index,
-                      }))}
-                      onSelect={(option) => resolve(option.value)}
-                    />
-                  ),
-                  () => resolve(null),
-                )
-              })
-            }
-            if (index == null) return
-            const method = methods[index]
-            if (method.type === "oauth") {
-              const result = await sdk.client.provider.oauth.authorize({
-                providerID: provider.id,
-                method: index,
-              })
-              if (result.data?.method === "code") {
-                dialog.replace(() => (
-                  <CodeMethod
-                    providerID={provider.id}
-                    title={method.label}
-                    index={index}
-                    authorization={result.data!}
-                  />
-                ))
-              }
-              if (result.data?.method === "auto") {
-                dialog.replace(() => (
-                  <AutoMethod
-                    providerID={provider.id}
-                    title={method.label}
-                    index={index}
-                    authorization={result.data!}
-                  />
-                ))
-              }
-            }
-            if (method.type === "api") {
-              return dialog.replace(() => <ApiMethod providerID={provider.id} title={method.label} />)
-            }
-          },
-        }
-      }),
+
+  // Group connected accounts by base provider ID.
+  // A group is "multi-account" when it contains at least one numbered variant (e.g. "anthropic-2").
+  const accountGroups = createMemo(() => {
+    const groups: Record<string, string[]> = {}
+    for (const id of sync.data.provider_next.connected) {
+      const baseID = id.replace(/-\d+$/, "")
+      if (!groups[baseID]) groups[baseID] = []
+      groups[baseID].push(id)
+    }
+    return Object.fromEntries(
+      Object.entries(groups).filter(([baseID, ids]) => ids.some((id) => id !== baseID)),
     )
   })
+
+  async function startOAuthFlow(targetProviderID: string, baseProviderID: string) {
+    const methods = sync.data.provider_auth[baseProviderID] ?? [{ type: "api" as const, label: "API key" }]
+    let index: number | null = 0
+    if (methods.length > 1) {
+      index = await new Promise<number | null>((resolve) => {
+        dialog.replace(
+          () => (
+            <DialogSelect
+              title="Select auth method"
+              options={methods.map((x, i) => ({ title: x.label, value: i }))}
+              onSelect={(option) => resolve(option.value)}
+            />
+          ),
+          () => resolve(null),
+        )
+      })
+    }
+    if (index == null) return
+    const method = methods[index]
+    if (method.type === "oauth") {
+      const result = await sdk.client.provider.oauth.authorize({ providerID: targetProviderID, method: index })
+      if (result.data?.method === "code") {
+        dialog.replace(() => (
+          <CodeMethod providerID={targetProviderID} title={method.label} index={index!} authorization={result.data!} />
+        ))
+      }
+      if (result.data?.method === "auto") {
+        dialog.replace(() => (
+          <AutoMethod providerID={targetProviderID} title={method.label} index={index!} authorization={result.data!} />
+        ))
+      }
+    }
+    if (method.type === "api") {
+      dialog.replace(() => <ApiMethod providerID={targetProviderID} title={method.label} />)
+    }
+  }
+
+  const options = createMemo(() => {
+    const allProviders = sync.data.provider_next.all
+    const groups = accountGroups()
+
+    // Collect all account IDs that are rendered as individual rows inside a multi-account group
+    const groupedIDs = new Set<string>(Object.values(groups).flat())
+
+    type Entry = {
+      _priority: number
+      title: string
+      value: string
+      category: string
+      description?: string
+      footer?: string
+      onSelect: () => Promise<void>
+    }
+
+    // Per-account rows + "Add account" row for every multi-account group
+    const multiAccountEntries: Entry[] = []
+    for (const [baseID, accountIDs] of Object.entries(groups)) {
+      const priority = PROVIDER_PRIORITY[baseID] ?? 99
+      const category = baseID in PROVIDER_PRIORITY ? "Popular" : "Other"
+      accountIDs.forEach((accountID, i) => {
+        const provider = allProviders.find((p) => p.id === accountID)
+        if (!provider) return
+        multiAccountEntries.push({
+          _priority: priority + i * 0.01,
+          title: provider.name,
+          value: provider.id,
+          category,
+          footer: "Connected",
+          async onSelect() {
+            await startOAuthFlow(accountID, baseID)
+          },
+        })
+      })
+      // "Add account" row always appears after all connected accounts
+      const nums = accountIDs
+        .map((id) => (id === baseID ? 1 : parseInt(id.slice(baseID.length + 1), 10)))
+        .sort((a, b) => b - a)
+      const nextID = `${baseID}-${(nums[0] ?? 0) + 1}`
+      const baseName = allProviders.find((p) => p.id === baseID)?.name ?? baseID
+      multiAccountEntries.push({
+        _priority: priority + accountIDs.length * 0.01,
+        title: `${baseName} · Add account`,
+        value: nextID,
+        category,
+        async onSelect() {
+          await startOAuthFlow(nextID, baseID)
+        },
+      })
+    }
+
+    // Single-row entries for all providers not already shown as grouped accounts.
+    // Also exclude standalone numbered variants — they only appear inside multi-account groups.
+    const regularEntries = pipe(
+      allProviders,
+      filter((x) => {
+        if (groupedIDs.has(x.id)) return false
+        // Exclude numbered variants (e.g. "anthropic-2") — they should only appear in groups
+        if (/-\d+$/.test(x.id)) return false
+        return true
+      }),
+      map((provider) => ({
+        _priority: PROVIDER_PRIORITY[provider.id] ?? 99,
+        title: provider.name,
+        value: provider.id,
+        description: ({
+          ironcode: "(Recommended)",
+          anthropic: "(Claude Max or API key)",
+          openai: "(ChatGPT Plus/Pro or API key)",
+          alibaba: "(Qwen models — DashScope API key)",
+        } as Record<string, string>)[provider.id],
+        category: provider.id in PROVIDER_PRIORITY ? "Popular" : "Other",
+        footer: connected().has(provider.id) ? "Connected" : undefined,
+        async onSelect() {
+          let targetID = provider.id
+          if (connected().has(provider.id)) {
+            // Already connected — offer add vs replace before opening auth flow
+            const action = await new Promise<"add" | "replace" | null>((resolve) => {
+              dialog.replace(
+                () => (
+                  <DialogSelect
+                    title={provider.name}
+                    options={[
+                      { title: "Add another account", value: "add" as const },
+                      { title: "Replace existing account", value: "replace" as const },
+                    ]}
+                    onSelect={(opt) => resolve(opt.value)}
+                  />
+                ),
+                () => resolve(null),
+              )
+            })
+            if (action == null) return
+            if (action === "add") {
+              const existingIDs = sync.data.provider_next.connected.filter(
+                (id) =>
+                  id === provider.id ||
+                  (id.startsWith(`${provider.id}-`) && /^\d+$/.test(id.slice(provider.id.length + 1))),
+              )
+              const nums = existingIDs
+                .map((id) => (id === provider.id ? 1 : parseInt(id.slice(provider.id.length + 1), 10)))
+                .sort((a, b) => b - a)
+              targetID = `${provider.id}-${(nums[0] ?? 0) + 1}`
+            }
+          }
+          await startOAuthFlow(targetID, provider.id)
+        },
+      })),
+    )
+
+    return [...regularEntries, ...multiAccountEntries].sort((a, b) => a._priority - b._priority)
+  })
+
   return options
 }
 
@@ -244,6 +335,13 @@ function ApiMethod(props: ApiMethodProps) {
             </text>
             <text fg={theme.text}>
               Go to <span style={{ fg: theme.primary }}>https://ironcode.cloud/zen</span> to get a key
+            </text>
+          </box>
+        ) : props.providerID === "alibaba" || props.providerID?.startsWith("alibaba-") ? (
+          <box gap={1}>
+            <text fg={theme.textMuted}>Qwen models via Alibaba DashScope.</text>
+            <text fg={theme.text}>
+              Get a key at <span style={{ fg: theme.primary }}>https://dashscope-intl.aliyun.com</span>
             </text>
           </box>
         ) : undefined
