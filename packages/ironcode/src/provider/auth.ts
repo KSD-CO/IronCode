@@ -57,10 +57,13 @@ export namespace ProviderAuth {
       method: z.number(),
     }),
     async (input): Promise<Authorization | undefined> => {
-      const auth = await state().then((s) => s.methods[input.providerID])
+      // Virtual accounts (e.g. github-copilot-2, anthropic-2) resolve to their base provider's auth methods
+      const baseProviderID = input.providerID.replace(/-\d+$/, "")
+      const auth = await state().then((s) => s.methods[baseProviderID])
       const method = auth.methods[input.method]
       if (method.type === "oauth") {
         const result = await method.authorize()
+        // Store pending keyed by the actual providerID (e.g. "github-copilot-2")
         await state().then((s) => (s.pending[input.providerID] = result))
         return {
           url: result.url,

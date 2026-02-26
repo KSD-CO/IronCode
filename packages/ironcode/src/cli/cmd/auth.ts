@@ -274,8 +274,9 @@ export const AuthLoginCommand = cmd({
           "github-copilot": 2,
           openai: 3,
           google: 4,
-          openrouter: 5,
-          vercel: 6,
+          alibaba: 5,
+          openrouter: 6,
+          vercel: 7,
         }
         let provider = await prompts.autocomplete({
           message: "Select provider",
@@ -295,6 +296,7 @@ export const AuthLoginCommand = cmd({
                   ironcode: "recommended",
                   anthropic: "Claude Max or API key",
                   openai: "ChatGPT Plus/Pro or API key",
+                  alibaba: "Qwen models — DashScope API key",
                 }[x.id],
               })),
             ),
@@ -309,7 +311,35 @@ export const AuthLoginCommand = cmd({
 
         const plugin = await Plugin.list().then((x) => x.findLast((x) => x.auth?.provider === provider))
         if (plugin && plugin.auth) {
-          const handled = await handlePluginAuth({ auth: plugin.auth }, provider)
+          const baseProvider = provider as string
+          let targetProvider = baseProvider
+
+          // Offer multi-account support for any plugin-based provider
+          const existingAuth = await Auth.all()
+          const existingAccounts = Object.keys(existingAuth).filter(
+            (id) =>
+              id === baseProvider ||
+              (id.startsWith(`${baseProvider}-`) && /^\d+$/.test(id.slice(baseProvider.length + 1))),
+          )
+          if (existingAccounts.length > 0) {
+            const action = await prompts.select({
+              message: `Found ${existingAccounts.length} ${providers[baseProvider]?.name ?? baseProvider} account(s). What would you like to do?`,
+              options: [
+                { label: "Add another account", value: "add" },
+                { label: "Replace existing account", value: "replace" },
+              ],
+            })
+            if (prompts.isCancel(action)) throw new UI.CancelledError()
+            if (action === "add") {
+              const nums = existingAccounts
+                .map((id) => (id === baseProvider ? 1 : parseInt(id.slice(baseProvider.length + 1), 10)))
+                .sort((a, b) => b - a)
+              const nextNum = (nums[0] ?? 0) + 1
+              targetProvider = `${baseProvider}-${nextNum}`
+            }
+          }
+
+          const handled = await handlePluginAuth({ auth: plugin.auth }, targetProvider)
           if (handled) return
         }
 
@@ -348,6 +378,13 @@ export const AuthLoginCommand = cmd({
           prompts.log.info("Create an api key at https://ironcode.cloud/auth")
         }
 
+        if (provider === "alibaba" || provider?.startsWith("alibaba-")) {
+          prompts.log.info(
+            "Create a DashScope API key at https://dashscope-intl.aliyun.com (international) or https://dashscope.aliyun.com (China).\n" +
+              "You can also set DASHSCOPE_API_KEY as an environment variable.",
+          )
+        }
+
         if (provider === "vercel") {
           prompts.log.info("You can create an api key at https://vercel.link/ai-gateway-token")
         }
@@ -356,6 +393,34 @@ export const AuthLoginCommand = cmd({
           prompts.log.info(
             "Cloudflare AI Gateway can be configured with CLOUDFLARE_GATEWAY_ID, CLOUDFLARE_ACCOUNT_ID, and CLOUDFLARE_API_TOKEN environment variables. Read more: https://ironcode.cloud/docs/providers/#cloudflare-ai-gateway",
           )
+        }
+
+        // Offer multi-account support for API key providers with existing credentials
+        {
+          const existingAllAuth = await Auth.all()
+          const baseProvID = provider
+          const existingAccounts = Object.keys(existingAllAuth).filter(
+            (id) =>
+              id === baseProvID ||
+              (id.startsWith(`${baseProvID}-`) && /^\d+$/.test(id.slice(baseProvID.length + 1))),
+          )
+          if (existingAccounts.length > 0) {
+            const action = await prompts.select({
+              message: `Found ${existingAccounts.length} ${providers[baseProvID]?.name ?? baseProvID} account(s). What would you like to do?`,
+              options: [
+                { label: "Add another account", value: "add" },
+                { label: "Replace existing account", value: "replace" },
+              ],
+            })
+            if (prompts.isCancel(action)) throw new UI.CancelledError()
+            if (action === "add") {
+              const nums = existingAccounts
+                .map((id) => (id === baseProvID ? 1 : parseInt(id.slice(baseProvID.length + 1), 10)))
+                .sort((a, b) => b - a)
+              const nextNum = (nums[0] ?? 0) + 1
+              provider = `${baseProvID}-${nextNum}`
+            }
+          }
         }
 
         const key = await prompts.password({
