@@ -2,7 +2,7 @@ import type { Hooks, PluginInput } from "@ironcode-ai/plugin"
 import { Installation } from "@/installation"
 import { iife } from "@/util/iife"
 
-const CLIENT_ID = "Ov23li8tweQw6odWQebz"
+const CLIENT_ID = "Ov23liJhPY3EVMi9b1KL"
 // Add a small safety buffer when polling to avoid hitting the server
 // slightly too early due to clock skew / timer drift.
 const OAUTH_POLLING_SAFETY_MARGIN_MS = 3000 // 3 seconds
