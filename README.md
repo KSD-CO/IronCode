@@ -220,6 +220,7 @@ IronCode is a **high-performance CLI fork** of [OpenCode](https://github.com/ano
 - 📝 **External Editor**: Opens `$EDITOR`/nvim with auto-install popup if not found
 - 💻 **Built-in Terminal**: Real terminal feel with syntax highlighting, fish-style autosuggest, and tab completion
 - 🔎 **Local Code Search**: BM25 + tree-sitter semantic search across your codebase — offline, zero latency, no ML model required
+- 📱 **Telegram Integration**: Control IronCode remotely via Telegram — send tasks from your phone and get live streaming output
 - 🏠 **100% Local**: No cloud services, works completely offline
 - 🔒 **Privacy First**: Your code never leaves your machine
 - 🎯 **Lightweight**: Stripped down to core functionality - CLI only
@@ -682,6 +683,48 @@ Enable native server-side tools from AI providers. These tools run on the provid
 
 > **Note**: Tools only activate when the current model matches the provider. For example, `anthropic:web_search` only works when using an Anthropic model (Claude). If you configure tools for multiple providers, only the relevant ones activate per session.
 
+### Telegram Integration
+
+Control IronCode remotely via a Telegram bot — send tasks from your phone and get real-time streaming output, just like the TUI.
+
+**Setup:**
+
+```bash
+# 1. Install IronCode and authenticate
+npm install -g ironcode-ai
+ironcode auth login
+
+# 2. Create a bot via @BotFather in Telegram, get the token
+
+# 3. Install the Telegram package
+bun install -g @ironcode-ai/telegram
+
+# 4. Configure your bot token
+ironcode-telegram setup
+# Saved to ~/.config/ironcode/telegram.json
+
+# 5. Start the bot from your project directory
+cd your-project
+ironcode-telegram
+```
+
+**Bot commands:**
+
+| Command | Description |
+| ------- | ----------- |
+| `/start` | Welcome message and quick reference |
+| `/new` | Start a new session |
+| `/sessions` | List all sessions with inline buttons to switch |
+| `/info` | Show current session ID and working directory |
+| _(any text)_ | Send a prompt — streams output live as the agent works |
+
+**How it works:**
+
+- The bot spawns an IronCode server in the current directory (same as running `ironcode`)
+- Responses stream in real-time as the agent generates text — messages update every ~1.2s
+- Tool calls (file edits, searches, bash commands) are reported as they complete
+- Sessions persist across messages; switch between them with `/sessions`
+
 ---
 
 ## Agents
@@ -843,6 +886,7 @@ Contributions are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) befo
 
 **Recent Contributions:**
 
+- ✅ **Telegram Integration** (`@ironcode-ai/telegram` — remote control via bot with live streaming output - Mar 2026)
 - ✅ **Multi-Account Providers + Round-Robin** (Anthropic, OpenAI, Google, Copilot, any API-key provider - Feb 2026)
 - ✅ **Native Wildcard + Bash Parser + Command Prefix (RETE)** (wildcard matching, tree-sitter bash, RETE rule engine - Feb 2026)
 - ✅ **Local Code Search** (BM25 + tree-sitter semantic search, 7 languages, offline - Feb 2026)
