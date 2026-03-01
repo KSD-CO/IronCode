@@ -111,6 +111,29 @@ export function createDialogProviderOptions() {
           category: "Connected",
           footer: "Connected",
           async onSelect() {
+            const action = await new Promise<"reconnect" | "disconnect" | null>((resolve) => {
+              dialog.replace(
+                () => (
+                  <DialogSelect
+                    title={provider.name}
+                    options={[
+                      { title: "Reconnect", value: "reconnect" as const },
+                      { title: "Disconnect", value: "disconnect" as const },
+                    ]}
+                    onSelect={(opt) => resolve(opt.value)}
+                  />
+                ),
+                () => resolve(null),
+              )
+            })
+            if (action == null) return
+            if (action === "disconnect") {
+              await sdk.client.auth.remove({ providerID: accountID })
+              await sdk.client.instance.dispose()
+              await sync.bootstrap()
+              dialog.clear()
+              return
+            }
             await startOAuthFlow(accountID, baseID)
           },
         })
@@ -161,8 +184,8 @@ export function createDialogProviderOptions() {
           async onSelect() {
             let targetID = provider.id
             if (isConnected) {
-              // Already connected — offer add vs replace before opening auth flow
-              const action = await new Promise<"add" | "replace" | null>((resolve) => {
+              // Already connected — offer add vs replace vs disconnect before opening auth flow
+              const action = await new Promise<"add" | "replace" | "disconnect" | null>((resolve) => {
                 dialog.replace(
                   () => (
                     <DialogSelect
@@ -170,6 +193,7 @@ export function createDialogProviderOptions() {
                       options={[
                         { title: "Add another account", value: "add" as const },
                         { title: "Replace existing account", value: "replace" as const },
+                        { title: "Disconnect", value: "disconnect" as const },
                       ]}
                       onSelect={(opt) => resolve(opt.value)}
                     />
@@ -178,6 +202,13 @@ export function createDialogProviderOptions() {
                 )
               })
               if (action == null) return
+              if (action === "disconnect") {
+                await sdk.client.auth.remove({ providerID: provider.id })
+                await sdk.client.instance.dispose()
+                await sync.bootstrap()
+                dialog.clear()
+                return
+              }
               if (action === "add") {
                 const existingIDs = sync.data.provider_next.connected.filter(
                   (id) =>
