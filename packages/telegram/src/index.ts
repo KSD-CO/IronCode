@@ -254,7 +254,7 @@ bot.command("sessions", async (ctx) => {
     return
   }
 
-  const list = res.data
+  const list = res.data!
     .filter((s) => !(s as any).time?.archived)
     .sort((a, b) => b.time.updated - a.time.updated)
     .slice(0, 10)
