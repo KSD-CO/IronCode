@@ -24,6 +24,37 @@
 
 ## 🎉 What's New
 
+### Mar 1, 2026 - Telegram Integration
+
+**Control IronCode remotely from your phone via Telegram:**
+
+- **`@ironcode-ai/telegram`** — new standalone package; install globally and run from any project directory
+- **Live streaming output** — agent responses stream in real time to your Telegram chat (throttled edits every 1.2s)
+- **Session management** — each conversation is a separate IronCode session; switch between sessions with inline keyboard buttons
+- **One-command setup** — `ironcode-telegram setup` walks you through token + allowed-user config, saved to `~/.config/ironcode/telegram.json`
+- **Server deployment** — run 24/7 on a VPS with PM2 or systemd; send tasks from your phone while the server does the work
+
+**Setup:**
+```bash
+npm install -g @ironcode-ai/telegram
+
+ironcode-telegram setup
+# → Enter your Telegram bot token (from @BotFather)
+# → Enter your Telegram user ID (from @userinfobot)
+
+cd your-project
+ironcode-telegram        # starts the bot, connects to IronCode
+```
+
+**Bot commands:**
+| Command | Description |
+|---------|-------------|
+| `/start` | Start a new IronCode session |
+| `/sessions` | List and switch between active sessions |
+| `/clear` | Clear current session history |
+| `/stop` | Stop current session |
+| _(any message)_ | Send task to IronCode, stream the response |
+
 ### Feb 26, 2026 - Multi-Account Providers & Round-Robin Load Balancing
 
 **Connect multiple API keys per provider and distribute load automatically:**
