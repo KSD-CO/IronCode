@@ -725,6 +725,58 @@ ironcode-telegram
 - Tool calls (file edits, searches, bash commands) are reported as they complete
 - Sessions persist across messages; switch between them with `/sessions`
 
+**Running on a server (24/7):**
+
+Deploy on a VPS or cloud instance so the bot is always available:
+
+```bash
+# 1. Install on the server
+npm install -g ironcode-ai
+bun install -g @ironcode-ai/telegram
+
+# 2. Authenticate with your AI provider
+ironcode auth login
+
+# 3. Clone your project
+git clone your-repo /app/my-project
+
+# 4. Setup bot token
+ironcode-telegram setup
+
+# 5. Run with PM2 (auto-restart, survives reboots)
+npm install -g pm2
+cd /app/my-project
+pm2 start --name ironcode-telegram -- ironcode-telegram
+pm2 save     # persist process list
+pm2 startup  # enable auto-start on reboot
+```
+
+Or with **systemd** (Linux):
+
+```ini
+# /etc/systemd/system/ironcode-telegram.service
+[Unit]
+Description=IronCode Telegram Bot
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/app/my-project
+ExecStart=/usr/local/bin/ironcode-telegram
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+sudo systemctl enable --now ironcode-telegram
+```
+
+> **Note:** `WorkingDirectory` is the project directory the bot will work with. For multiple projects, run a separate instance for each.
+
 ---
 
 ## Agents
