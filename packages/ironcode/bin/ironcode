@@ -47,20 +47,40 @@ if (!arch) {
 const base = "ironcode-" + platform + "-" + arch
 const binary = platform === "windows" ? "ironcode.exe" : "ironcode"
 
+function hasAvx2() {
+  if (platform !== "linux" || arch !== "x64") return true
+  try {
+    const cpuinfo = fs.readFileSync("/proc/cpuinfo", "utf8")
+    return cpuinfo.includes(" avx2 ")
+  } catch {
+    return true
+  }
+}
+
+const avx2 = hasAvx2()
+
 function findBinary(startDir) {
   let current = startDir
   for (;;) {
     const modules = path.join(current, "node_modules")
     if (fs.existsSync(modules)) {
       const entries = fs.readdirSync(modules)
+      // Collect all matching candidates
+      const candidates = []
       for (const entry of entries) {
-        if (!entry.startsWith(base)) {
-          continue
-        }
+        if (!entry.startsWith(base)) continue
         const candidate = path.join(modules, entry, "bin", binary)
         if (fs.existsSync(candidate)) {
-          return candidate
+          candidates.push({ entry, path: candidate })
         }
+      }
+      if (candidates.length > 0) {
+        // Prefer modern (AVX2) or baseline based on CPU capability
+        const preferred = avx2 ? "modern" : "baseline"
+        const exact = candidates.find((c) => c.entry === base + "-" + preferred)
+        if (exact) return exact.path
+        // Fall back: if only one exists, use it; otherwise pick first
+        return candidates[0].path
       }
     }
     const parent = path.dirname(current)

@@ -84,7 +84,7 @@ jobs:
 
       - name: Build
         id: build
-        run: bun ./packages/ironcode/script/build.ts --single
+        run: bun ./packages/ironcode/script/build.ts --single ${{ matrix.platform == 'linux' && '--baseline' || '' }}
         env:
           IRONCODE_VERSION: ${{ needs.version.outputs.version }}
           IRONCODE_RELEASE: ${{ needs.version.outputs.release }}
