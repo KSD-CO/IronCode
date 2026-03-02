@@ -24,6 +24,20 @@
 
 ## 🎉 What's New
 
+### Mar 2, 2026 - AI SDK v6 Upgrade
+
+**Upgraded to Vercel AI SDK v6 with agent loop compatibility:**
+
+- **Root cause**: AI SDK v6 changed behavior — after tools execute, it emits `finishReason: "stop"` (or `undefined`) instead of `"tool-calls"` like v5. IronCode's custom loop control depends on `finishReason === "tool-calls"` to continue the agent loop.
+- **Solution**: Added `hasToolCalls` tracking variable in `processor.ts` that monitors tool execution per turn. When tools are called but SDK returns `finishReason: "stop"`, we override it to `"tool-calls"` to maintain proper loop continuation.
+- **Impact**: Multi-turn agent conversations now work correctly with AI SDK v6. The agent properly continues after tool calls instead of stopping prematurely.
+
+**Technical details:**
+- Track tool execution with `hasToolCalls` boolean flag
+- Override `finishReason` from "stop" → "tool-calls" when tools were called
+- Reset tracking at start of each turn
+- Zero breaking changes to existing functionality
+
 ### Mar 2, 2026 - Fix TUI crash when MCP servers are configured
 
 Fixed a fatal crash (`TextNodeRenderable only accepts strings...`) that occurred ~5–10 seconds after startup whenever MCP servers were defined in `~/.config/ironcode/ironcode.json`.

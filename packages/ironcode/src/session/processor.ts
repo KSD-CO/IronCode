@@ -34,6 +34,7 @@ export namespace SessionProcessor {
     let blocked = false
     let attempt = 0
     let needsCompaction = false
+    let hasToolCalls = false // Track if any tool calls occurred in this turn
 
     const result = {
       get message() {
@@ -45,22 +46,13 @@ export namespace SessionProcessor {
       async process(streamInput: LLM.StreamInput) {
         log.info("process")
         needsCompaction = false
+        hasToolCalls = false // Reset for each process call
         const shouldBreak = (await Config.get()).experimental?.continue_loop_on_deny !== true
         while (true) {
           try {
             let currentText: MessageV2.TextPart | undefined
             let reasoningMap: Record<string, MessageV2.ReasoningPart> = {}
-            let lastStep: { finishReason: string; usage: any; providerMetadata?: any } | undefined
-            const stream = await LLM.stream({
-              ...streamInput,
-              onStepFinish: (step) => {
-                lastStep = {
-                  finishReason: step.finishReason,
-                  usage: step.usage,
-                  providerMetadata: step.providerMetadata,
-                }
-              },
-            })
+            const stream = await LLM.stream(streamInput)
 
             for await (const value of stream.fullStream) {
               input.abort.throwIfAborted()
@@ -86,14 +78,17 @@ export namespace SessionProcessor {
                   }
                   break
 
-                case "reasoning-delta":
+                case "reasoning-delta": {
+                  // AI SDK v6 emits 'delta' at runtime but TS type declares 'text'
+                  const reasoningDelta = (value as any).delta ?? value.text
                   if (value.id in reasoningMap) {
                     const part = reasoningMap[value.id]
-                    part.text += value.text
+                    part.text += reasoningDelta
                     if (value.providerMetadata) part.metadata = value.providerMetadata
-                    if (part.text) await Session.updatePart({ part, delta: value.text })
+                    if (part.text) await Session.updatePart({ part, delta: reasoningDelta })
                   }
                   break
+                }
 
                 case "reasoning-end":
                   if (value.id in reasoningMap) {
@@ -110,22 +105,25 @@ export namespace SessionProcessor {
                   }
                   break
 
-                case "tool-input-start":
+                case "tool-input-start": {
+                  // AI SDK v6 emits 'toolCallId' at runtime but the TS type declares 'id'
+                  const toolCallId = (value as any).toolCallId ?? value.id
                   const part = await Session.updatePart({
-                    id: toolcalls[value.id]?.id ?? Identifier.ascending("part"),
+                    id: toolcalls[toolCallId]?.id ?? Identifier.ascending("part"),
                     messageID: input.assistantMessage.id,
                     sessionID: input.assistantMessage.sessionID,
                     type: "tool",
                     tool: value.toolName,
-                    callID: value.id,
+                    callID: toolCallId,
                     state: {
                       status: "pending",
                       input: {},
                       raw: "",
                     },
                   })
-                  toolcalls[value.id] = part as MessageV2.ToolPart
+                  toolcalls[toolCallId] = part as MessageV2.ToolPart
                   break
+                }
 
                 case "tool-input-delta":
                   break
@@ -134,6 +132,7 @@ export namespace SessionProcessor {
                   break
 
                 case "tool-call": {
+                  hasToolCalls = true // Mark that we have tool calls
                   const match = toolcalls[value.toolCallId]
                   if (match) {
                     const part = await Session.updatePart({
@@ -244,14 +243,20 @@ export namespace SessionProcessor {
                   break
 
                 case "finish-step": {
-                  const stepData = lastStep
-                  lastStep = undefined
                   const usage = Session.getUsage({
                     model: input.model,
-                    usage: stepData?.usage,
-                    metadata: stepData?.providerMetadata,
+                    usage: value.usage,
+                    metadata: value.providerMetadata,
                   })
-                  const finishReason = stepData?.finishReason ?? "stop"
+                  let finishReason = value.finishReason ?? "stop"
+                  
+                  // AI SDK v6 fix: If tool calls occurred, override finishReason to "tool-calls"
+                  // to ensure the agent loop continues. This handles cases where the SDK
+                  // returns "stop" or undefined after executing tools.
+                  if (hasToolCalls && finishReason === "stop") {
+                    finishReason = "tool-calls"
+                  }
+                  
                   input.assistantMessage.finish = finishReason
                   input.assistantMessage.cost += usage.cost
                   input.assistantMessage.tokens = usage.tokens
@@ -304,17 +309,20 @@ export namespace SessionProcessor {
                   }
                   break
 
-                case "text-delta":
+                case "text-delta": {
+                  // AI SDK v6 emits 'delta' at runtime but TS type declares 'text'
+                  const textDelta = (value as any).delta ?? value.text
                   if (currentText) {
-                    currentText.text += value.text
+                    currentText.text += textDelta
                     if (value.providerMetadata) currentText.metadata = value.providerMetadata
                     if (currentText.text)
                       await Session.updatePart({
                         part: currentText,
-                        delta: value.text,
+                        delta: textDelta,
                       })
                   }
                   break
+                }
 
                 case "text-end":
                   if (currentText) {
