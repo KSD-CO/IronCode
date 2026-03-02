@@ -1166,11 +1166,11 @@ export function Session() {
                 sessionID={route.sessionID}
                 hint={
                   <Show when={changeCounts().additions > 0 || changeCounts().deletions > 0}>
-                    <span style={{ fg: theme.textMuted }}>
+                    <text fg={theme.textMuted}>
                       {" "}
                       <span style={{ fg: theme.success }}>+{changeCounts().additions}</span>{" "}
                       <span style={{ fg: theme.error }}>-{changeCounts().deletions}</span>
-                    </span>
+                    </text>
                   </Show>
                 }
               />
