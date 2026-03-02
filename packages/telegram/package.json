@@ -18,7 +18,8 @@
     "grammy": "^1.36.3"
   },
   "devDependencies": {
-    "@types/node": "^22.13.9",
-    "typescript": "^5.9.3"
+    "@types/node": "catalog:",
+    "@typescript/native-preview": "catalog:",
+    "typescript": "catalog:"
   }
 }
