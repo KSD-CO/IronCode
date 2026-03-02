@@ -24,6 +24,15 @@
 
 ## 🎉 What's New
 
+### Mar 2, 2026 - Fix TUI crash when MCP servers are configured
+
+Fixed a fatal crash (`TextNodeRenderable only accepts strings...`) that occurred ~5–10 seconds after startup whenever MCP servers were defined in `~/.config/ironcode/ironcode.json`.
+
+- **Root cause 1** (`prompt/index.tsx`): `{props.hint}` was placed inside a `<text>` node. The MCP hint in `home.tsx` renders a `<box>`, which is not a valid child of `TextNodeRenderable`. When MCP status loaded after bootstrap, the reactive update tried to insert a `BoxRenderable` into a `TextNodeRenderable`, crashing the TUI.
+- **Root cause 2** (`dialog-select.tsx`): The `footer` prop was always wrapped in `<text>`, but `DialogMcp` passes a JSX element (`<Status>` component) as footer — also not text-compatible.
+
+**Fix:** Moved `{props.hint}` outside the `<text>` tag in prompt; added type-branching for footer rendering in dialog-select.
+
 ### Mar 1, 2026 - Telegram Integration
 
 **Control IronCode remotely from your phone via Telegram:**

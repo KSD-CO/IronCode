@@ -1177,8 +1177,8 @@ export function Prompt(props: PromptProps) {
                   </text>
                   <text fg={theme.text}>
                     {keybind.print("review_toggle" as any)} <span style={{ fg: theme.textMuted }}>changes</span>
-                    {props.hint}
                   </text>
+                  {props.hint}
                 </Match>
                 <Match when={store.mode === "shell"}>
                   <text fg={theme.text}>

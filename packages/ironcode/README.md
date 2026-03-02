@@ -182,6 +182,20 @@ Virtual accounts are auto-discovered at startup — no extra configuration neede
 
 ## Changelog
 
+### Mar 2, 2026 — Fix TUI crash when MCP servers are configured
+
+Fixed a fatal `TextNodeRenderable only accepts strings...` crash that occurred ~5–10 seconds after startup whenever MCP servers were defined in `~/.config/ironcode/ironcode.json`.
+
+**Root cause (2 issues):**
+
+1. **`prompt/index.tsx`** — `{props.hint}` was placed inside a `<text>` node. The `Hint` element in `home.tsx` contains a `<box>` (BoxRenderable), which is not a valid child of TextNodeRenderable. When MCP status loaded after bootstrap and `connectedMcpCount() > 0` became true, the `<Show>` component rendered the `<box>` into the `<text>`, causing the crash.
+
+2. **`ui/dialog-select.tsx`** — The `footer` prop (typed as `JSX.Element | string`) was always wrapped in `<text>`. When `DialogMcp` passed a `<Status>` component (a JSX element) as `footer`, it could not be inserted into a TextNodeRenderable.
+
+**Fixes:**
+- `prompt/index.tsx`: moved `{props.hint}` outside the `<text>` tag so it renders as a flex sibling inside the parent `<box flexDirection="row">`.
+- `dialog-select.tsx`: footer rendering now branches on type — strings are wrapped in `<text>`, JSX elements are rendered directly in the `<box>`.
+
 ### Feb 26, 2026 — Multi-Account Support for All Providers
 
 Generalized multi-account + round-robin to work with any API-key-based provider (Anthropic, OpenAI, Google, MiniMax, Qwen, etc.):
