@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "dev": "bun run src/index.ts",
-    "typecheck": "tsgo --noEmit"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@ironcode-ai/sdk": "^1.15.4",
