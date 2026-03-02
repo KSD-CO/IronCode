@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "version": "1.16.3",
+  "version": "1.17.0",
   "name": "ironcode",
   "type": "module",
   "license": "MIT",
