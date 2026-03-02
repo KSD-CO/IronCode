@@ -50,7 +50,17 @@ export namespace SessionProcessor {
           try {
             let currentText: MessageV2.TextPart | undefined
             let reasoningMap: Record<string, MessageV2.ReasoningPart> = {}
-            const stream = await LLM.stream(streamInput)
+            let lastStep: { finishReason: string; usage: any; providerMetadata?: any } | undefined
+            const stream = await LLM.stream({
+              ...streamInput,
+              onStepFinish: (step) => {
+                lastStep = {
+                  finishReason: step.finishReason,
+                  usage: step.usage,
+                  providerMetadata: step.providerMetadata,
+                }
+              },
+            })
 
             for await (const value of stream.fullStream) {
               input.abort.throwIfAborted()
@@ -233,18 +243,21 @@ export namespace SessionProcessor {
                   })
                   break
 
-                case "finish-step":
+                case "finish-step": {
+                  const stepData = lastStep
+                  lastStep = undefined
                   const usage = Session.getUsage({
                     model: input.model,
-                    usage: value.usage,
-                    metadata: value.providerMetadata,
+                    usage: stepData?.usage,
+                    metadata: stepData?.providerMetadata,
                   })
-                  input.assistantMessage.finish = value.finishReason
+                  const finishReason = stepData?.finishReason ?? "stop"
+                  input.assistantMessage.finish = finishReason
                   input.assistantMessage.cost += usage.cost
                   input.assistantMessage.tokens = usage.tokens
                   await Session.updatePart({
                     id: Identifier.ascending("part"),
-                    reason: value.finishReason,
+                    reason: finishReason,
                     snapshot: await Snapshot.track(),
                     messageID: input.assistantMessage.id,
                     sessionID: input.assistantMessage.sessionID,
@@ -275,6 +288,7 @@ export namespace SessionProcessor {
                     needsCompaction = true
                   }
                   break
+                }
 
                 case "text-start":
                   currentText = {

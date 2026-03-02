@@ -6,6 +6,7 @@ import {
   wrapLanguageModel,
   type ModelMessage,
   type StreamTextResult,
+  type StepResult,
   type Tool,
   type ToolSet,
   tool,
@@ -40,6 +41,7 @@ export namespace LLM {
     small?: boolean
     tools: Record<string, Tool>
     retries?: number
+    onStepFinish?: (step: StepResult<ToolSet>) => void | Promise<void>
   }
 
   export type StreamOutput = StreamTextResult<ToolSet, never>
@@ -264,6 +266,7 @@ export namespace LLM {
     }
 
     return streamText({
+      onStepFinish: input.onStepFinish,
       onError(error) {
         l.error("stream error", {
           error,
