@@ -171,7 +171,7 @@ describe("session.getUsage", () => {
         inputTokens: 1000,
         outputTokens: 500,
         totalTokens: 1500,
-      },
+      } as any,
     })
 
     expect(result.tokens.input).toBe(1000)
@@ -190,7 +190,7 @@ describe("session.getUsage", () => {
         outputTokens: 500,
         totalTokens: 1500,
         cachedInputTokens: 200,
-      },
+      } as any,
     })
 
     expect(result.tokens.input).toBe(800)
@@ -205,7 +205,7 @@ describe("session.getUsage", () => {
         inputTokens: 1000,
         outputTokens: 500,
         totalTokens: 1500,
-      },
+      } as any,
       metadata: {
         anthropic: {
           cacheCreationInputTokens: 300,
@@ -225,7 +225,7 @@ describe("session.getUsage", () => {
         outputTokens: 500,
         totalTokens: 1500,
         cachedInputTokens: 200,
-      },
+      } as any,
       metadata: {
         anthropic: {},
       },
@@ -244,7 +244,7 @@ describe("session.getUsage", () => {
         outputTokens: 500,
         totalTokens: 1500,
         reasoningTokens: 100,
-      },
+      } as any,
     })
 
     expect(result.tokens.reasoning).toBe(100)
@@ -258,7 +258,7 @@ describe("session.getUsage", () => {
         inputTokens: 0,
         outputTokens: 0,
         totalTokens: 0,
-      },
+      } as any,
     })
 
     expect(result.tokens.input).toBe(0)
@@ -285,7 +285,7 @@ describe("session.getUsage", () => {
         inputTokens: 1_000_000,
         outputTokens: 100_000,
         totalTokens: 1_100_000,
-      },
+      } as any,
     })
 
     expect(result.cost).toBe(3 + 1.5)

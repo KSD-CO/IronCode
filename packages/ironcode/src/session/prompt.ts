@@ -10,7 +10,7 @@ import { SessionRevert } from "./revert"
 import { Session } from "."
 import { Agent } from "../agent/agent"
 import { Provider } from "../provider/provider"
-import { type Tool as AITool, tool, jsonSchema, type ToolCallOptions, asSchema } from "ai"
+import { type Tool as AITool, tool, jsonSchema, type ToolExecutionOptions, asSchema } from "ai"
 import { SessionCompaction } from "./compaction"
 import { Instance } from "../project/instance"
 import { Bus } from "../bus"
@@ -701,7 +701,7 @@ export namespace SessionPrompt {
     using _ = log.time("resolveTools")
     const tools: Record<string, AITool> = {}
 
-    const context = (args: any, options: ToolCallOptions): Tool.Context => ({
+    const context = (args: any, options: ToolExecutionOptions): Tool.Context => ({
       sessionID: input.session.id,
       abort: options.abortSignal!,
       messageID: input.processor.message.id,
@@ -770,7 +770,11 @@ export namespace SessionPrompt {
           )
           return result
         },
-        toModelOutput(output) {
+        toModelOutput(
+          {
+            output
+          }
+        ) {
           return { type: "text", value: output.output }
         },
       })
@@ -780,7 +784,7 @@ export namespace SessionPrompt {
       const execute = item.execute
       if (!execute) continue
 
-      const transformed = ProviderTransform.schema(input.model, asSchema(item.inputSchema).jsonSchema)
+      const transformed = ProviderTransform.schema(input.model, await Promise.resolve(asSchema(item.inputSchema).jsonSchema))
       item.inputSchema = jsonSchema(transformed)
       // Wrap execute to add plugin hooks and format output
       item.execute = async (args, opts) => {
@@ -1897,7 +1901,7 @@ NOTE: At any point in time through this workflow you should feel free to ask the
           : await MessageV2.toModelMessages(contextMessages, model)),
       ],
     })
-    const text = await result.text.catch((err) => log.error("failed to generate title", { error: err }))
+    const text = await Promise.resolve(result.text).catch((err) => log.error("failed to generate title", { error: err }))
     if (text)
       return Session.update(
         input.session.id,
@@ -1913,6 +1917,6 @@ NOTE: At any point in time through this workflow you should feel free to ask the
           draft.title = title
         },
         { touch: false },
-      )
+      );
   }
 }

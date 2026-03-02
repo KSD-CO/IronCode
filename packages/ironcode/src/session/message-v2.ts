@@ -462,7 +462,7 @@ export namespace MessageV2 {
       return false
     })()
 
-    const toModelOutput = (output: unknown) => {
+    const toModelOutput = ({ output }: { output: unknown }) => {
       if (typeof output === "string") {
         return { type: "text", value: output }
       }

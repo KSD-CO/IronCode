@@ -42,7 +42,7 @@ export namespace LLM {
     retries?: number
   }
 
-  export type StreamOutput = StreamTextResult<ToolSet, unknown>
+  export type StreamOutput = StreamTextResult<ToolSet, never>
 
   export async function stream(input: StreamInput) {
     const l = log
