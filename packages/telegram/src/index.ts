@@ -107,8 +107,24 @@ function sessionLabel(s: Session, isCurrent: boolean) {
 const bot = new Bot(cfg.token)
 
 console.log("🚀 Starting ironcode server...")
-const ironcode = await createIroncode({ port: 0 })
-console.log("✅ Ironcode server ready at", ironcode.server.url)
+let localServer: Awaited<ReturnType<typeof createIroncode>>
+try {
+  localServer = await createIroncode({ port: 0 })
+} catch (err: any) {
+  const msg = err?.message ?? String(err)
+  if (msg.includes("exited with code 0") || msg.includes("ENOENT") || msg.includes("Illegal instruction")) {
+    console.error("❌ Failed to start ironcode server.\n")
+    console.error("   Make sure the ironcode CLI is installed and authenticated:")
+    console.error("   1. npm install -g ironcode-ai")
+    console.error("   2. ironcode auth login")
+    console.error("   3. ironcode serve  ← test manually first\n")
+  } else {
+    console.error("❌ Failed to start ironcode server:", msg)
+  }
+  process.exit(1)
+}
+console.log("✅ Ironcode server ready at", localServer.server.url)
+const client = localServer.client
 
 type SessionState = {
   sessionId: string
@@ -117,6 +133,7 @@ type SessionState = {
   liveMessageId?: number
   liveText: string
   lastEditMs: number
+  currentTool?: string
 }
 
 const EDIT_INTERVAL_MS = 1200
@@ -136,7 +153,7 @@ async function editLive(state: SessionState, text: string) {
 
 // Event loop
 ;(async () => {
-  const events = await ironcode.client.event.subscribe()
+  const events = await client.event.subscribe()
   for await (const event of events.stream) {
     const getState = (sessionID: string) =>
       [...sessions.values()].find((s) => s.sessionId === sessionID)
@@ -153,13 +170,26 @@ async function editLive(state: SessionState, text: string) {
           await editLive(state, state.liveText)
           state.lastEditMs = now
         }
-      } else if (part.type === "tool" && part.state?.status === "completed") {
-        await bot.api
-          .sendMessage(state.chatId, `*${part.tool}* — ${part.state.title}`, {
-            parse_mode: "Markdown",
-            ...(state.threadId ? { message_thread_id: state.threadId } : {}),
-          })
-          .catch(() => {})
+      } else if (part.type === "tool") {
+        if (part.state?.status === "completed") {
+          state.currentTool = undefined
+          await bot.api
+            .sendMessage(state.chatId, `🔧 *${part.tool}* — ${part.state.title}`, {
+              parse_mode: "Markdown",
+              ...(state.threadId ? { message_thread_id: state.threadId } : {}),
+            })
+            .catch(() => {})
+        } else if (state.currentTool !== part.tool) {
+          // Tool just started — show loading indicator if no text yet
+          state.currentTool = part.tool
+          if (!state.liveText.trim() && state.liveMessageId) {
+            const now = Date.now()
+            if (now - state.lastEditMs > 500) {
+              await editLive(state, `⏳ ${part.tool}...`)
+              state.lastEditMs = now
+            }
+          }
+        }
       }
     } else if (event.type === "message.updated") {
       const info = event.properties.info as any
@@ -172,18 +202,31 @@ async function editLive(state: SessionState, text: string) {
         await editLive(state, `❌ ${msg}`)
         state.liveMessageId = undefined
         state.liveText = ""
+        state.currentTool = undefined
         continue
       }
 
       if (info.finish && info.finish !== "tool-calls" && info.finish !== "unknown") {
         const finalText = state.liveText.trim()
+        const savedMessageId = state.liveMessageId
+
         if (finalText) {
           await editLive(state, finalText)
-        } else if (state.liveMessageId) {
-          await bot.api.deleteMessage(state.chatId, state.liveMessageId).catch(() => {})
+        } else if (savedMessageId) {
+          // No text output (only tools ran) — show done in placeholder
+          await bot.api.editMessageText(state.chatId, savedMessageId, "✅ Done").catch(() => {})
         }
+
+        // Add ✅ reaction to signal completion
+        if (savedMessageId) {
+          await bot.api
+            .setMessageReaction(state.chatId, savedMessageId, [{ type: "emoji", emoji: "👍" }])
+            .catch(() => {})
+        }
+
         state.liveMessageId = undefined
         state.liveText = ""
+        state.currentTool = undefined
       }
     }
   }
@@ -223,7 +266,7 @@ bot.command("info", async (ctx) => {
     return
   }
 
-  const res = await ironcode.client.session.get({ path: { id: state.sessionId } })
+  const res = await client.session.get({ path: { id: state.sessionId } })
   if (res.error) {
     await ctx.reply(`❌ ${JSON.stringify(res.error)}`)
     return
@@ -248,15 +291,15 @@ bot.command("sessions", async (ctx) => {
   const key = getChatKey(ctx.chat.id, ctx.message?.message_thread_id)
   const currentState = sessions.get(key)
 
-  const res = await ironcode.client.session.list()
+  const res = await client.session.list()
   if (res.error) {
     await ctx.reply(`❌ ${JSON.stringify(res.error)}`)
     return
   }
 
   const list = res.data!
-    .filter((s) => !(s as any).time?.archived)
-    .sort((a, b) => b.time.updated - a.time.updated)
+    .filter((s: any) => !s.time?.archived)
+    .sort((a: any, b: any) => b.time.updated - a.time.updated)
     .slice(0, 10)
 
   if (list.length === 0) {
@@ -278,7 +321,7 @@ bot.callbackQuery(/^switch:(.+)$/, async (ctx) => {
   const threadId = (ctx.callbackQuery.message as any)?.message_thread_id
   const key = getChatKey(chatId, threadId)
 
-  const res = await ironcode.client.session.get({ path: { id: sessionId } })
+  const res = await client.session.get({ path: { id: sessionId } })
   if (res.error) {
     await ctx.answerCallbackQuery({ text: "❌ Session not found" })
     return
@@ -304,7 +347,7 @@ bot.on("message:text", async (ctx) => {
   let state = sessions.get(key)
 
   if (!state) {
-    const res = await ironcode.client.session.create({
+    const res = await client.session.create({
       body: { title: `Telegram ${ctx.chat.type} ${key}` },
     })
     if (res.error) {
@@ -314,7 +357,7 @@ bot.on("message:text", async (ctx) => {
     state = { sessionId: res.data.id, chatId, threadId, liveText: "", lastEditMs: 0 }
     sessions.set(key, state)
 
-    const share = await ironcode.client.session.share({ path: { id: res.data.id } })
+    const share = await client.session.share({ path: { id: res.data.id } })
     if (!share.error && share.data?.share?.url) {
       await ctx.reply(`🔗 Session: ${share.data.share.url}`)
     }
@@ -326,13 +369,25 @@ bot.on("message:text", async (ctx) => {
   state.liveMessageId = placeholder.message_id
   state.liveText = ""
   state.lastEditMs = 0
+  state.currentTool = undefined
+
+  // Show "typing..." indicator immediately and keep it alive every 4s
+  const sendTyping = () =>
+    bot.api.sendChatAction(chatId, "typing", threadId ? { message_thread_id: threadId } : {}).catch(() => {})
+  sendTyping()
+  const typingInterval = setInterval(() => {
+    if (!state.liveMessageId) return
+    sendTyping()
+  }, 4000)
 
   const model = cfg.model ? parseModel(cfg.model) : undefined
 
-  const result = await ironcode.client.session.promptAsync({
+  const result = await client.session.promptAsync({
     path: { id: state.sessionId },
     body: { parts: [{ type: "text", text }], model },
   })
+
+  clearInterval(typingInterval)
 
   if (result.error) {
     await ctx.api.editMessageText(chatId, placeholder.message_id, `❌ ${JSON.stringify(result.error)}`)
