@@ -22,6 +22,24 @@
 
 ---
 
+## What's New
+
+### v1.17.3 — Rust Rule Engine Migration
+- **Permission Rule Engine** — `PermissionNext.evaluate()` và `disabled()` migrated to Rust. Toàn bộ ruleset được batch vào 1 FFI call thay vì N roundtrip từ JS
+- **File Ignore Matching** — `FileIgnore.match()` migrated to Rust với `globset` compiled regex, nhanh hơn per-call `Bun.Glob` allocation
+- **Dead code removed** — `permission/arity.ts` (BashArity) đã xóa, thay bởi `extractPrefixFFI` (Rust) có từ trước
+
+### v1.17.2 — Telegram Enhancement
+- **`/init` command** — Phân tích project và tạo `AGENTS.md` từ bot Telegram
+- **Code diff streaming** — `/diff` hiển thị tất cả file thay đổi trong session hiện tại
+- **Session management UI** — `/sessions` với inline switch buttons
+
+### v1.17.0 — AI SDK v6
+- Upgrade lên AI SDK v6 với support đầy đủ các provider mới
+- Cải thiện UX terminal
+
+---
+
 ## What is IronCode?
 
 IronCode is a **high-performance CLI AI coding agent** — a fork of [OpenCode](https://github.com/anomalyco/opencode) that runs entirely on your machine. It rewrites performance-critical components in Rust for dramatically improved speed and memory efficiency.
