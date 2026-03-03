@@ -246,7 +246,9 @@ bot.command("start", async (ctx) => {
       "Commands:\n" +
       "/sessions — list sessions\n" +
       "/new — start a new session\n" +
-      "/info — current session details",
+      "/info — current session details\n" +
+      "/init — create AGENTS.md for current project\n" +
+      "/diff — show code changes in this session",
     { parse_mode: "Markdown" },
   )
 })
@@ -285,6 +287,76 @@ bot.command("info", async (ctx) => {
       changes,
     { parse_mode: "Markdown" },
   )
+})
+
+bot.command("init", async (ctx) => {
+  const key = getChatKey(ctx.chat.id, ctx.message?.message_thread_id)
+  let state = sessions.get(key)
+
+  if (!state) {
+    const res = await client.session.create({
+      body: { title: `Telegram ${ctx.chat.type} ${key}` },
+    })
+    if (res.error) {
+      await ctx.reply(`❌ Failed to create session: ${JSON.stringify(res.error)}`)
+      return
+    }
+    state = { sessionId: res.data.id, chatId: ctx.chat.id, threadId: ctx.message?.message_thread_id, liveText: "", lastEditMs: 0 }
+    sessions.set(key, state)
+  }
+
+  const placeholder = await ctx.reply("⏳ Analyzing project and creating AGENTS.md...")
+
+  const model = cfg.model ? parseModel(cfg.model) : undefined
+  const res = await client.session.command({
+    path: { id: state.sessionId },
+    body: { command: "init", arguments: "", ...(model ? { model: `${model.providerID}/${model.modelID}` } : {}) },
+  })
+
+  if (res.error) {
+    await bot.api
+      .editMessageText(ctx.chat.id, placeholder.message_id, `❌ ${JSON.stringify(res.error)}`)
+      .catch(() => {})
+    return
+  }
+
+  await bot.api
+    .editMessageText(ctx.chat.id, placeholder.message_id, "✅ *AGENTS.md created!*\n\nThe AI agent has analyzed your project and written configuration.", {
+      parse_mode: "Markdown",
+    })
+    .catch(() => {})
+})
+
+bot.command("diff", async (ctx) => {
+  const key = getChatKey(ctx.chat.id, ctx.message?.message_thread_id)
+  const state = sessions.get(key)
+
+  if (!state) {
+    await ctx.reply("No active session. Send a message to create one.")
+    return
+  }
+
+  const res = await client.session.diff({ path: { id: state.sessionId } })
+  if (res.error) {
+    await ctx.reply(`❌ ${JSON.stringify(res.error)}`)
+    return
+  }
+
+  const diffs = res.data ?? []
+
+  if (diffs.length === 0) {
+    await ctx.reply("📊 No code changes in this session.")
+    return
+  }
+
+  const totalAdd = diffs.reduce((s, d) => s + d.additions, 0)
+  const totalDel = diffs.reduce((s, d) => s + d.deletions, 0)
+
+  const fileLines = diffs.map((d) => `✏️ \`${d.file}\` (+${d.additions}/-${d.deletions})`).join("\n")
+
+  const msg = `📝 *Code Changes* — ${diffs.length} files · +${totalAdd}/-${totalDel}\n\n${fileLines}`
+
+  await ctx.reply(msg.slice(0, 4096), { parse_mode: "Markdown" })
 })
 
 bot.command("sessions", async (ctx) => {
@@ -363,7 +435,8 @@ bot.on("message:text", async (ctx) => {
     }
   }
 
-  const placeholder = await ctx.reply("⏳", {
+  const placeholder = await ctx.reply("🤔 Thinking\\.\\.\\.", {
+    parse_mode: "MarkdownV2",
     ...(threadId ? { message_thread_id: threadId } : {}),
   })
   state.liveMessageId = placeholder.message_id

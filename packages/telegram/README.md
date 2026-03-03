@@ -74,16 +74,19 @@ The agent runs with the current directory as its working directory, so it can re
 | `/sessions` | List recent sessions — tap to switch |
 | `/new` | Start a new session |
 | `/info` | Show current session details (title, ID, file changes) |
+| `/init` | Analyze the project and create an `AGENTS.md` config file |
+| `/diff` | Show all file changes made in the current session |
 | `/start` | Show help |
 
 ## How It Works
 
 ```
 You send a message
+  → Bot shows 🤔 Thinking... while the agent starts up
   → Bot creates/resumes an ironcode session on your machine
   → Agent reads/writes files, runs bash, calls LLM
   → Each completed tool call is sent as a separate message
-  → Text response is streamed live by editing a ⏳ placeholder
+  → Text response is streamed live by editing the placeholder
   → Final response replaces the placeholder when done
 ```
 
