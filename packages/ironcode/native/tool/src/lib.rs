@@ -5,6 +5,7 @@ pub mod archive;
 pub mod bm25;
 pub mod codesearch;
 pub mod edit;
+pub mod file_ignore;
 pub mod file_list;
 pub mod fuzzy;
 pub mod glob;
@@ -13,6 +14,7 @@ pub mod indexer;
 pub mod lock;
 pub mod ls;
 pub mod read;
+pub mod permission;
 pub mod shell;
 pub mod stats;
 pub mod terminal;
@@ -1891,4 +1893,143 @@ pub unsafe extern "C" fn extract_prefix_ffi(tokens_json: *const c_char) -> *mut 
         Ok(c) => c.into_raw(),
         Err(_) => std::ptr::null_mut(),
     }
+}
+
+/// Evaluate a permission request against a ruleset.
+///
+/// Arguments:
+/// - `permission_str`: the permission name (e.g. "bash", "edit")
+/// - `pattern_str`: the pattern to match (e.g. "ls -la", "/home/user/*")
+/// - `rules_json`: JSON array of `{permission, pattern, action}` objects
+///
+/// Returns: JSON of matched `{permission, pattern, action}`, or default `{action:"ask"}`.
+///
+/// # Safety
+/// The caller must ensure all pointers are valid, non-null, null-terminated C strings.
+#[no_mangle]
+pub unsafe extern "C" fn evaluate_permission_ffi(
+    permission_str: *const c_char,
+    pattern_str: *const c_char,
+    rules_json: *const c_char,
+) -> *mut c_char {
+    let permission = unsafe {
+        if permission_str.is_null() { return std::ptr::null_mut(); }
+        match CStr::from_ptr(permission_str).to_str() {
+            Ok(s) => s,
+            Err(_) => return std::ptr::null_mut(),
+        }
+    };
+    let pattern = unsafe {
+        if pattern_str.is_null() { return std::ptr::null_mut(); }
+        match CStr::from_ptr(pattern_str).to_str() {
+            Ok(s) => s,
+            Err(_) => return std::ptr::null_mut(),
+        }
+    };
+    let rules_str = unsafe {
+        if rules_json.is_null() { return std::ptr::null_mut(); }
+        match CStr::from_ptr(rules_json).to_str() {
+            Ok(s) => s,
+            Err(_) => return std::ptr::null_mut(),
+        }
+    };
+    let rules: Vec<permission::PermissionRule> =
+        serde_json::from_str(rules_str).unwrap_or_default();
+    let result = permission::evaluate_permission(permission, pattern, &rules);
+    match serde_json::to_string(&result) {
+        Ok(json) => match CString::new(json) {
+            Ok(c) => c.into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        },
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// Return the subset of tools denied by a ruleset.
+///
+/// Arguments:
+/// - `tools_json`: JSON array of tool name strings
+/// - `ruleset_json`: JSON array of `{permission, pattern, action}` objects
+///
+/// Returns: JSON array of denied tool names.
+///
+/// # Safety
+/// The caller must ensure all pointers are valid, non-null, null-terminated C strings.
+#[no_mangle]
+pub unsafe extern "C" fn disabled_tools_ffi(
+    tools_json: *const c_char,
+    ruleset_json: *const c_char,
+) -> *mut c_char {
+    let tools_str = unsafe {
+        if tools_json.is_null() { return std::ptr::null_mut(); }
+        match CStr::from_ptr(tools_json).to_str() {
+            Ok(s) => s,
+            Err(_) => return std::ptr::null_mut(),
+        }
+    };
+    let ruleset_str = unsafe {
+        if ruleset_json.is_null() { return std::ptr::null_mut(); }
+        match CStr::from_ptr(ruleset_json).to_str() {
+            Ok(s) => s,
+            Err(_) => return std::ptr::null_mut(),
+        }
+    };
+    let tools: Vec<String> = serde_json::from_str(tools_str).unwrap_or_default();
+    let ruleset: Vec<permission::PermissionRule> =
+        serde_json::from_str(ruleset_str).unwrap_or_default();
+    let result = permission::disabled_tools(&tools, &ruleset);
+    match serde_json::to_string(&result) {
+        Ok(json) => match CString::new(json) {
+            Ok(c) => c.into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        },
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// Check whether a filepath should be ignored based on folder segments and file globs.
+///
+/// Arguments:
+/// - `filepath`:       null-terminated C string with the relative or absolute file path
+/// - `whitelist_json`: JSON array of glob patterns that exempt a path from being ignored
+/// - `extra_json`:     JSON array of additional glob patterns to treat as ignored
+///
+/// Returns: 1 if the path is ignored, 0 if not.
+///
+/// # Safety
+/// The caller must ensure all pointers are valid, non-null, null-terminated C strings.
+#[no_mangle]
+pub unsafe extern "C" fn file_ignore_match_ffi(
+    filepath: *const c_char,
+    whitelist_json: *const c_char,
+    extra_json: *const c_char,
+) -> i32 {
+    let filepath = unsafe {
+        if filepath.is_null() { return 0; }
+        match CStr::from_ptr(filepath).to_str() {
+            Ok(s) => s,
+            Err(_) => return 0,
+        }
+    };
+    let whitelist: Vec<String> = if whitelist_json.is_null() {
+        vec![]
+    } else {
+        unsafe {
+            match CStr::from_ptr(whitelist_json).to_str() {
+                Ok(s) => serde_json::from_str(s).unwrap_or_default(),
+                Err(_) => vec![],
+            }
+        }
+    };
+    let extra: Vec<String> = if extra_json.is_null() {
+        vec![]
+    } else {
+        unsafe {
+            match CStr::from_ptr(extra_json).to_str() {
+                Ok(s) => serde_json::from_str(s).unwrap_or_default(),
+                Err(_) => vec![],
+            }
+        }
+    };
+    if file_ignore::file_ignore_match(filepath, &whitelist, &extra) { 1 } else { 0 }
 }

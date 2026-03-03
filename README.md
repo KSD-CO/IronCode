@@ -50,6 +50,8 @@ IronCode is a **high-performance CLI AI coding agent** — a fork of [OpenCode](
 | Grep search | **90–99% less memory** | Streams GB-sized files |
 | File read | **1.5x faster, 99.7% less memory** | 64KB buffer + pre-allocation |
 | Git operations | **1.8x faster** | libgit2, no process spawning |
+| Permission evaluation | **N× fewer FFI calls** | Entire ruleset in 1 native call vs N roundtrips |
+| File ignore matching | **Faster glob matching** | Compiled `globset` regex vs per-call `Bun.Glob` allocation |
 
 ---
 
@@ -171,7 +173,7 @@ bun dev
 ## Architecture
 
 - **CLI/TUI**: TypeScript + Bun
-- **Native Performance Layer**: Rust via FFI — PTY, edit, grep, glob, git, archive, bash parser, BM25 search, wildcard matching, RETE command prefix, system stats
+- **Native Performance Layer**: Rust via FFI — PTY, edit, grep, glob, git, archive, bash parser, BM25 search, wildcard matching, RETE command prefix, permission rule engine, file ignore matching, system stats
 - **Telegram Bot**: `@ironcode-ai/telegram` — grammy + `@ironcode-ai/sdk`
 
 ---

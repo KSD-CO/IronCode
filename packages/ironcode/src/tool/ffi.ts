@@ -259,6 +259,18 @@ const lib = dlopen(libPath, {
     args: [FFIType.cstring],
     returns: FFIType.ptr,
   },
+  evaluate_permission_ffi: {
+    args: [FFIType.cstring, FFIType.cstring, FFIType.cstring],
+    returns: FFIType.ptr,
+  },
+  disabled_tools_ffi: {
+    args: [FFIType.cstring, FFIType.cstring],
+    returns: FFIType.ptr,
+  },
+  file_ignore_match_ffi: {
+    args: [FFIType.cstring, FFIType.cstring, FFIType.cstring],
+    returns: FFIType.i32,
+  },
   git_status_detailed_ffi: {
     args: [FFIType.cstring],
     returns: FFIType.ptr,
@@ -1079,4 +1091,63 @@ export function extractPrefixFFI(tokens: string[]): string {
   const result = new CString(ptr).toString()
   lib.symbols.free_string(ptr)
   return result
+}
+
+// ============================================================================
+// Permission Rule Engine FFI
+// ============================================================================
+
+export interface PermissionRule {
+  permission: string
+  pattern: string
+  action: "allow" | "deny" | "ask"
+}
+
+// Evaluate a permission request against a merged ruleset.
+// Mirrors PermissionNext.evaluate() — returns last matching rule or default {action:"ask"}.
+export function evaluatePermissionFFI(
+  permission: string,
+  pattern: string,
+  rules: PermissionRule[],
+): PermissionRule {
+  const rulesJson = JSON.stringify(rules)
+  const ptr = lib.symbols.evaluate_permission_ffi(
+    Buffer.from(permission + "\0"),
+    Buffer.from(pattern + "\0"),
+    Buffer.from(rulesJson + "\0"),
+  )
+  if (!ptr) return { action: "ask", permission, pattern: "*" }
+  const json = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+  return JSON.parse(json)
+}
+
+// Return the subset of tools denied by a ruleset.
+// Mirrors PermissionNext.disabled() — tools with a matching deny rule (pattern="*").
+export function disabledToolsFFI(tools: string[], ruleset: PermissionRule[]): string[] {
+  const toolsJson = JSON.stringify(tools)
+  const rulesetJson = JSON.stringify(ruleset)
+  const ptr = lib.symbols.disabled_tools_ffi(
+    Buffer.from(toolsJson + "\0"),
+    Buffer.from(rulesetJson + "\0"),
+  )
+  if (!ptr) return []
+  const json = new CString(ptr).toString()
+  lib.symbols.free_string(ptr)
+  return JSON.parse(json)
+}
+
+// ============================================================================
+// File Ignore FFI
+// ============================================================================
+
+// Check whether a filepath should be ignored using the Rust file_ignore engine.
+// Mirrors FileIgnore.match() from file/ignore.ts.
+export function fileIgnoreMatchFFI(filepath: string, whitelist: string[] = [], extra: string[] = []): boolean {
+  const result = lib.symbols.file_ignore_match_ffi(
+    Buffer.from(filepath + "\0"),
+    Buffer.from(JSON.stringify(whitelist) + "\0"),
+    Buffer.from(JSON.stringify(extra) + "\0"),
+  )
+  return result === 1
 }

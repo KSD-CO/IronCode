@@ -7,6 +7,7 @@ import { Storage } from "@/storage/storage"
 import { fn } from "@/util/fn"
 import { Log } from "@/util/log"
 import { Wildcard } from "@/util/wildcard"
+import { evaluatePermissionFFI, disabledToolsFFI } from "@/tool/ffi"
 import os from "os"
 import z from "zod"
 
@@ -231,24 +232,11 @@ export namespace PermissionNext {
   export function evaluate(permission: string, pattern: string, ...rulesets: Ruleset[]): Rule {
     const merged = merge(...rulesets)
     log.info("evaluate", { permission, pattern, ruleset: merged })
-    const match = merged.findLast(
-      (rule) => Wildcard.match(permission, rule.permission) && Wildcard.match(pattern, rule.pattern),
-    )
-    return match ?? { action: "ask", permission, pattern: "*" }
+    return evaluatePermissionFFI(permission, pattern, merged) as Rule
   }
 
-  const EDIT_TOOLS = ["edit", "write", "patch", "multiedit"]
-
   export function disabled(tools: string[], ruleset: Ruleset): Set<string> {
-    const result = new Set<string>()
-    for (const tool of tools) {
-      const permission = EDIT_TOOLS.includes(tool) ? "edit" : tool
-
-      const rule = ruleset.findLast((r) => Wildcard.match(permission, r.permission))
-      if (!rule) continue
-      if (rule.pattern === "*" && rule.action === "deny") result.add(tool)
-    }
-    return result
+    return new Set(disabledToolsFFI(tools, ruleset))
   }
 
   /** User rejected without message - halts execution */
