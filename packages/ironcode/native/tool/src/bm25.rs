@@ -4,15 +4,76 @@ const K1: f64 = 1.2;
 const B: f64 = 0.75;
 const MIN_TOKEN_LEN: usize = 2;
 
-/// Common code keywords that don't add meaningful search signal
+/// Common code keywords that don't add meaningful search signal.
+///
+/// Note: this list intentionally excludes common method-prefix verbs like
+/// `get`/`set`/`is`/`has` so identifier-first searches (e.g. `getUser`) keep
+/// meaningful tokens. For long-term robustness consider making stop-words
+/// context-aware (apply differently to identifiers vs free text).
 const STOP_WORDS: &[&str] = &[
-    "fn", "let", "const", "var", "if", "else", "return", "pub", "use", "mod", "impl",
-    "struct", "enum", "trait", "type", "async", "await", "match", "true", "false",
-    "null", "undefined", "void", "new", "class", "extends", "import", "export", "from",
-    "default", "function", "this", "self", "super", "of", "as", "with", "not", "do",
-    "while", "for", "try", "catch", "throw", "get", "set", "the", "a", "an", "and",
-    "or", "but", "in", "on", "at", "to", "is", "it", "be", "was", "are", "has",
-    "have", "had", "that", "this", "mut", "ref", "pub", "priv", "crate", "super",
+    "a",
+    "an",
+    "and",
+    "are",
+    "as",
+    "async",
+    "await",
+    "at",
+    "be",
+    "but",
+    "catch",
+    "class",
+    "const",
+    "crate",
+    "default",
+    "do",
+    "else",
+    "enum",
+    "export",
+    "extends",
+    "false",
+    "for",
+    "from",
+    "function",
+    "had",
+    "have",
+    "if",
+    "impl",
+    "in",
+    "import",
+    "it",
+    "let",
+    "match",
+    "mod",
+    "mut",
+    "not",
+    "null",
+    "of",
+    "on",
+    "or",
+    "priv",
+    "pub",
+    "ref",
+    "return",
+    "self",
+    "struct",
+    "super",
+    "that",
+    "the",
+    "this",
+    "throw",
+    "to",
+    "trait",
+    "true",
+    "try",
+    "type",
+    "undefined",
+    "use",
+    "var",
+    "void",
+    "was",
+    "while",
+    "with",
 ];
 
 pub struct Bm25Index {
@@ -117,8 +178,8 @@ impl Bm25Index {
                     }
                     let tf_f = tf as f64;
                     let dl_f = dl as f64;
-                    let score = idf * (tf_f * (K1 + 1.0))
-                        / (tf_f + K1 * (1.0 - B + B * dl_f / avgdl));
+                    let score =
+                        idf * (tf_f * (K1 + 1.0)) / (tf_f + K1 * (1.0 - B + B * dl_f / avgdl));
                     *scores.entry(doc_id).or_insert(0.0) += score;
                 }
             }
@@ -149,9 +210,36 @@ pub fn tokenize(text: &str) -> Vec<String> {
         c.is_whitespace()
             || matches!(
                 c,
-                '.' | ',' | ';' | ':' | '!' | '?' | '(' | ')' | '[' | ']' | '{' | '}'
-                    | '"' | '\'' | '`' | '/' | '\\' | '|' | '<' | '>' | '@' | '#' | '$'
-                    | '%' | '^' | '&' | '*' | '+' | '=' | '~' | '-'
+                '.' | ','
+                    | ';'
+                    | ':'
+                    | '!'
+                    | '?'
+                    | '('
+                    | ')'
+                    | '['
+                    | ']'
+                    | '{'
+                    | '}'
+                    | '"'
+                    | '\''
+                    | '`'
+                    | '/'
+                    | '\\'
+                    | '|'
+                    | '<'
+                    | '>'
+                    | '@'
+                    | '#'
+                    | '$'
+                    | '%'
+                    | '^'
+                    | '&'
+                    | '*'
+                    | '+'
+                    | '='
+                    | '~'
+                    | '-'
             )
     };
 
@@ -240,14 +328,24 @@ mod tests {
     #[test]
     fn test_bm25_basic() {
         let mut idx = Bm25Index::new();
-        idx.add_document(0, &tokenize("authenticate user login password session"));
-        idx.add_document(1, &tokenize("read file from disk path"));
-        idx.add_document(2, &tokenize("user profile update name email"));
+        let d0 = tokenize("authenticate user login password session");
+        let d1 = tokenize("read file from disk path");
+        let d2 = tokenize("user profile update name email");
+        idx.add_document(0, &d0);
+        idx.add_document(1, &d1);
+        idx.add_document(2, &d2);
 
-        let results = idx.search(&tokenize("user authentication"), 5);
+        let q = tokenize("user authentication");
+        // debug prints to inspect tokenization and scoring
+        println!("d0={:?}", d0);
+        println!("d1={:?}", d1);
+        println!("d2={:?}", d2);
+        println!("q={:?}", q);
+
+        let results = idx.search(&q, 5);
+        println!("results={:?}", results);
         assert!(!results.is_empty());
         // Document 0 should rank highest for "user authentication"
         assert_eq!(results[0].0, 0);
     }
-
 }
