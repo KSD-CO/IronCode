@@ -12,6 +12,7 @@ import * as readline from "readline"
 type Config = {
   token: string
   model?: string
+  groqApiKey?: string
 }
 
 function configPath() {
@@ -53,10 +54,12 @@ if (process.argv[2] === "setup") {
   const existing = loadConfig()
   const token = await ask(`Bot Token (from @BotFather)${existing?.token ? " [keep current: Enter]" : ""}: `)
   const model = await ask(`Model [${existing?.model ?? "github-copilot/claude-sonnet-4.6"}]: `)
+  const groqApiKey = await ask(`Groq API Key (for voice transcription, optional) [${existing?.groqApiKey ? "keep current: Enter" : "skip: Enter"}]: `)
 
   const cfg: Config = {
     token: token || existing?.token || "",
     model: model || existing?.model || "github-copilot/claude-sonnet-4.6",
+    groqApiKey: groqApiKey || existing?.groqApiKey,
   }
 
   if (!cfg.token) {
@@ -230,7 +233,7 @@ async function editLive(state: SessionState, text: string) {
       }
     }
   }
-})()
+})().catch((err) => console.error("[events] event loop crashed:", err))
 
 bot.catch((err) => {
   console.error("❌ Unhandled bot error:", err.message)
@@ -406,16 +409,36 @@ bot.callbackQuery(/^switch:(.+)$/, async (ctx) => {
   await ctx.editMessageText(`✅ Now using: *${res.data!.title}*`, { parse_mode: "Markdown" })
 })
 
+// ── Voice transcription ───────────────────────────────────────────────────────
+
+async function transcribeVoice(fileUrl: string, groqApiKey: string): Promise<string> {
+  const audioResponse = await fetch(fileUrl)
+  if (!audioResponse.ok) throw new Error(`Failed to download voice file: ${audioResponse.status}`)
+  const blob = await audioResponse.blob()
+
+  const form = new FormData()
+  form.append("file", new File([blob], "voice.ogg", { type: "audio/ogg" }))
+  form.append("model", "whisper-large-v3-turbo")
+  form.append("response_format", "json")
+
+  const res = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${groqApiKey}` },
+    body: form,
+  })
+
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`Groq API error ${res.status}: ${err}`)
+  }
+  const data = (await res.json()) as { text: string }
+  return data.text.trim()
+}
+
 // ── Main message handler ──────────────────────────────────────────────────────
 
-bot.on("message:text", async (ctx) => {
-  const chatId = ctx.chat.id
-  const threadId = ctx.message.message_thread_id
+async function handleMessage(ctx: any, chatId: number, threadId: number | undefined, text: string) {
   const key = getChatKey(chatId, threadId)
-  const text = ctx.message.text
-
-  if (text.startsWith("/")) return
-
   let state = sessions.get(key)
 
   if (!state) {
@@ -444,7 +467,6 @@ bot.on("message:text", async (ctx) => {
   state.lastEditMs = 0
   state.currentTool = undefined
 
-  // Show "typing..." indicator immediately and keep it alive every 4s
   const sendTyping = () =>
     bot.api.sendChatAction(chatId, "typing", threadId ? { message_thread_id: threadId } : {}).catch(() => {})
   sendTyping()
@@ -453,7 +475,7 @@ bot.on("message:text", async (ctx) => {
     sendTyping()
   }, 4000)
 
-  const model = cfg.model ? parseModel(cfg.model) : undefined
+  const model = cfg!.model ? parseModel(cfg!.model) : undefined
 
   const result = await client.session.promptAsync({
     path: { id: state.sessionId },
@@ -466,6 +488,38 @@ bot.on("message:text", async (ctx) => {
     await ctx.api.editMessageText(chatId, placeholder.message_id, `❌ ${JSON.stringify(result.error)}`)
     state.liveMessageId = undefined
   }
+}
+
+bot.on("message:text", async (ctx) => {
+  const text = ctx.message.text
+  if (text.startsWith("/")) return
+  await handleMessage(ctx, ctx.chat.id, ctx.message.message_thread_id, text)
+})
+
+bot.on("message:voice", async (ctx) => {
+  if (!cfg.groqApiKey) {
+    await ctx.reply("❌ Voice messages require a Groq API key. Run `ironcode-telegram setup` to configure.")
+    return
+  }
+
+  const statusMsg = await ctx.reply("🎤 Transcribing...")
+  let text: string
+  try {
+    const file = await ctx.getFile()
+    const fileUrl = `https://api.telegram.org/file/bot${cfg.token}/${file.file_path}`
+    text = await transcribeVoice(fileUrl, cfg.groqApiKey)
+  } catch (err: any) {
+    await bot.api
+      .editMessageText(ctx.chat.id, statusMsg.message_id, `❌ Transcription failed: ${err.message}`)
+      .catch(() => {})
+    return
+  }
+
+  await bot.api
+    .editMessageText(ctx.chat.id, statusMsg.message_id, `🎤 _${text}_`, { parse_mode: "Markdown" })
+    .catch(() => {})
+
+  await handleMessage(ctx, ctx.chat.id, ctx.message.message_thread_id, text)
 })
 
 await bot.start()

@@ -24,19 +24,23 @@
 
 ## What's New
 
+### v1.17.5 — Voice Message Support
+- **Voice messages** — Send voice messages to the Telegram bot; audio is automatically transcribed via Groq Whisper and forwarded to the agent
+- **BM25 improvements** — Updated `STOP_WORDS` to retain method-prefix tokens (`get`/`set`/`is`/`has`/`new`) for more accurate code search
+
 ### v1.17.3 — Rust Rule Engine Migration
-- **Permission Rule Engine** — `PermissionNext.evaluate()` và `disabled()` migrated to Rust. Toàn bộ ruleset được batch vào 1 FFI call thay vì N roundtrip từ JS
-- **File Ignore Matching** — `FileIgnore.match()` migrated to Rust với `globset` compiled regex, nhanh hơn per-call `Bun.Glob` allocation
-- **Dead code removed** — `permission/arity.ts` (BashArity) đã xóa, thay bởi `extractPrefixFFI` (Rust) có từ trước
+- **Permission Rule Engine** — `PermissionNext.evaluate()` and `disabled()` migrated to Rust; entire ruleset batched into a single FFI call instead of N JS roundtrips
+- **File Ignore Matching** — `FileIgnore.match()` migrated to Rust using `globset` compiled regex, faster than per-call `Bun.Glob` allocation
+- **Dead code removed** — `permission/arity.ts` (BashArity) removed, replaced by `extractPrefixFFI` (Rust)
 
 ### v1.17.2 — Telegram Enhancement
-- **`/init` command** — Phân tích project và tạo `AGENTS.md` từ bot Telegram
-- **Code diff streaming** — `/diff` hiển thị tất cả file thay đổi trong session hiện tại
-- **Session management UI** — `/sessions` với inline switch buttons
+- **`/init` command** — Analyze a project and generate `AGENTS.md` directly from the Telegram bot
+- **Code diff streaming** — `/diff` shows all changed files in the current session
+- **Session management UI** — `/sessions` with inline switch buttons
 
 ### v1.17.0 — AI SDK v6
-- Upgrade lên AI SDK v6 với support đầy đủ các provider mới
-- Cải thiện UX terminal
+- Upgraded to AI SDK v6 with full support for new providers
+- Improved terminal UX
 
 ---
 
@@ -51,7 +55,8 @@ IronCode is a **high-performance CLI AI coding agent** — a fork of [OpenCode](
 - 🎯 **Git Source Control** — Stage, commit, diff, push without leaving the TUI
 - 🔍 **Code Changes Panel** — Diff viewer with inline comments and hunk revert
 - 🔎 **Local Code Search** — BM25 + tree-sitter semantic search, offline, zero latency
-- 📱 **Telegram Integration** — Control IronCode remotely from your phone
+- 📱 **Telegram Integration** — Control IronCode remotely from your phone, including voice messages
+- 🎤 **Voice Input** — Send voice messages via Telegram; transcribed automatically via Groq Whisper
 - 💻 **Built-in Terminal** — Fish-style autosuggest, tab completion, syntax highlighting
 - 📝 **External Editor** — Opens `$EDITOR`/nvim with auto-install if missing
 - 🏠 **100% Local** — No cloud services, works completely offline
@@ -138,8 +143,9 @@ Control IronCode remotely via Telegram — send tasks from your phone, get live 
 # Install
 bun install -g @ironcode-ai/telegram
 
-# Configure (enter bot token from @BotFather)
+# Configure
 ironcode-telegram setup
+# Enter: Bot Token (from @BotFather), model, and optionally a Groq API key for voice support
 
 # Run from your project directory
 cd your-project
@@ -155,7 +161,19 @@ ironcode-telegram
 | `/info` | Current session details and file change stats |
 | `/init` | Analyze project and create `AGENTS.md` |
 | `/diff` | Show all file changes in the current session |
-| _(any message)_ | Send a prompt — streams the response live |
+| _(text message)_ | Send a prompt — streams the response live |
+| _(voice message)_ | Transcribed via Groq Whisper and sent as a prompt |
+
+### Voice Message Setup
+
+To enable voice input, add a [Groq API key](https://console.groq.com) (free tier: 28,800 seconds/day) during setup:
+
+```bash
+ironcode-telegram setup
+# Groq API Key (for voice transcription, optional): gsk_...
+```
+
+Once configured, send any voice message to the bot — it will transcribe the audio and process it as a text prompt automatically.
 
 See [`packages/telegram/README.md`](./packages/telegram/README.md) for full setup docs including PM2/systemd server deployment.
 
@@ -192,7 +210,7 @@ bun dev
 
 - **CLI/TUI**: TypeScript + Bun
 - **Native Performance Layer**: Rust via FFI — PTY, edit, grep, glob, git, archive, bash parser, BM25 search, wildcard matching, RETE command prefix, permission rule engine, file ignore matching, system stats
-- **Telegram Bot**: `@ironcode-ai/telegram` — grammy + `@ironcode-ai/sdk`
+- **Telegram Bot**: `@ironcode-ai/telegram` — grammy + `@ironcode-ai/sdk` + Groq Whisper for voice transcription
 
 ---
 
