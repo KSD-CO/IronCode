@@ -2393,16 +2393,7 @@
                     "pattern": "^msg.*"
                   },
                   "model": {
-                    "type": "object",
-                    "properties": {
-                      "providerID": {
-                        "type": "string"
-                      },
-                      "modelID": {
-                        "type": "string"
-                      }
-                    },
-                    "required": ["providerID", "modelID"]
+                    "type": "string"
                   },
                   "agent": {
                     "type": "string"
@@ -2769,16 +2760,7 @@
                     "pattern": "^msg.*"
                   },
                   "model": {
-                    "type": "object",
-                    "properties": {
-                      "providerID": {
-                        "type": "string"
-                      },
-                      "modelID": {
-                        "type": "string"
-                      }
-                    },
-                    "required": ["providerID", "modelID"]
+                    "type": "string"
                   },
                   "agent": {
                     "type": "string"
@@ -6139,16 +6121,7 @@
             "type": "string"
           },
           "model": {
-            "type": "object",
-            "properties": {
-              "providerID": {
-                "type": "string"
-              },
-              "modelID": {
-                "type": "string"
-              }
-            },
-            "required": ["providerID", "modelID"]
+            "type": "string"
           },
           "system": {
             "type": "string"
@@ -6335,10 +6308,7 @@
           "parentID": {
             "type": "string"
           },
-          "modelID": {
-            "type": "string"
-          },
-          "providerID": {
+          "model": {
             "type": "string"
           },
           "mode": {
@@ -6399,20 +6369,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "id",
-          "sessionID",
-          "role",
-          "time",
-          "parentID",
-          "modelID",
-          "providerID",
-          "mode",
-          "agent",
-          "path",
-          "cost",
-          "tokens"
-        ]
+        "required": ["id", "sessionID", "role", "time", "parentID", "model", "mode", "agent", "path", "cost", "tokens"]
       },
       "Message": {
         "oneOf": [
@@ -6538,16 +6495,7 @@
             "type": "string"
           },
           "model": {
-            "type": "object",
-            "properties": {
-              "providerID": {
-                "type": "string"
-              },
-              "modelID": {
-                "type": "string"
-              }
-            },
-            "required": ["providerID", "modelID"]
+            "type": "string"
           },
           "command": {
             "type": "string"
@@ -9902,6 +9850,10 @@
                 "description": "Enable OpenTelemetry spans for AI SDK calls (using the 'experimental_telemetry' flag)",
                 "type": "boolean"
               },
+              "provider_round_robin": {
+                "description": "Enable experimental provider round-robin selection for compatible models",
+                "type": "boolean"
+              },
               "provider_tools": {
                 "description": "Enable provider-specific tools (e.g. 'anthropic:web_search', 'openai:web_search', 'google:google_search', 'xai:x_search'). Use 'anthropic:*' to enable all tools for a provider.",
                 "type": "array",
@@ -10512,16 +10464,7 @@
             "type": "string"
           },
           "model": {
-            "type": "object",
-            "properties": {
-              "providerID": {
-                "type": "string"
-              },
-              "modelID": {
-                "type": "string"
-              }
-            },
-            "required": ["providerID", "modelID"]
+            "type": "string"
           },
           "command": {
             "type": "string"

@@ -24,21 +24,40 @@
 
 ## What's New
 
+### v1.17.6 — AI SDK v6 ModelRef Migration
+
+**Completed ModelRef migration as part of AI SDK v6 upgrade:**
+
+- **Schema migration** — Migrated model references from object format `{ providerID: string, modelID: string }` to string-based `ModelRef` format (`"provider:model"`) throughout the codebase
+- **Parser/formatter utilities** — All code now uses `ProviderRegistry.parse(modelRef)` to extract components and `ProviderRegistry.format(providerID, modelID)` to create ModelRef strings
+- **Runtime compatibility** — Added `ensureModelRef()` helper to handle legacy object formats gracefully during transition
+- **Bug fixes** — Fixed `ProviderModelNotFoundError` with undefined values caused by incomplete migration; fixed `Provider.defaultModel()` to return strings consistently
+
+**Technical details:**
+
+- Updated schemas in `message-v2.ts`: User, Assistant, and SubtaskPart now use `model: z.string()` instead of separate modelID/providerID fields
+- Migrated 24 files including session handling, compaction, summary, task/plan tools, telegram bot, and SDK types
+- Zero breaking changes for end users
+
 ### v1.17.5 — Voice Message Support
+
 - **Voice messages** — Send voice messages to the Telegram bot; audio is automatically transcribed via Groq Whisper and forwarded to the agent
 - **BM25 improvements** — Updated `STOP_WORDS` to retain method-prefix tokens (`get`/`set`/`is`/`has`/`new`) for more accurate code search
 
 ### v1.17.3 — Rust Rule Engine Migration
+
 - **Permission Rule Engine** — `PermissionNext.evaluate()` and `disabled()` migrated to Rust; entire ruleset batched into a single FFI call instead of N JS roundtrips
 - **File Ignore Matching** — `FileIgnore.match()` migrated to Rust using `globset` compiled regex, faster than per-call `Bun.Glob` allocation
 - **Dead code removed** — `permission/arity.ts` (BashArity) removed, replaced by `extractPrefixFFI` (Rust)
 
 ### v1.17.2 — Telegram Enhancement
+
 - **`/init` command** — Analyze a project and generate `AGENTS.md` directly from the Telegram bot
 - **Code diff streaming** — `/diff` shows all changed files in the current session
 - **Session management UI** — `/sessions` with inline switch buttons
 
 ### v1.17.0 — AI SDK v6
+
 - Upgraded to AI SDK v6 with full support for new providers
 - Improved terminal UX
 
@@ -64,17 +83,17 @@ IronCode is a **high-performance CLI AI coding agent** — a fork of [OpenCode](
 
 ### Performance (Native Rust Components)
 
-| Operation | Speedup | Notes |
-|---|---|---|
-| PTY/Terminal | **15x faster** | Zero-copy ring buffer |
-| Edit Tool | **2–6x faster** | 9 smart replacement strategies |
-| Bash Parser | **50–100x faster** | Native tree-sitter vs WASM |
-| Archive extraction | **3–5x faster** | s-zip streaming reader |
-| Grep search | **90–99% less memory** | Streams GB-sized files |
-| File read | **1.5x faster, 99.7% less memory** | 64KB buffer + pre-allocation |
-| Git operations | **1.8x faster** | libgit2, no process spawning |
-| Permission evaluation | **N× fewer FFI calls** | Entire ruleset in 1 native call vs N roundtrips |
-| File ignore matching | **Faster glob matching** | Compiled `globset` regex vs per-call `Bun.Glob` allocation |
+| Operation             | Speedup                            | Notes                                                      |
+| --------------------- | ---------------------------------- | ---------------------------------------------------------- |
+| PTY/Terminal          | **15x faster**                     | Zero-copy ring buffer                                      |
+| Edit Tool             | **2–6x faster**                    | 9 smart replacement strategies                             |
+| Bash Parser           | **50–100x faster**                 | Native tree-sitter vs WASM                                 |
+| Archive extraction    | **3–5x faster**                    | s-zip streaming reader                                     |
+| Grep search           | **90–99% less memory**             | Streams GB-sized files                                     |
+| File read             | **1.5x faster, 99.7% less memory** | 64KB buffer + pre-allocation                               |
+| Git operations        | **1.8x faster**                    | libgit2, no process spawning                               |
+| Permission evaluation | **N× fewer FFI calls**             | Entire ruleset in 1 native call vs N roundtrips            |
+| File ignore matching  | **Faster glob matching**           | Compiled `globset` regex vs per-call `Bun.Glob` allocation |
 
 ---
 
@@ -122,16 +141,16 @@ ironcode auth login
 
 ### Key Commands
 
-| Command | Description |
-|---|---|
-| `/git` | Open Git source control panel |
-| `/terminal` | Open built-in terminal |
-| `/editor` | Open file in `$EDITOR` |
-| `/review` | Open code changes panel |
-| `/init` | Create `AGENTS.md` for the project |
-| `Tab` | Switch between agents (build / plan) |
-| `Ctrl+X I` | Git panel shortcut |
-| `Ctrl+X R` | Code changes panel shortcut |
+| Command     | Description                          |
+| ----------- | ------------------------------------ |
+| `/git`      | Open Git source control panel        |
+| `/terminal` | Open built-in terminal               |
+| `/editor`   | Open file in `$EDITOR`               |
+| `/review`   | Open code changes panel              |
+| `/init`     | Create `AGENTS.md` for the project   |
+| `Tab`       | Switch between agents (build / plan) |
+| `Ctrl+X I`  | Git panel shortcut                   |
+| `Ctrl+X R`  | Code changes panel shortcut          |
 
 ---
 
@@ -154,14 +173,14 @@ ironcode-telegram
 
 **Bot commands:**
 
-| Command | Description |
-|---|---|
-| `/new` | Start a new session |
-| `/sessions` | List sessions with inline switch buttons |
-| `/info` | Current session details and file change stats |
-| `/init` | Analyze project and create `AGENTS.md` |
-| `/diff` | Show all file changes in the current session |
-| _(text message)_ | Send a prompt — streams the response live |
+| Command           | Description                                       |
+| ----------------- | ------------------------------------------------- |
+| `/new`            | Start a new session                               |
+| `/sessions`       | List sessions with inline switch buttons          |
+| `/info`           | Current session details and file change stats     |
+| `/init`           | Analyze project and create `AGENTS.md`            |
+| `/diff`           | Show all file changes in the current session      |
+| _(text message)_  | Send a prompt — streams the response live         |
 | _(voice message)_ | Transcribed via Groq Whisper and sent as a prompt |
 
 ### Voice Message Setup

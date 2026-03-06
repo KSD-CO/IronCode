@@ -54,7 +54,9 @@ if (process.argv[2] === "setup") {
   const existing = loadConfig()
   const token = await ask(`Bot Token (from @BotFather)${existing?.token ? " [keep current: Enter]" : ""}: `)
   const model = await ask(`Model [${existing?.model ?? "github-copilot/claude-sonnet-4.6"}]: `)
-  const groqApiKey = await ask(`Groq API Key (for voice transcription, optional) [${existing?.groqApiKey ? "keep current: Enter" : "skip: Enter"}]: `)
+  const groqApiKey = await ask(
+    `Groq API Key (for voice transcription, optional) [${existing?.groqApiKey ? "keep current: Enter" : "skip: Enter"}]: `,
+  )
 
   const cfg: Config = {
     token: token || existing?.token || "",
@@ -149,17 +151,14 @@ function getChatKey(chatId: number, threadId?: number) {
 
 async function editLive(state: SessionState, text: string) {
   if (!state.liveMessageId) return
-  await bot.api
-    .editMessageText(state.chatId, state.liveMessageId, text || "…")
-    .catch(() => {})
+  await bot.api.editMessageText(state.chatId, state.liveMessageId, text || "…").catch(() => {})
 }
 
 // Event loop
 ;(async () => {
   const events = await client.event.subscribe()
   for await (const event of events.stream) {
-    const getState = (sessionID: string) =>
-      [...sessions.values()].find((s) => s.sessionId === sessionID)
+    const getState = (sessionID: string) => [...sessions.values()].find((s) => s.sessionId === sessionID)
 
     if (event.type === "message.part.updated") {
       const part = event.properties.part as any
@@ -304,7 +303,13 @@ bot.command("init", async (ctx) => {
       await ctx.reply(`❌ Failed to create session: ${JSON.stringify(res.error)}`)
       return
     }
-    state = { sessionId: res.data.id, chatId: ctx.chat.id, threadId: ctx.message?.message_thread_id, liveText: "", lastEditMs: 0 }
+    state = {
+      sessionId: res.data.id,
+      chatId: ctx.chat.id,
+      threadId: ctx.message?.message_thread_id,
+      liveText: "",
+      lastEditMs: 0,
+    }
     sessions.set(key, state)
   }
 
@@ -324,9 +329,14 @@ bot.command("init", async (ctx) => {
   }
 
   await bot.api
-    .editMessageText(ctx.chat.id, placeholder.message_id, "✅ *AGENTS.md created!*\n\nThe AI agent has analyzed your project and written configuration.", {
-      parse_mode: "Markdown",
-    })
+    .editMessageText(
+      ctx.chat.id,
+      placeholder.message_id,
+      "✅ *AGENTS.md created!*\n\nThe AI agent has analyzed your project and written configuration.",
+      {
+        parse_mode: "Markdown",
+      },
+    )
     .catch(() => {})
 })
 
@@ -372,8 +382,8 @@ bot.command("sessions", async (ctx) => {
     return
   }
 
-  const list = res.data!
-    .filter((s: any) => !s.time?.archived)
+  const list = res
+    .data!.filter((s: any) => !s.time?.archived)
     .sort((a: any, b: any) => b.time.updated - a.time.updated)
     .slice(0, 10)
 
@@ -403,7 +413,14 @@ bot.callbackQuery(/^switch:(.+)$/, async (ctx) => {
   }
 
   const existing = sessions.get(key)
-  sessions.set(key, { sessionId, chatId, threadId, liveText: "", lastEditMs: 0, liveMessageId: existing?.liveMessageId })
+  sessions.set(key, {
+    sessionId,
+    chatId,
+    threadId,
+    liveText: "",
+    lastEditMs: 0,
+    liveMessageId: existing?.liveMessageId,
+  })
 
   await ctx.answerCallbackQuery({ text: "✓ Session switched" })
   await ctx.editMessageText(`✅ Now using: *${res.data!.title}*`, { parse_mode: "Markdown" })

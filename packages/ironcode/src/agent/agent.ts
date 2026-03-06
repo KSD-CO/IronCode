@@ -1,6 +1,6 @@
 import { Config } from "../config/config"
 import z from "zod"
-import { Provider } from "../provider/provider"
+import { Provider, ProviderRegistry } from "../provider/provider"
 import { generateText, streamText, Output, type ModelMessage } from "ai"
 import { SystemPrompt } from "../session/system"
 import { Instance } from "../project/instance"
@@ -32,12 +32,7 @@ export namespace Agent {
       temperature: z.number().optional(),
       color: z.string().optional(),
       permission: PermissionNext.Ruleset,
-      model: z
-        .object({
-          modelID: z.string(),
-          providerID: z.string(),
-        })
-        .optional(),
+      model: z.string().optional(), // ModelRef format: "provider:model" - accepts both during parse via preprocess below
       variant: z.string().optional(),
       prompt: z.string().optional(),
       options: z.record(z.string(), z.any()),
@@ -215,7 +210,10 @@ export namespace Agent {
           options: {},
           native: false,
         }
-      if (value.model) item.model = Provider.parseModel(value.model)
+      if (value.model) {
+        const parsed = Provider.parseModel(value.model)
+        item.model = ProviderRegistry.format(parsed.providerID, parsed.modelID)
+      }
       item.variant = value.variant ?? item.variant
       item.prompt = value.prompt ?? item.prompt
       item.description = value.description ?? item.description
@@ -281,7 +279,9 @@ export namespace Agent {
 
   export async function generate(input: { description: string; model?: { providerID: string; modelID: string } }) {
     const cfg = await Config.get()
-    const defaultModel = input.model ?? (await Provider.defaultModel())
+    const defaultModelInput = input.model ?? (await Provider.defaultModel())
+    const defaultModel =
+      typeof defaultModelInput === "string" ? ProviderRegistry.parse(defaultModelInput) : defaultModelInput
     const model = await Provider.getModel(defaultModel.providerID, defaultModel.modelID)
     const language = await Provider.getLanguage(model)
 

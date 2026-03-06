@@ -1,7 +1,7 @@
 import { Bus } from "@/bus"
 import { Config } from "@/config/config"
 import { ulid } from "ulid"
-import { Provider } from "@/provider/provider"
+import { Provider, ProviderRegistry } from "@/provider/provider"
 import { Session } from "@/session"
 import { MessageV2 } from "@/session/message-v2"
 import { Storage } from "@/storage/storage"
@@ -39,9 +39,10 @@ export namespace ShareNext {
           {
             type: "model",
             data: [
-              await Provider.getModel(evt.properties.info.model.providerID, evt.properties.info.model.modelID).then(
-                (m) => m,
-              ),
+              await (async () => {
+                const { providerID, modelID } = ProviderRegistry.parse(evt.properties.info.model)
+                return Provider.getModel(providerID, modelID)
+              })(),
             ],
           },
         ])
@@ -175,7 +176,10 @@ export namespace ShareNext {
       messages
         .filter((m) => m.info.role === "user")
         .map((m) => (m.info as SDK.UserMessage).model)
-        .map((m) => Provider.getModel(m.providerID, m.modelID).then((m) => m)),
+        .map(async (modelRef) => {
+          const { providerID, modelID } = ProviderRegistry.parse(modelRef)
+          return Provider.getModel(providerID, modelID)
+        }),
     )
     await sync(sessionID, [
       {

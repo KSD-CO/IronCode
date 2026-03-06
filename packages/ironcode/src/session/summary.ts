@@ -1,9 +1,7 @@
-import { Provider } from "@/provider/provider"
-
+import { Provider, ProviderRegistry } from "@/provider/provider"
 import { fn } from "@/util/fn"
 import z from "zod"
 import { Session } from "."
-
 import { MessageV2 } from "./message-v2"
 import { Identifier } from "@/id/id"
 import { Snapshot } from "@/snapshot"
@@ -142,9 +140,18 @@ export namespace SessionSummary {
         user: userMsg,
         tools: {},
         model: agent.model
-          ? await Provider.getModel(agent.model.providerID, agent.model.modelID)
-          : ((await Provider.getSmallModel(userMsg.model.providerID)) ??
-            (await Provider.getModel(userMsg.model.providerID, userMsg.model.modelID))),
+          ? await (async () => {
+              const modelRef =
+                typeof agent.model! === "string"
+                  ? agent.model!
+                  : ProviderRegistry.format((agent.model as any)!.providerID, (agent.model as any)!.modelID)
+              const { providerID, modelID } = ProviderRegistry.parse(modelRef)
+              return Provider.getModel(providerID, modelID)
+            })()
+          : await (async () => {
+              const { providerID, modelID } = ProviderRegistry.parse(userMsg.model)
+              return (await Provider.getSmallModel(providerID)) ?? (await Provider.getModel(providerID, modelID))
+            })(),
         small: true,
         messages: [
           {

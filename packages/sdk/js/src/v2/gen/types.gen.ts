@@ -112,10 +112,7 @@ export type UserMessage = {
     diffs: Array<FileDiff>
   }
   agent: string
-  model: {
-    providerID: string
-    modelID: string
-  }
+  model: string
   system?: string
   tools?: {
     [key: string]: boolean
@@ -178,8 +175,7 @@ export type AssistantMessage = {
   }
   error?: ProviderAuthError | UnknownError | MessageOutputLengthError | MessageAbortedError | ApiError
   parentID: string
-  modelID: string
-  providerID: string
+  model: string
   mode: string
   agent: string
   path: {
@@ -243,10 +239,7 @@ export type SubtaskPart = {
   prompt: string
   description: string
   agent: string
-  model?: {
-    providerID: string
-    modelID: string
-  }
+  model?: string
   command?: string
 }
 
@@ -2057,10 +2050,7 @@ export type SubtaskPartInput = {
   prompt: string
   description: string
   agent: string
-  model?: {
-    providerID: string
-    modelID: string
-  }
+  model?: string
   command?: string
 }
 
@@ -3393,10 +3383,7 @@ export type SessionMessagesResponse = SessionMessagesResponses[keyof SessionMess
 export type SessionPromptData = {
   body?: {
     messageID?: string
-    model?: {
-      providerID: string
-      modelID: string
-    }
+    model?: string
     agent?: string
     noReply?: boolean
     /**
@@ -3580,10 +3567,7 @@ export type PartUpdateResponse = PartUpdateResponses[keyof PartUpdateResponses]
 export type SessionPromptAsyncData = {
   body?: {
     messageID?: string
-    model?: {
-      providerID: string
-      modelID: string
-    }
+    model?: string
     agent?: string
     noReply?: boolean
     /**

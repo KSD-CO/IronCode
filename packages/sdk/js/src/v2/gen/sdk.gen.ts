@@ -1464,10 +1464,7 @@ export class Session extends HeyApiClient {
       sessionID: string
       directory?: string
       messageID?: string
-      model?: {
-        providerID: string
-        modelID: string
-      }
+      model?: string
       agent?: string
       noReply?: boolean
       tools?: {
@@ -1552,10 +1549,7 @@ export class Session extends HeyApiClient {
       sessionID: string
       directory?: string
       messageID?: string
-      model?: {
-        providerID: string
-        modelID: string
-      }
+      model?: string
       agent?: string
       noReply?: boolean
       tools?: {

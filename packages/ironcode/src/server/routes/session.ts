@@ -16,6 +16,7 @@ import { Log } from "../../util/log"
 import { PermissionNext } from "@/permission/next"
 import { errors } from "../error"
 import { lazy } from "../../util/lazy"
+import { ProviderRegistry } from "../../provider/provider"
 
 const log = Log.create({ service: "server" })
 
@@ -533,10 +534,7 @@ export const SessionRoutes = lazy(() =>
         await SessionCompaction.create({
           sessionID,
           agent: currentAgent,
-          model: {
-            providerID: body.providerID,
-            modelID: body.modelID,
-          },
+          model: ProviderRegistry.format(body.providerID, body.modelID),
           auto: body.auto,
         })
         await SessionPrompt.loop({ sessionID })

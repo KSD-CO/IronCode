@@ -38,9 +38,7 @@ export function createDialogProviderOptions() {
       if (!groups[baseID]) groups[baseID] = []
       groups[baseID].push(id)
     }
-    return Object.fromEntries(
-      Object.entries(groups).filter(([baseID, ids]) => ids.some((id) => id !== baseID)),
-    )
+    return Object.fromEntries(Object.entries(groups).filter(([baseID, ids]) => ids.some((id) => id !== baseID)))
   })
 
   async function startOAuthFlow(targetProviderID: string, baseProviderID: string) {
@@ -168,17 +166,21 @@ export function createDialogProviderOptions() {
       map((provider) => {
         const isConnected = connected().has(provider.id)
         return {
-          _priority: isConnected ? (PROVIDER_PRIORITY[provider.id] ?? 99) : (PROVIDER_PRIORITY[provider.id] ?? 99) + 1000,
+          _priority: isConnected
+            ? (PROVIDER_PRIORITY[provider.id] ?? 99)
+            : (PROVIDER_PRIORITY[provider.id] ?? 99) + 1000,
           title: provider.name,
           value: provider.id,
           description: isConnected
             ? undefined
-            : ({
-                ironcode: "(Recommended)",
-                anthropic: "(Claude Max or API key)",
-                openai: "(ChatGPT Plus/Pro or API key)",
-                alibaba: "(Qwen models — DashScope API key)",
-              } as Record<string, string>)[provider.id],
+            : (
+                {
+                  ironcode: "(Recommended)",
+                  anthropic: "(Claude Max or API key)",
+                  openai: "(ChatGPT Plus/Pro or API key)",
+                  alibaba: "(Qwen models — DashScope API key)",
+                } as Record<string, string>
+              )[provider.id],
           category: isConnected ? "Connected" : "Add provider",
           footer: isConnected ? ("Connected" as const) : undefined,
           async onSelect() {

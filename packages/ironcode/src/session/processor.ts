@@ -249,14 +249,14 @@ export namespace SessionProcessor {
                     metadata: value.providerMetadata,
                   })
                   let finishReason = value.finishReason ?? "stop"
-                  
+
                   // AI SDK v6 fix: If tool calls occurred, override finishReason to "tool-calls"
                   // to ensure the agent loop continues. This handles cases where the SDK
                   // returns "stop" or undefined after executing tools.
                   if (hasToolCalls && finishReason === "stop") {
                     finishReason = "tool-calls"
                   }
-                  
+
                   input.assistantMessage.finish = finishReason
                   input.assistantMessage.cost += usage.cost
                   input.assistantMessage.tokens = usage.tokens

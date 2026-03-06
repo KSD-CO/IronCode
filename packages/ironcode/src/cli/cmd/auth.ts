@@ -401,8 +401,7 @@ export const AuthLoginCommand = cmd({
           const baseProvID = provider
           const existingAccounts = Object.keys(existingAllAuth).filter(
             (id) =>
-              id === baseProvID ||
-              (id.startsWith(`${baseProvID}-`) && /^\d+$/.test(id.slice(baseProvID.length + 1))),
+              id === baseProvID || (id.startsWith(`${baseProvID}-`) && /^\d+$/.test(id.slice(baseProvID.length + 1))),
           )
           if (existingAccounts.length > 0) {
             const action = await prompts.select({

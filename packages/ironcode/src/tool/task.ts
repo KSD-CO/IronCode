@@ -10,6 +10,7 @@ import { iife } from "@/util/iife"
 import { defer } from "@/util/defer"
 import { Config } from "../config/config"
 import { PermissionNext } from "@/permission/next"
+import { ProviderRegistry } from "../provider/provider"
 
 const parameters = z.object({
   description: z.string().describe("A short (3-5 words) description of the task"),
@@ -103,10 +104,12 @@ export const TaskTool = Tool.define("task", async (ctx) => {
       const msg = await MessageV2.get({ sessionID: ctx.sessionID, messageID: ctx.messageID })
       if (msg.info.role !== "assistant") throw new Error("Not an assistant message")
 
-      const model = agent.model ?? {
-        modelID: msg.info.modelID,
-        providerID: msg.info.providerID,
-      }
+      // Normalize model - agent.model can be old or new format, msg.info.model is new ModelRef string
+      const model = agent.model
+        ? typeof agent.model === "string"
+          ? agent.model
+          : ProviderRegistry.format((agent.model as any).providerID, (agent.model as any).modelID)
+        : msg.info.model
 
       ctx.metadata({
         title: params.description,
@@ -128,10 +131,7 @@ export const TaskTool = Tool.define("task", async (ctx) => {
       const result = await SessionPrompt.prompt({
         messageID,
         sessionID: session.id,
-        model: {
-          modelID: model.modelID,
-          providerID: model.providerID,
-        },
+        model, // Already normalized ModelRef string
         agent: agent.name,
         tools: {
           todowrite: false,

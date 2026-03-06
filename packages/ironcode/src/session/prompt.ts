@@ -10,7 +10,8 @@ import { Resource } from "../util/resource"
 import { SessionRevert } from "./revert"
 import { Session } from "."
 import { Agent } from "../agent/agent"
-import { Provider } from "../provider/provider"
+import { Provider, ProviderRegistry } from "../provider/provider"
+import { ensureModelRef } from "../provider/model-ref-compat"
 import { type Tool as AITool, tool, jsonSchema, asSchema } from "ai"
 import { SessionCompaction } from "./compaction"
 import { Instance } from "../project/instance"
@@ -88,9 +89,17 @@ export namespace SessionPrompt {
     sessionID: Identifier.schema("session"),
     messageID: Identifier.schema("message").optional(),
     model: z
-      .object({
-        providerID: z.string(),
-        modelID: z.string(),
+      .union([
+        z.string(), // New format: "provider:model"
+        z.object({
+          // Old format from TUI
+          providerID: z.string(),
+          modelID: z.string(),
+        }),
+      ])
+      .transform((val) => {
+        if (typeof val === "string") return val
+        return ProviderRegistry.format(val.providerID, val.modelID)
       })
       .optional(),
     agent: z.string().optional(),
@@ -151,6 +160,7 @@ export namespace SessionPrompt {
   export type PromptInput = z.infer<typeof PromptInput>
 
   export const prompt = fn(PromptInput, async (input) => {
+    await Bun.write("/tmp/ironcode-debug.log", "=== PROMPT CALLED ===\n")
     const session = await Session.get(input.sessionID)
     await SessionRevert.cleanup(session)
 
@@ -320,22 +330,30 @@ export namespace SessionPrompt {
       }
 
       step++
-      if (step === 1)
+      if (step === 1) {
+        const { providerID, modelID } = ProviderRegistry.parse(lastUser.model)
         ensureTitle({
           session,
-          modelID: lastUser.model.modelID,
-          providerID: lastUser.model.providerID,
+          modelID,
+          providerID,
           history: msgs,
         })
+      }
 
-      const model = await Provider.getModel(lastUser.model.providerID, lastUser.model.modelID)
+      const { providerID, modelID } = ProviderRegistry.parse(lastUser.model)
+      const model = await Provider.getModel(providerID, modelID)
       const task = tasks.pop()
 
       // pending subtask
       // TODO: centralize "invoke tool" logic
       if (task?.type === "subtask") {
         const taskTool = await TaskTool.init()
-        const taskModel = task.model ? await Provider.getModel(task.model.providerID, task.model.modelID) : model
+        const taskModel = task.model
+          ? await (async () => {
+              const { providerID: taskProviderID, modelID: taskModelID } = ProviderRegistry.parse(task.model!)
+              return Provider.getModel(taskProviderID, taskModelID)
+            })()
+          : model
         const assistantMessage = (await Session.updateMessage({
           id: Identifier.ascending("message"),
           role: "assistant",
@@ -355,8 +373,7 @@ export namespace SessionPrompt {
             reasoning: 0,
             cache: { read: 0, write: 0 },
           },
-          modelID: taskModel.id,
-          providerID: taskModel.providerID,
+          model: ProviderRegistry.format(taskModel.providerID, taskModel.id),
           time: {
             created: Date.now(),
           },
@@ -559,8 +576,7 @@ export namespace SessionPrompt {
             reasoning: 0,
             cache: { read: 0, write: 0 },
           },
-          modelID: model.id,
-          providerID: model.providerID,
+          model: ProviderRegistry.format(model.providerID, model.id),
           time: {
             created: Date.now(),
           },
@@ -683,7 +699,7 @@ export namespace SessionPrompt {
     throw new Error("Impossible")
   })
 
-  async function lastModel(sessionID: string) {
+  async function lastModel(sessionID: string): Promise<string> {
     for await (const item of MessageV2.stream(sessionID)) {
       if (item.info.role === "user" && item.info.model) return item.info.model
     }
@@ -771,11 +787,7 @@ export namespace SessionPrompt {
           )
           return result
         },
-        toModelOutput(
-          {
-            output
-          }
-        ) {
+        toModelOutput({ output }) {
           return { type: "text", value: output.output }
         },
       })
@@ -785,7 +797,10 @@ export namespace SessionPrompt {
       const execute = item.execute
       if (!execute) continue
 
-      const transformed = ProviderTransform.schema(input.model, await Promise.resolve(asSchema(item.inputSchema).jsonSchema))
+      const transformed = ProviderTransform.schema(
+        input.model,
+        await Promise.resolve(asSchema(item.inputSchema).jsonSchema),
+      )
       item.inputSchema = jsonSchema(transformed)
       // Wrap execute to add plugin hooks and format output
       item.execute = async (args, opts) => {
@@ -894,14 +909,24 @@ export namespace SessionPrompt {
     const agent = await Agent.get(input.agent ?? (await Agent.defaultAgent()))
 
     const resolvedModel = input.model ?? agent.model ?? (await lastModel(input.sessionID))
+
+    // Normalize to ModelRef string (handle legacy formats at runtime)
+    const modelRef = ensureModelRef(resolvedModel as any)
+
     // Round-robin across multi-account providers, preserving the user's chosen modelID
-    const model = await Provider.nextAccountModel(resolvedModel)
+    const model = await (async () => {
+      const { providerID, modelID } = ProviderRegistry.parse(modelRef)
+      const legacyFormat = { providerID, modelID }
+      return Provider.nextAccountModel(legacyFormat)
+    })()
+
     const variant =
       input.variant ??
-      (agent.variant &&
-      agent.model &&
-      model.providerID === agent.model.providerID &&
-      model.modelID === agent.model.modelID
+      (agent.model &&
+      modelRef ===
+        (typeof agent.model === "string"
+          ? agent.model
+          : ProviderRegistry.format((agent.model as any).providerID, (agent.model as any).modelID))
         ? agent.variant
         : undefined)
 
@@ -914,7 +939,7 @@ export namespace SessionPrompt {
       },
       tools: input.tools,
       agent: agent.name,
-      model,
+      model: modelRef,
       system: input.system,
       variant,
     }
@@ -1088,7 +1113,8 @@ export namespace SessionPrompt {
 
                 await ReadTool.init()
                   .then(async (t) => {
-                    const model = await Provider.getModel(info.model.providerID, info.model.modelID)
+                    const { providerID: infoProviderID, modelID: infoModelID } = ProviderRegistry.parse(info.model)
+                    const model = await Provider.getModel(infoProviderID, infoModelID)
                     const readCtx: Tool.Context = {
                       sessionID: input.sessionID,
                       abort: new AbortController().signal,
@@ -1453,7 +1479,11 @@ NOTE: At any point in time through this workflow you should feel free to ask the
       await SessionRevert.cleanup(session)
     }
     const agent = await Agent.get(input.agent)
-    const model = input.model ?? agent.model ?? (await lastModel(input.sessionID))
+    let modelRef = input.model ?? agent.model ?? (await lastModel(input.sessionID))
+    // Ensure modelRef is a string (agent.model might be in legacy object format)
+    if (typeof modelRef !== "string") {
+      modelRef = ProviderRegistry.format((modelRef as any).providerID, (modelRef as any).modelID)
+    }
     const userMsg: MessageV2.User = {
       id: Identifier.ascending("message"),
       sessionID: input.sessionID,
@@ -1462,10 +1492,7 @@ NOTE: At any point in time through this workflow you should feel free to ask the
       },
       role: "user",
       agent: input.agent,
-      model: {
-        providerID: model.providerID,
-        modelID: model.modelID,
-      },
+      model: modelRef,
     }
     await Session.updateMessage(userMsg)
     const userPart: MessageV2.Part = {
@@ -1499,8 +1526,7 @@ NOTE: At any point in time through this workflow you should feel free to ask the
         reasoning: 0,
         cache: { read: 0, write: 0 },
       },
-      modelID: model.modelID,
-      providerID: model.providerID,
+      model: modelRef,
     }
     await Session.updateMessage(msg)
     const part: MessageV2.Part = {
@@ -1746,22 +1772,28 @@ NOTE: At any point in time through this workflow you should feel free to ask the
     }
     template = template.trim()
 
-    const taskModel = await (async () => {
-      if (command.model) {
-        return Provider.parseModel(command.model)
+    let taskModelRef: string
+    if (command.model) {
+      taskModelRef = command.model
+    } else if (command.agent) {
+      const cmdAgent = await Agent.get(command.agent)
+      if (cmdAgent?.model) {
+        // agent.model might be in legacy object format at runtime
+        taskModelRef = ensureModelRef(cmdAgent.model as string)
+      } else if (input.model) {
+        taskModelRef = input.model
+      } else {
+        taskModelRef = await lastModel(input.sessionID)
       }
-      if (command.agent) {
-        const cmdAgent = await Agent.get(command.agent)
-        if (cmdAgent?.model) {
-          return cmdAgent.model
-        }
-      }
-      if (input.model) return Provider.parseModel(input.model)
-      return await lastModel(input.sessionID)
-    })()
+    } else if (input.model) {
+      taskModelRef = input.model
+    } else {
+      taskModelRef = await lastModel(input.sessionID)
+    }
 
     try {
-      await Provider.getModel(taskModel.providerID, taskModel.modelID)
+      const { providerID, modelID } = ProviderRegistry.parse(taskModelRef)
+      await Provider.getModel(providerID, modelID)
     } catch (e) {
       if (Provider.ModelNotFoundError.isInstance(e)) {
         const { providerID, modelID, suggestions } = e.data
@@ -1798,10 +1830,7 @@ NOTE: At any point in time through this workflow you should feel free to ask the
             agent: agent.name,
             description: command.description ?? "",
             command: input.command,
-            model: {
-              providerID: taskModel.providerID,
-              modelID: taskModel.modelID,
-            },
+            model: taskModelRef,
             // TODO: how can we make task tool accept a more complex input?
             prompt: templateParts.find((y) => y.type === "text")?.text ?? "",
           },
@@ -1809,11 +1838,7 @@ NOTE: At any point in time through this workflow you should feel free to ask the
       : [...templateParts, ...(input.parts ?? [])]
 
     const userAgent = isSubtask ? (input.agent ?? (await Agent.defaultAgent())) : agentName
-    const userModel = isSubtask
-      ? input.model
-        ? Provider.parseModel(input.model)
-        : await lastModel(input.sessionID)
-      : taskModel
+    const userModelRef = isSubtask ? (input.model ?? (await lastModel(input.sessionID))) : taskModelRef
 
     await Plugin.trigger(
       "command.execute.before",
@@ -1828,7 +1853,7 @@ NOTE: At any point in time through this workflow you should feel free to ask the
     const result = (await prompt({
       sessionID: input.sessionID,
       messageID: input.messageID,
-      model: userModel,
+      model: userModelRef,
       agent: userAgent,
       parts,
       variant: input.variant,
@@ -1877,7 +1902,10 @@ NOTE: At any point in time through this workflow you should feel free to ask the
     const agent = await Agent.get("title")
     if (!agent) return
     const model = await iife(async () => {
-      if (agent.model) return await Provider.getModel(agent.model.providerID, agent.model.modelID)
+      if (agent.model) {
+        const { providerID, modelID } = ProviderRegistry.parse(agent.model)
+        return await Provider.getModel(providerID, modelID)
+      }
       return (
         (await Provider.getSmallModel(input.providerID)) ?? (await Provider.getModel(input.providerID, input.modelID))
       )
@@ -1902,7 +1930,9 @@ NOTE: At any point in time through this workflow you should feel free to ask the
           : await MessageV2.toModelMessages(contextMessages, model)),
       ],
     })
-    const text = await Promise.resolve(result.text).catch((err) => log.error("failed to generate title", { error: err }))
+    const text = await Promise.resolve(result.text).catch((err) =>
+      log.error("failed to generate title", { error: err }),
+    )
     if (text)
       return Session.update(
         input.session.id,
@@ -1918,6 +1948,6 @@ NOTE: At any point in time through this workflow you should feel free to ask the
           draft.title = title
         },
         { touch: false },
-      );
+      )
   }
 }

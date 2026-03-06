@@ -3,7 +3,7 @@ import { Bus } from "@/bus"
 import { Session } from "."
 import { Identifier } from "../id/id"
 import { Instance } from "../project/instance"
-import { Provider } from "../provider/provider"
+import { Provider, ProviderRegistry } from "../provider/provider"
 import { MessageV2 } from "./message-v2"
 import z from "zod"
 import { SessionPrompt } from "./prompt"
@@ -98,9 +98,17 @@ export namespace SessionCompaction {
   }) {
     const userMessage = input.messages.findLast((m) => m.info.id === input.parentID)!.info as MessageV2.User
     const agent = await Agent.get("compaction")
-    const model = agent.model
-      ? await Provider.getModel(agent.model.providerID, agent.model.modelID)
-      : await Provider.getModel(userMessage.model.providerID, userMessage.model.modelID)
+
+    // Resolve model - prefer compaction agent's model, fallback to user's model
+    const modelRef = agent.model
+      ? typeof agent.model === "string"
+        ? agent.model
+        : ProviderRegistry.format((agent.model as any).providerID, (agent.model as any).modelID)
+      : userMessage.model // userMessage.model is already ModelRef string
+
+    const { providerID, modelID } = ProviderRegistry.parse(modelRef)
+    const model = await Provider.getModel(providerID, modelID)
+
     const msg = (await Session.updateMessage({
       id: Identifier.ascending("message"),
       role: "assistant",
@@ -121,8 +129,7 @@ export namespace SessionCompaction {
         reasoning: 0,
         cache: { read: 0, write: 0 },
       },
-      modelID: model.id,
-      providerID: model.providerID,
+      model: modelRef,
       time: {
         created: Date.now(),
       },
@@ -197,10 +204,7 @@ export namespace SessionCompaction {
     z.object({
       sessionID: Identifier.schema("session"),
       agent: z.string(),
-      model: z.object({
-        providerID: z.string(),
-        modelID: z.string(),
-      }),
+      model: z.string(), // ModelRef format: "provider:model"
       auto: z.boolean(),
     }),
     async (input) => {

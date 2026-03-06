@@ -12,6 +12,7 @@ import { STATUS_CODES } from "http"
 import { iife } from "@/util/iife"
 import { type SystemError } from "bun"
 import type { Provider } from "@/provider/provider"
+import { ProviderRegistry, type ModelRef } from "@/provider/registry"
 
 export namespace MessageV2 {
   export const OutputLengthError = NamedError.create("MessageOutputLengthError", z.object({}))
@@ -169,12 +170,7 @@ export namespace MessageV2 {
     prompt: z.string(),
     description: z.string(),
     agent: z.string(),
-    model: z
-      .object({
-        providerID: z.string(),
-        modelID: z.string(),
-      })
-      .optional(),
+    model: z.string().optional(), // ModelRef format: "provider:model"
     command: z.string().optional(),
   }).meta({
     ref: "SubtaskPart",
@@ -317,10 +313,7 @@ export namespace MessageV2 {
       })
       .optional(),
     agent: z.string(),
-    model: z.object({
-      providerID: z.string(),
-      modelID: z.string(),
-    }),
+    model: z.string(), // ModelRef format: "provider:model"
     system: z.string().optional(),
     tools: z.record(z.string(), z.boolean()).optional(),
     variant: z.string().optional(),
@@ -365,8 +358,7 @@ export namespace MessageV2 {
       ])
       .optional(),
     parentID: z.string(),
-    modelID: z.string(),
-    providerID: z.string(),
+    model: z.string(), // ModelRef format: "provider:model"
     /**
      * @deprecated - Duplicate of `agent` field, but cannot be removed yet
      * because it's persisted in existing user sessions. Safe to remove after
@@ -536,7 +528,9 @@ export namespace MessageV2 {
       }
 
       if (msg.info.role === "assistant") {
-        const differentModel = `${model.providerID}/${model.id}` !== `${msg.info.providerID}/${msg.info.modelID}`
+        // Compare model refs - model param should be Provider.Model with id/providerID, msg.info.model is ModelRef string
+        const modelRef = ProviderRegistry.format(model.providerID, model.id)
+        const differentModel = modelRef !== msg.info.model
         const media: Array<{ mime: string; url: string }> = []
 
         if (

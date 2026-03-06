@@ -1105,11 +1105,7 @@ export interface PermissionRule {
 
 // Evaluate a permission request against a merged ruleset.
 // Mirrors PermissionNext.evaluate() — returns last matching rule or default {action:"ask"}.
-export function evaluatePermissionFFI(
-  permission: string,
-  pattern: string,
-  rules: PermissionRule[],
-): PermissionRule {
+export function evaluatePermissionFFI(permission: string, pattern: string, rules: PermissionRule[]): PermissionRule {
   const rulesJson = JSON.stringify(rules)
   const ptr = lib.symbols.evaluate_permission_ffi(
     Buffer.from(permission + "\0"),
@@ -1127,10 +1123,7 @@ export function evaluatePermissionFFI(
 export function disabledToolsFFI(tools: string[], ruleset: PermissionRule[]): string[] {
   const toolsJson = JSON.stringify(tools)
   const rulesetJson = JSON.stringify(ruleset)
-  const ptr = lib.symbols.disabled_tools_ffi(
-    Buffer.from(toolsJson + "\0"),
-    Buffer.from(rulesetJson + "\0"),
-  )
+  const ptr = lib.symbols.disabled_tools_ffi(Buffer.from(toolsJson + "\0"), Buffer.from(rulesetJson + "\0"))
   if (!ptr) return []
   const json = new CString(ptr).toString()
   lib.symbols.free_string(ptr)

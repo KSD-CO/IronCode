@@ -1336,7 +1336,12 @@ export namespace Provider {
 
   export async function defaultModel() {
     const cfg = await Config.get()
-    if (cfg.model) return parseModel(cfg.model)
+    if (cfg.model) {
+      const parsed = parseModel(cfg.model)
+      // Import inline to avoid circular dependency
+      const { ProviderRegistry } = await import("./registry")
+      return ProviderRegistry.format(parsed.providerID, parsed.modelID)
+    }
 
     const allProviders = await list().then((val) => Object.values(val))
 
@@ -1355,7 +1360,8 @@ export namespace Provider {
       const [model] = sort(Object.values(picked.models))
       if (model) {
         log.info("copilot round-robin", { providerID: picked.id, index: idx })
-        return { providerID: picked.id, modelID: model.id }
+        const { ProviderRegistry } = await import("./registry")
+        return ProviderRegistry.format(picked.id, model.id)
       }
     }
 
@@ -1363,10 +1369,8 @@ export namespace Provider {
     if (!provider) throw new Error("no providers found")
     const [model] = sort(Object.values(provider.models))
     if (!model) throw new Error("no models found")
-    return {
-      providerID: provider.id,
-      modelID: model.id,
-    }
+    const { ProviderRegistry } = await import("./registry")
+    return ProviderRegistry.format(provider.id, model.id)
   }
 
   export function parseModel(model: string) {
@@ -1393,3 +1397,6 @@ export namespace Provider {
     }),
   )
 }
+
+// Export ProviderRegistry for namespace-based model access
+export { ProviderRegistry, type ModelRef } from "./registry"

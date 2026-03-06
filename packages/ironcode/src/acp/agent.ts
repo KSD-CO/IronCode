@@ -32,7 +32,7 @@ import { Log } from "../util/log"
 import { pathToFileURL } from "bun"
 import { ACPSessionManager } from "./session"
 import type { ACPConfig } from "./types"
-import { Provider } from "../provider/provider"
+import { Provider, ProviderRegistry } from "../provider/provider"
 import { Agent as AgentModule } from "../agent/agent"
 import { Installation } from "@/installation"
 import { MessageV2 } from "@/session/message-v2"
@@ -94,7 +94,8 @@ export namespace ACP {
     if (!lastAssistant) return
 
     const msg = lastAssistant.info
-    const size = await getContextLimit(sdk, msg.providerID, msg.modelID, directory)
+    const { providerID, modelID } = ProviderRegistry.parse(msg.model)
+    const size = await getContextLimit(sdk, providerID, modelID, directory)
 
     if (!size) {
       // Cannot calculate usage without known context size
@@ -600,10 +601,11 @@ export namespace ACP {
 
         const lastUser = messages?.findLast((m) => m.info.role === "user")?.info
         if (lastUser?.role === "user") {
-          result.models.currentModelId = `${lastUser.model.providerID}/${lastUser.model.modelID}`
+          result.models.currentModelId = lastUser.model // Already in "provider:model" format
+          const { providerID, modelID } = ProviderRegistry.parse(lastUser.model)
           this.sessionManager.setModel(sessionId, {
-            providerID: lastUser.model.providerID,
-            modelID: lastUser.model.modelID,
+            providerID,
+            modelID,
           })
           if (result.modes?.availableModes.some((m) => m.id === lastUser.agent)) {
             result.modes.currentModeId = lastUser.agent
@@ -1335,10 +1337,7 @@ export namespace ACP {
       if (!cmd) {
         const response = await this.sdk.session.prompt({
           sessionID,
-          model: {
-            providerID: model.providerID,
-            modelID: model.modelID,
-          },
+          model: ProviderRegistry.format(model.providerID, model.modelID),
           variant: this.sessionManager.getVariant(sessionID),
           parts,
           agent,

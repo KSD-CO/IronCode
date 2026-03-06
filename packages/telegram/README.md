@@ -24,6 +24,7 @@ ironcode auth login openai     # OpenAI
 ```
 
 List available models:
+
 ```bash
 ironcode models
 ```
@@ -49,6 +50,7 @@ ironcode-telegram setup
 ```
 
 Config is stored at `~/.config/ironcode/telegram.json`:
+
 ```json
 {
   "token": "your-bot-token",
@@ -69,14 +71,14 @@ The agent runs with the current directory as its working directory, so it can re
 
 ## Bot Commands
 
-| Command | Description |
-|---|---|
-| `/sessions` | List recent sessions — tap to switch |
-| `/new` | Start a new session |
-| `/info` | Show current session details (title, ID, file changes) |
-| `/init` | Analyze the project and create an `AGENTS.md` config file |
-| `/diff` | Show all file changes made in the current session |
-| `/start` | Show help |
+| Command     | Description                                               |
+| ----------- | --------------------------------------------------------- |
+| `/sessions` | List recent sessions — tap to switch                      |
+| `/new`      | Start a new session                                       |
+| `/info`     | Show current session details (title, ID, file changes)    |
+| `/init`     | Analyze the project and create an `AGENTS.md` config file |
+| `/diff`     | Show all file changes made in the current session         |
+| `/start`    | Show help                                                 |
 
 ## How It Works
 

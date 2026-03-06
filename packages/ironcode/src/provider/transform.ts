@@ -197,7 +197,7 @@ export namespace ProviderTransform {
       if (shouldUseContentOptions) {
         const lastContent = msg.content[msg.content.length - 1]
         if (lastContent && typeof lastContent === "object") {
-          (lastContent as any).providerOptions = mergeDeep((lastContent as any).providerOptions ?? {}, providerOptions)
+          ;(lastContent as any).providerOptions = mergeDeep((lastContent as any).providerOptions ?? {}, providerOptions)
           continue
         }
       }

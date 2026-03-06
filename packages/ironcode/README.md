@@ -15,16 +15,16 @@ An AI coding assistant with a native Rust backend for high-performance local too
 
 All performance-critical components are compiled to a native `.dylib` via FFI:
 
-| Component              | Status | Description                                           |
-| ---------------------- | ------ | ----------------------------------------------------- |
-| File Watcher           | ✅     | Cross-platform via `notify` crate                     |
-| Fuzzy Match            | ✅     | `nucleo-matcher` for fast scoring                     |
-| Code Search (BM25)     | ✅     | tree-sitter symbol indexing + BM25 ranking            |
-| VCS (git2)             | ✅     | Native git operations                                 |
-| PTY                    | ✅     | `portable-pty` for terminal emulation                 |
-| Wildcard Matching      | ✅     | `*`/`?` glob patterns via `rexile`, replaces JS impl  |
-| Bash Parser            | ✅     | tree-sitter bash — extracts dirs, patterns, always    |
-| Command Prefix (RETE)  | ✅     | GRL rule engine maps commands → arity for prefix      |
+| Component             | Status | Description                                          |
+| --------------------- | ------ | ---------------------------------------------------- |
+| File Watcher          | ✅     | Cross-platform via `notify` crate                    |
+| Fuzzy Match           | ✅     | `nucleo-matcher` for fast scoring                    |
+| Code Search (BM25)    | ✅     | tree-sitter symbol indexing + BM25 ranking           |
+| VCS (git2)            | ✅     | Native git operations                                |
+| PTY                   | ✅     | `portable-pty` for terminal emulation                |
+| Wildcard Matching     | ✅     | `*`/`?` glob patterns via `rexile`, replaces JS impl |
+| Bash Parser           | ✅     | tree-sitter bash — extracts dirs, patterns, always   |
+| Command Prefix (RETE) | ✅     | GRL rule engine maps commands → arity for prefix     |
 
 ## Local Code Search (BM25 + tree-sitter)
 
@@ -128,12 +128,12 @@ ironcode auth login
 
 Once two or more accounts of the same provider are connected, every message is routed to the next account automatically — **no configuration needed**:
 
-| Message | Account used |
-|---------|-------------|
-| 1 | Anthropic (Account 1) |
-| 2 | Anthropic (Account 2) |
-| 3 | Anthropic (Account 1) |
-| … | … |
+| Message | Account used          |
+| ------- | --------------------- |
+| 1       | Anthropic (Account 1) |
+| 2       | Anthropic (Account 2) |
+| 3       | Anthropic (Account 1) |
+| …       | …                     |
 
 - The **model you selected** (e.g. `claude-sonnet-4`) is preserved across accounts — only the provider account rotates
 - Works **within the same session** as well as across different sessions
@@ -169,11 +169,11 @@ Accounts are stored in `~/.local/share/ironcode/auth.json`:
 
 ```json
 {
-  "anthropic":   { "type": "api", "key": "sk-ant-..." },
+  "anthropic": { "type": "api", "key": "sk-ant-..." },
   "anthropic-2": { "type": "api", "key": "sk-ant-..." },
-  "openai":      { "type": "api", "key": "sk-..." },
-  "openai-2":    { "type": "api", "key": "sk-..." },
-  "github-copilot":   { "type": "oauth", "access": "...", "refresh": "gho_..." },
+  "openai": { "type": "api", "key": "sk-..." },
+  "openai-2": { "type": "api", "key": "sk-..." },
+  "github-copilot": { "type": "oauth", "access": "...", "refresh": "gho_..." },
   "github-copilot-2": { "type": "oauth", "access": "...", "refresh": "gho_..." }
 }
 ```
@@ -193,6 +193,7 @@ Fixed a fatal `TextNodeRenderable only accepts strings...` crash that occurred ~
 2. **`ui/dialog-select.tsx`** — The `footer` prop (typed as `JSX.Element | string`) was always wrapped in `<text>`. When `DialogMcp` passed a `<Status>` component (a JSX element) as `footer`, it could not be inserted into a TextNodeRenderable.
 
 **Fixes:**
+
 - `prompt/index.tsx`: moved `{props.hint}` outside the `<text>` tag so it renders as a flex sibling inside the parent `<box flexDirection="row">`.
 - `dialog-select.tsx`: footer rendering now branches on type — strings are wrapped in `<text>`, JSX elements are rendered directly in the `<box>`.
 
