@@ -165,7 +165,10 @@ export namespace Installation {
     }
     const result = await cmd.quiet().throws(false)
     if (result.exitCode !== 0) {
-      const stderr = method === "choco" ? "not running from an elevated command shell" : result.stderr.toString("utf8")
+      const stderr =
+        method === "choco"
+          ? "not running from an elevated command shell"
+          : Bun.stripANSI(result.stderr.toString("utf8"))
       throw new UpgradeFailedError({
         stderr: stderr,
       })
@@ -173,8 +176,8 @@ export namespace Installation {
     log.info("upgraded", {
       method,
       target,
-      stdout: result.stdout.toString(),
-      stderr: result.stderr.toString(),
+      stdout: Bun.stripANSI(result.stdout.toString()),
+      stderr: Bun.stripANSI(result.stderr.toString()),
     })
     await $`${process.execPath} --version`.nothrow().quiet().text()
   }

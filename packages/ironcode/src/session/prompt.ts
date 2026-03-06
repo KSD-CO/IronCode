@@ -1619,7 +1619,7 @@ NOTE: At any point in time through this workflow you should feel free to ask the
     let output = ""
 
     proc.stdout?.on("data", (chunk) => {
-      output += chunk.toString()
+      output += Bun.stripANSI(chunk.toString())
       if (part.state.status === "running") {
         part.state.metadata = {
           output: output,
@@ -1630,7 +1630,7 @@ NOTE: At any point in time through this workflow you should feel free to ask the
     })
 
     proc.stderr?.on("data", (chunk) => {
-      output += chunk.toString()
+      output += Bun.stripANSI(chunk.toString())
       if (part.state.status === "running") {
         part.state.metadata = {
           output: output,

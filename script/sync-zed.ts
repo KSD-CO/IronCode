@@ -115,11 +115,11 @@ async function main() {
       .nothrow()
 
   if (prResult.exitCode !== 0) {
-    console.error("stderr:", prResult.stderr.toString())
+    console.error("stderr:", Bun.stripANSI(prResult.stderr.toString()))
     throw new Error(`Failed with exit code ${prResult.exitCode}`)
   }
 
-  const prUrl = prResult.stdout.toString().trim()
+  const prUrl = Bun.stripANSI(prResult.stdout.toString()).trim()
   console.log(`✅ Pull request created: ${prUrl}`)
   console.log(`🎉 Done!`)
 }

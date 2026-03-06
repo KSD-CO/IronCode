@@ -1162,14 +1162,20 @@ export namespace LSPServer {
         log.info("Downloading JDTLS archive", { url: releaseURL, dest: distPath })
         const curlResult = await $`curl -L -o ${archiveName} '${releaseURL}'`.cwd(distPath).quiet().nothrow()
         if (curlResult.exitCode !== 0) {
-          log.error("Failed to download JDTLS", { exitCode: curlResult.exitCode, stderr: curlResult.stderr.toString() })
+          log.error("Failed to download JDTLS", {
+            exitCode: curlResult.exitCode,
+            stderr: Bun.stripANSI(curlResult.stderr.toString()),
+          })
           return
         }
 
         log.info("Extracting JDTLS archive")
         const tarResult = await $`tar -xzf ${archiveName}`.cwd(distPath).quiet().nothrow()
         if (tarResult.exitCode !== 0) {
-          log.error("Failed to extract JDTLS", { exitCode: tarResult.exitCode, stderr: tarResult.stderr.toString() })
+          log.error("Failed to extract JDTLS", {
+            exitCode: tarResult.exitCode,
+            stderr: Bun.stripANSI(tarResult.stderr.toString()),
+          })
           return
         }
 

@@ -39,8 +39,8 @@ export namespace Snapshot {
     if (result.exitCode !== 0) {
       log.warn("cleanup failed", {
         exitCode: result.exitCode,
-        stderr: result.stderr.toString(),
-        stdout: result.stdout.toString(),
+        stderr: Bun.stripANSI(result.stderr.toString()),
+        stdout: Bun.stripANSI(result.stdout.toString()),
       })
       return
     }
@@ -121,8 +121,8 @@ export namespace Snapshot {
       log.error("failed to restore snapshot", {
         snapshot,
         exitCode: result.exitCode,
-        stderr: result.stderr.toString(),
-        stdout: result.stdout.toString(),
+        stderr: Bun.stripANSI(result.stderr.toString()),
+        stdout: Bun.stripANSI(result.stdout.toString()),
       })
     }
   }
@@ -172,8 +172,8 @@ export namespace Snapshot {
       log.warn("failed to get diff", {
         hash,
         exitCode: result.exitCode,
-        stderr: result.stderr.toString(),
-        stdout: result.stdout.toString(),
+        stderr: Bun.stripANSI(result.stderr.toString()),
+        stdout: Bun.stripANSI(result.stdout.toString()),
       })
       return ""
     }

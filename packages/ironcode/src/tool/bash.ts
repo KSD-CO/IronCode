@@ -124,7 +124,9 @@ export const BashTool = Tool.define("bash", async () => {
       })
 
       const append = (chunk: Buffer) => {
-        output += chunk.toString()
+        // Strip ANSI escape codes to prevent terminal corruption from panic backtraces
+        const text = Bun.stripANSI(chunk.toString())
+        output += text
         ctx.metadata({
           metadata: {
             // truncate the metadata to avoid GIANT blobs of data (has nothing to do w/ what agent can access)
