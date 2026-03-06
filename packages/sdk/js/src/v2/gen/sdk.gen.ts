@@ -1464,9 +1464,15 @@ export class Session extends HeyApiClient {
       sessionID: string
       directory?: string
       messageID?: string
-      model?: string
+      model?:
+        | string
+        | {
+            providerID: string
+            modelID: string
+          }
       agent?: string
       noReply?: boolean
+      thinking?: boolean
       tools?: {
         [key: string]: boolean
       }
@@ -1487,6 +1493,7 @@ export class Session extends HeyApiClient {
             { in: "body", key: "model" },
             { in: "body", key: "agent" },
             { in: "body", key: "noReply" },
+            { in: "body", key: "thinking" },
             { in: "body", key: "tools" },
             { in: "body", key: "system" },
             { in: "body", key: "variant" },
@@ -1549,9 +1556,15 @@ export class Session extends HeyApiClient {
       sessionID: string
       directory?: string
       messageID?: string
-      model?: string
+      model?:
+        | string
+        | {
+            providerID: string
+            modelID: string
+          }
       agent?: string
       noReply?: boolean
+      thinking?: boolean
       tools?: {
         [key: string]: boolean
       }
@@ -1572,6 +1585,7 @@ export class Session extends HeyApiClient {
             { in: "body", key: "model" },
             { in: "body", key: "agent" },
             { in: "body", key: "noReply" },
+            { in: "body", key: "thinking" },
             { in: "body", key: "tools" },
             { in: "body", key: "system" },
             { in: "body", key: "variant" },

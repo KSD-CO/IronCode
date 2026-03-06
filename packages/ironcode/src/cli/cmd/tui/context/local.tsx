@@ -8,7 +8,7 @@ import { Global } from "@/global"
 import { iife } from "@/util/iife"
 import { createSimpleContext } from "./helper"
 import { useToast } from "../ui/toast"
-import { Provider } from "@/provider/provider"
+import { Provider, ProviderRegistry } from "@/provider/provider"
 import { useArgs } from "./args"
 import { useSDK } from "./sdk"
 import { RGBA } from "@opentui/core"
@@ -111,12 +111,14 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           modelID: string
         }[]
         variant: Record<string, string | undefined>
+        thinking: Record<string, boolean>
       }>({
         ready: false,
         model: {},
         recent: [],
         favorite: [],
         variant: {},
+        thinking: {},
       })
 
       const file = Bun.file(path.join(Global.Path.state, "model.json"))
@@ -198,7 +200,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
         return (
           getFirstValidModel(
             () => modelStore.model[a.name],
-            () => a.model,
+            () => (a.model ? ProviderRegistry.parse(a.model) : undefined),
             fallbackModel,
           ) ?? undefined
         )
@@ -363,6 +365,23 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
             this.set(variants[index + 1])
           },
         },
+        thinking: {
+          isEnabled() {
+            const current = model.current()
+            if (!current) return true // Default to enabled if no model selected
+            const key = `${current.providerID}/${current.modelID}`
+            // Default to true (thinking enabled) if not explicitly disabled
+            return modelStore.thinking[key] ?? true
+          },
+          toggle() {
+            const current = model.current()
+            if (!current) return // No-op if no model selected
+            const key = `${current.providerID}/${current.modelID}`
+            const currentValue = this.isEnabled()
+            setModelStore("thinking", key, !currentValue)
+            save()
+          },
+        },
       }
     })
 
@@ -387,15 +406,16 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
     createEffect(() => {
       const value = agent.current()
       if (value.model) {
-        if (isModelValid(value.model))
+        const parsed = ProviderRegistry.parse(value.model)
+        if (isModelValid(parsed))
           model.set({
-            providerID: value.model.providerID,
-            modelID: value.model.modelID,
+            providerID: parsed.providerID,
+            modelID: parsed.modelID,
           })
         else
           toast.show({
             variant: "warning",
-            message: `Agent ${value.name}'s configured model ${value.model.providerID}/${value.model.modelID} is not valid`,
+            message: `Agent ${value.name}'s configured model ${value.model} is not valid`,
             duration: 3000,
           })
       }

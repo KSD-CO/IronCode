@@ -507,6 +507,18 @@ export namespace ProviderTransform {
         // https://v5.ai-sdk.dev/providers/ai-sdk-providers/google-generative-ai
         if (id.includes("2.5")) {
           return {
+            low: {
+              thinkingConfig: {
+                includeThoughts: true,
+                thinkingBudget: 4000,
+              },
+            },
+            medium: {
+              thinkingConfig: {
+                includeThoughts: true,
+                thinkingBudget: 8000,
+              },
+            },
             high: {
               thinkingConfig: {
                 includeThoughts: true,

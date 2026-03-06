@@ -104,6 +104,7 @@ export namespace SessionPrompt {
       .optional(),
     agent: z.string().optional(),
     noReply: z.boolean().optional(),
+    thinking: z.boolean().optional().describe("Enable or disable thinking/reasoning for this request"),
     tools: z
       .record(z.string(), z.boolean())
       .optional()
@@ -563,7 +564,7 @@ export namespace SessionPrompt {
           role: "assistant",
           mode: agent.name,
           agent: agent.name,
-          variant: lastUser.variant,
+          variant: lastUser.thinking === false ? undefined : lastUser.variant,
           path: {
             cwd: Instance.directory,
             root: Instance.worktree,
@@ -941,6 +942,7 @@ export namespace SessionPrompt {
       model: modelRef,
       system: input.system,
       variant,
+      thinking: input.thinking,
     }
     using _ = defer(() => InstructionPrompt.clear(info.id))
 

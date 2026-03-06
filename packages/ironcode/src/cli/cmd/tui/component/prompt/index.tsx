@@ -670,6 +670,7 @@ export function Prompt(props: PromptProps) {
           agent: local.agent.current().name,
           model: `${selectedModel.providerID}/${selectedModel.modelID}`,
           variant,
+          thinking: local.model.thinking.isEnabled(),
           parts: [
             {
               id: Identifier.ascending("part"),
@@ -903,6 +904,11 @@ export function Prompt(props: PromptProps) {
                   setStore("extmarkToPartIndex", new Map())
                   return
                 }
+                if (keybind.match("toggle_thinking", e)) {
+                  local.model.thinking.toggle()
+                  e.preventDefault()
+                  return
+                }
                 if (keybind.match("app_exit", e)) {
                   if (store.prompt.input === "") {
                     await exit()
@@ -1051,6 +1057,12 @@ export function Prompt(props: PromptProps) {
                       <span style={{ fg: theme.warning, bold: true }}>{local.model.variant.current()}</span>
                     </text>
                   </Show>
+                  <text fg={theme.textMuted}>·</text>
+                  <text>
+                    <span style={{ fg: local.model.thinking.isEnabled() ? theme.text : theme.textMuted }}>
+                      {local.model.thinking.isEnabled() ? "thinking" : "no-thinking"}
+                    </span>
+                  </text>
                 </box>
               </Show>
             </box>
@@ -1172,6 +1184,9 @@ export function Prompt(props: PromptProps) {
                       {keybind.print("variant_cycle")} <span style={{ fg: theme.textMuted }}>variants</span>
                     </text>
                   </Show>
+                  <text fg={theme.text}>
+                    {keybind.print("toggle_thinking")} <span style={{ fg: theme.textMuted }}>thinking</span>
+                  </text>
                   <text fg={theme.text}>
                     {keybind.print("agent_cycle")} <span style={{ fg: theme.textMuted }}>agents</span>
                   </text>

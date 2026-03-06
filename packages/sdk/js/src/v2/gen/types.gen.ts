@@ -118,6 +118,7 @@ export type UserMessage = {
     [key: string]: boolean
   }
   variant?: string
+  thinking?: boolean
 }
 
 export type ProviderAuthError = {
@@ -1131,6 +1132,10 @@ export type KeybindsConfig = {
    * Cycle model variants
    */
   variant_cycle?: string
+  /**
+   * Toggle thinking/reasoning for current model
+   */
+  toggle_thinking?: string
   /**
    * Clear input field
    */
@@ -2176,10 +2181,7 @@ export type Agent = {
   temperature?: number
   color?: string
   permission: PermissionRuleset
-  model?: {
-    modelID: string
-    providerID: string
-  }
+  model?: string
   variant?: string
   prompt?: string
   options: {
@@ -3383,9 +3385,18 @@ export type SessionMessagesResponse = SessionMessagesResponses[keyof SessionMess
 export type SessionPromptData = {
   body?: {
     messageID?: string
-    model?: string
+    model?:
+      | string
+      | {
+          providerID: string
+          modelID: string
+        }
     agent?: string
     noReply?: boolean
+    /**
+     * Enable or disable thinking/reasoning for this request
+     */
+    thinking?: boolean
     /**
      * @deprecated tools and permissions have been merged, you can set permissions on the session itself now
      */
@@ -3567,9 +3578,18 @@ export type PartUpdateResponse = PartUpdateResponses[keyof PartUpdateResponses]
 export type SessionPromptAsyncData = {
   body?: {
     messageID?: string
-    model?: string
+    model?:
+      | string
+      | {
+          providerID: string
+          modelID: string
+        }
     agent?: string
     noReply?: boolean
+    /**
+     * Enable or disable thinking/reasoning for this request
+     */
+    thinking?: boolean
     /**
      * @deprecated tools and permissions have been merged, you can set permissions on the session itself now
      */
