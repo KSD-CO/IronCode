@@ -1,7 +1,7 @@
 import { EOL } from "os"
 import { basename } from "path"
 import { Agent } from "../../../agent/agent"
-import { Provider } from "../../../provider/provider"
+import { Provider, ProviderRegistry } from "../../../provider/provider"
 import { Session } from "../../../session"
 import type { MessageV2 } from "../../../session/message-v2"
 import { Identifier } from "../../../id/id"
@@ -70,8 +70,9 @@ export const AgentCommand = cmd({
 })
 
 async function getAvailableTools(agent: Agent.Info) {
-  const model = agent.model ?? (await Provider.defaultModel())
-  return ToolRegistry.tools(model, agent)
+  const modelRef = agent.model ?? (await Provider.defaultModel())
+  const { providerID, modelID } = ProviderRegistry.parse(modelRef)
+  return ToolRegistry.tools({ providerID, modelID }, agent)
 }
 
 async function resolveTools(agent: Agent.Info, availableTools: Awaited<ReturnType<typeof getAvailableTools>>) {
@@ -114,7 +115,7 @@ function parseToolParams(input?: string) {
 async function createToolContext(agent: Agent.Info) {
   const session = await Session.create({ title: `Debug tool run (${agent.name})` })
   const messageID = Identifier.ascending("message")
-  const model = agent.model ?? (await Provider.defaultModel())
+  const modelRef = agent.model ?? (await Provider.defaultModel())
   const now = Date.now()
   const message: MessageV2.Assistant = {
     id: messageID,
@@ -124,8 +125,7 @@ async function createToolContext(agent: Agent.Info) {
       created: now,
     },
     parentID: messageID,
-    modelID: model.modelID,
-    providerID: model.providerID,
+    model: modelRef,
     mode: "debug",
     agent: agent.name,
     path: {

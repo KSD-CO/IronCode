@@ -4,6 +4,7 @@ import { tmpdir } from "../fixture/fixture"
 import { Instance } from "../../src/project/instance"
 import { Agent } from "../../src/agent/agent"
 import { PermissionNext } from "../../src/permission/next"
+import { ProviderRegistry } from "../../src/provider/provider"
 
 // Helper to evaluate permission for a tool with wildcard pattern
 function evalPerm(agent: Agent.Info | undefined, permission: string): PermissionNext.Action | undefined {
@@ -123,8 +124,10 @@ test("custom agent from config creates new agent", async () => {
     fn: async () => {
       const custom = await Agent.get("my_custom_agent")
       expect(custom).toBeDefined()
-      expect(custom?.model?.providerID).toBe("openai")
-      expect(custom?.model?.modelID).toBe("gpt-4")
+      expect(custom?.model).toBeDefined()
+      const parsed = ProviderRegistry.parse(custom!.model!)
+      expect(parsed.providerID).toBe("openai")
+      expect(parsed.modelID).toBe("gpt-4")
       expect(custom?.description).toBe("My custom agent")
       expect(custom?.temperature).toBe(0.5)
       expect(custom?.topP).toBe(0.9)
@@ -152,8 +155,10 @@ test("custom agent config overrides native agent properties", async () => {
     fn: async () => {
       const build = await Agent.get("build")
       expect(build).toBeDefined()
-      expect(build?.model?.providerID).toBe("anthropic")
-      expect(build?.model?.modelID).toBe("claude-3")
+      expect(build?.model).toBeDefined()
+      const parsed = ProviderRegistry.parse(build!.model!)
+      expect(parsed.providerID).toBe("anthropic")
+      expect(parsed.modelID).toBe("claude-3")
       expect(build?.description).toBe("Custom build agent")
       expect(build?.temperature).toBe(0.7)
       expect(build?.color).toBe("#FF0000")

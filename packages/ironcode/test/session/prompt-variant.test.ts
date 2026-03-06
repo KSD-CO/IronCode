@@ -26,7 +26,7 @@ describe("session.prompt agent variant", () => {
         const other = await SessionPrompt.prompt({
           sessionID: session.id,
           agent: "build",
-          model: { providerID: "ironcode", modelID: "kimi-k2.5-free" },
+          model: "ironcode:kimi-k2.5-free",
           noReply: true,
           parts: [{ type: "text", text: "hello" }],
         })
@@ -40,7 +40,7 @@ describe("session.prompt agent variant", () => {
           parts: [{ type: "text", text: "hello again" }],
         })
         if (match.info.role !== "user") throw new Error("expected user message")
-        expect(match.info.model).toEqual({ providerID: "openai", modelID: "gpt-5.2" })
+        expect(match.info.model).toBe("openai:gpt-5.2")
         expect(match.info.variant).toBe("xhigh")
 
         const override = await SessionPrompt.prompt({

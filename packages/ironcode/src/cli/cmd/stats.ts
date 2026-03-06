@@ -208,7 +208,7 @@ export async function aggregateSessionStats(days?: number, projectFilter?: strin
         if (message.info.role === "assistant") {
           sessionCost += message.info.cost || 0
 
-          const modelKey = `${message.info.providerID}/${message.info.modelID}`
+          const modelKey = message.info.model
           if (!sessionModelUsage[modelKey]) {
             sessionModelUsage[modelKey] = {
               messages: 0,

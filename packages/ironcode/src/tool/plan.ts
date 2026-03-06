@@ -10,7 +10,7 @@ import { Instance } from "../project/instance"
 import EXIT_DESCRIPTION from "./plan-exit.txt"
 import ENTER_DESCRIPTION from "./plan-enter.txt"
 
-async function getLastModel(sessionID: string) {
+async function getLastModel(sessionID: string): Promise<string> {
   for await (const item of MessageV2.stream(sessionID)) {
     if (item.info.role === "user" && item.info.model) return item.info.model
   }
@@ -42,10 +42,7 @@ export const PlanExitTool = Tool.define("plan_exit", {
     const answer = answers[0]?.[0]
     if (answer === "No") throw new Question.RejectedError()
 
-    const modelInput = await getLastModel(ctx.sessionID)
-    // Normalize to ModelRef string (handle both old and new formats during migration)
-    const model: string =
-      typeof modelInput === "string" ? modelInput : ProviderRegistry.format(modelInput.providerID, modelInput.modelID)
+    const model = await getLastModel(ctx.sessionID)
 
     const userMsg: MessageV2.User = {
       id: Identifier.ascending("message"),
@@ -103,11 +100,8 @@ export const PlanEnterTool = Tool.define("plan_enter", {
     if (answer === "No") throw new Question.RejectedError()
 
     const modelInput2 = await getLastModel(ctx.sessionID)
-    // Normalize to ModelRef string (handle both old and new formats during migration)
-    const model: string =
-      typeof modelInput2 === "string"
-        ? modelInput2
-        : ProviderRegistry.format(modelInput2.providerID, modelInput2.modelID)
+    // modelInput2 is already a ModelRef string
+    const model = modelInput2
 
     const userMsg: MessageV2.User = {
       id: Identifier.ascending("message"),

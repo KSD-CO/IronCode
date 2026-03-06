@@ -10,6 +10,7 @@ import { useKeybind } from "../../context/keybind"
 import { Installation } from "@/installation"
 import { useTerminalDimensions } from "@opentui/solid"
 import { getSystemStatsFFI, type SystemStats } from "@/tool/ffi"
+import { ProviderRegistry } from "@/provider/provider"
 
 const Title = (props: { session: Accessor<Session> }) => {
   const { theme } = useTheme()
@@ -81,7 +82,8 @@ export function Header() {
     if (!last) return
     const total =
       last.tokens.input + last.tokens.output + last.tokens.reasoning + last.tokens.cache.read + last.tokens.cache.write
-    const model = sync.data.provider.find((x) => x.id === last.providerID)?.models[last.modelID]
+    const { providerID, modelID } = ProviderRegistry.parse(last.model)
+    const model = sync.data.provider.find((x) => x.id === providerID)?.models[modelID]
     let result = total.toLocaleString()
     if (model?.limit.context) {
       result += "  " + Math.round((total / model.limit.context) * 100) + "%"

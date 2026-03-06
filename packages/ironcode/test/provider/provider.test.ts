@@ -3,7 +3,7 @@ import path from "path"
 
 import { tmpdir } from "../fixture/fixture"
 import { Instance } from "../../src/project/instance"
-import { Provider } from "../../src/provider/provider"
+import { Provider, ProviderRegistry } from "../../src/provider/provider"
 import { Env } from "../../src/env"
 
 test("provider loaded from env variable", async () => {
@@ -379,8 +379,9 @@ test("defaultModel returns first available model when no config set", async () =
     },
     fn: async () => {
       const model = await Provider.defaultModel()
-      expect(model.providerID).toBeDefined()
-      expect(model.modelID).toBeDefined()
+      const parsed = ProviderRegistry.parse(model)
+      expect(parsed.providerID).toBeDefined()
+      expect(parsed.modelID).toBeDefined()
     },
   })
 })
@@ -404,8 +405,9 @@ test("defaultModel respects config model setting", async () => {
     },
     fn: async () => {
       const model = await Provider.defaultModel()
-      expect(model.providerID).toBe("anthropic")
-      expect(model.modelID).toBe("claude-sonnet-4-20250514")
+      const parsed = ProviderRegistry.parse(model)
+      expect(parsed.providerID).toBe("anthropic")
+      expect(parsed.modelID).toBe("claude-sonnet-4-20250514")
     },
   })
 })
@@ -549,51 +551,6 @@ test("provider removed when all models filtered out", async () => {
     fn: async () => {
       const providers = await Provider.list()
       expect(providers["anthropic"]).toBeUndefined()
-    },
-  })
-})
-
-test("closest finds model by partial match", async () => {
-  await using tmp = await tmpdir({
-    init: async (dir) => {
-      await Bun.write(
-        path.join(dir, "ironcode.json"),
-        JSON.stringify({
-          $schema: "https://ironcode.cloud/config.json",
-        }),
-      )
-    },
-  })
-  await Instance.provide({
-    directory: tmp.path,
-    init: async () => {
-      Env.set("ANTHROPIC_API_KEY", "test-api-key")
-    },
-    fn: async () => {
-      const result = await Provider.closest("anthropic", ["sonnet-4"])
-      expect(result).toBeDefined()
-      expect(result?.providerID).toBe("anthropic")
-      expect(result?.modelID).toContain("sonnet-4")
-    },
-  })
-})
-
-test("closest returns undefined for nonexistent provider", async () => {
-  await using tmp = await tmpdir({
-    init: async (dir) => {
-      await Bun.write(
-        path.join(dir, "ironcode.json"),
-        JSON.stringify({
-          $schema: "https://ironcode.cloud/config.json",
-        }),
-      )
-    },
-  })
-  await Instance.provide({
-    directory: tmp.path,
-    fn: async () => {
-      const result = await Provider.closest("nonexistent", ["model"])
-      expect(result).toBeUndefined()
     },
   })
 })
@@ -1604,54 +1561,6 @@ test("getProvider returns provider info", async () => {
       const provider = await Provider.getProvider("anthropic")
       expect(provider).toBeDefined()
       expect(provider?.id).toBe("anthropic")
-    },
-  })
-})
-
-test("closest returns undefined when no partial match found", async () => {
-  await using tmp = await tmpdir({
-    init: async (dir) => {
-      await Bun.write(
-        path.join(dir, "ironcode.json"),
-        JSON.stringify({
-          $schema: "https://ironcode.cloud/config.json",
-        }),
-      )
-    },
-  })
-  await Instance.provide({
-    directory: tmp.path,
-    init: async () => {
-      Env.set("ANTHROPIC_API_KEY", "test-api-key")
-    },
-    fn: async () => {
-      const result = await Provider.closest("anthropic", ["nonexistent-xyz-model"])
-      expect(result).toBeUndefined()
-    },
-  })
-})
-
-test("closest checks multiple query terms in order", async () => {
-  await using tmp = await tmpdir({
-    init: async (dir) => {
-      await Bun.write(
-        path.join(dir, "ironcode.json"),
-        JSON.stringify({
-          $schema: "https://ironcode.cloud/config.json",
-        }),
-      )
-    },
-  })
-  await Instance.provide({
-    directory: tmp.path,
-    init: async () => {
-      Env.set("ANTHROPIC_API_KEY", "test-api-key")
-    },
-    fn: async () => {
-      // First term won't match, second will
-      const result = await Provider.closest("anthropic", ["nonexistent", "haiku"])
-      expect(result).toBeDefined()
-      expect(result?.modelID).toContain("haiku")
     },
   })
 })

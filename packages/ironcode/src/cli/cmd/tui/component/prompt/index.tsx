@@ -28,6 +28,7 @@ import { useDialog } from "@tui/ui/dialog"
 import { DialogProvider as DialogProviderConnect } from "../dialog-provider"
 import { DialogAlert } from "../../ui/dialog-alert"
 import { DialogConfirm } from "../../ui/dialog-confirm"
+import { ProviderRegistry } from "@/provider/provider"
 import { useToast } from "../../ui/toast"
 import { useKV } from "../../context/kv"
 import { useTextareaKeybindings } from "../textarea-keybindings"
@@ -150,7 +151,10 @@ export function Prompt(props: PromptProps) {
       const isPrimaryAgent = local.agent.list().some((x) => x.name === msg.agent)
       if (msg.agent && isPrimaryAgent) {
         local.agent.set(msg.agent)
-        if (msg.model) local.model.set(msg.model)
+        if (msg.model) {
+          const { providerID, modelID } = ProviderRegistry.parse(msg.model)
+          local.model.set({ providerID, modelID })
+        }
         if (msg.variant) local.model.variant.set(msg.variant)
       }
     }
@@ -662,10 +666,9 @@ export function Prompt(props: PromptProps) {
       sdk.client.session
         .prompt({
           sessionID,
-          ...selectedModel,
           messageID,
           agent: local.agent.current().name,
-          model: selectedModel,
+          model: `${selectedModel.providerID}/${selectedModel.modelID}`,
           variant,
           parts: [
             {

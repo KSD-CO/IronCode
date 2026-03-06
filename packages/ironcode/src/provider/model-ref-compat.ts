@@ -27,9 +27,17 @@ export const ModelRefSchema = z
 
 /**
  * Helper to ensure a value is ModelRef (converts if needed)
+ * Handles both legacy object format and slash-separated CLI format
  */
 export function ensureModelRef(val: ModelRef | { providerID: string; modelID: string } | string): ModelRef {
   if (typeof val === "string") {
+    // Handle slash-separated format from CLI/config: "provider/model" → "provider:model"
+    if (val.includes("/") && !val.includes(":")) {
+      const slashIndex = val.indexOf("/")
+      const providerID = val.slice(0, slashIndex)
+      const modelID = val.slice(slashIndex + 1)
+      return ProviderRegistry.format(providerID, modelID)
+    }
     return val as ModelRef
   }
   return ProviderRegistry.format(val.providerID, val.modelID)

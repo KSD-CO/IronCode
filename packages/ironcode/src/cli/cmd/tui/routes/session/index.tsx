@@ -75,6 +75,7 @@ import { usePromptRef } from "../../context/prompt"
 import { useExit } from "../../context/exit"
 import { Filesystem } from "@/util/filesystem"
 import { Global } from "@/global"
+import { ProviderRegistry } from "@/provider/provider"
 import { PermissionPrompt } from "./permission"
 import { QuestionPrompt } from "./question"
 import { DialogExportOptions } from "../../ui/dialog-export-options"
@@ -1366,12 +1367,12 @@ function AssistantMessage(props: { message: AssistantMessage; parts: Part[]; las
   })
 
   const providerName = createMemo(() => {
-    const id = props.message.providerID
-    if (!id) return undefined
+    const { providerID } = ProviderRegistry.parse(props.message.model)
+    if (!providerID) return undefined
     return (
-      sync.data.provider.find((x) => x.id === id)?.name ??
-      sync.data.provider_next.all.find((x) => x.id === id)?.name ??
-      id
+      sync.data.provider.find((x) => x.id === providerID)?.name ??
+      sync.data.provider_next.all.find((x) => x.id === providerID)?.name ??
+      providerID
     )
   })
 
@@ -1421,7 +1422,7 @@ function AssistantMessage(props: { message: AssistantMessage; parts: Part[]; las
                 ▣{" "}
               </span>{" "}
               <span style={{ fg: theme.text }}>{Locale.titlecase(props.message.mode)}</span>
-              <span style={{ fg: theme.textMuted }}> · {props.message.modelID}</span>
+              <span style={{ fg: theme.textMuted }}> · {ProviderRegistry.parse(props.message.model).modelID}</span>
               <Show when={providerName()}>
                 <span style={{ fg: theme.textMuted }}> · {providerName()}</span>
               </Show>

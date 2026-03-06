@@ -27,10 +27,7 @@ const seed = async () => {
         role: "user" as const,
         time: { created: now },
         agent: "build",
-        model: {
-          providerID,
-          modelID,
-        },
+        model: `${providerID}:${modelID}`,
       }
       const part = {
         id: partID,

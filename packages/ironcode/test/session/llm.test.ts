@@ -275,12 +275,12 @@ describe("session.llm.stream", () => {
         } satisfies Agent.Info
 
         const user = {
-          id: "user-1",
+          id: "user-2",
           sessionID,
           role: "user",
           time: { created: Date.now() },
           agent: agent.name,
-          model: { providerID, modelID: resolved.id },
+          model: `openai:${resolved.id}`,
           variant: "high",
         } satisfies MessageV2.User
 
@@ -410,12 +410,12 @@ describe("session.llm.stream", () => {
         } satisfies Agent.Info
 
         const user = {
-          id: "user-2",
+          id: "user-1",
           sessionID,
           role: "user",
           time: { created: Date.now() },
           agent: agent.name,
-          model: { providerID: "openai", modelID: resolved.id },
+          model: `openai:${resolved.id}`,
           variant: "high",
         } satisfies MessageV2.User
 
@@ -543,7 +543,7 @@ describe("session.llm.stream", () => {
           role: "user",
           time: { created: Date.now() },
           agent: agent.name,
-          model: { providerID, modelID: resolved.id },
+          model: `${providerID}:${resolved.id}`,
         } satisfies MessageV2.User
 
         const stream = await LLM.stream({
@@ -651,7 +651,7 @@ describe("session.llm.stream", () => {
           role: "user",
           time: { created: Date.now() },
           agent: agent.name,
-          model: { providerID, modelID: resolved.id },
+          model: `${providerID}:${resolved.id}`,
         } satisfies MessageV2.User
 
         const stream = await LLM.stream({

@@ -1,5 +1,6 @@
 import type { AssistantMessage, Part, UserMessage } from "@ironcode-ai/sdk/v2"
 import { Locale } from "@/util/locale"
+import { ProviderRegistry } from "@/provider/provider"
 
 export type TranscriptOptions = {
   thinking: boolean
@@ -64,7 +65,8 @@ export function formatAssistantHeader(msg: AssistantMessage, includeMetadata: bo
   const duration =
     msg.time.completed && msg.time.created ? ((msg.time.completed - msg.time.created) / 1000).toFixed(1) + "s" : ""
 
-  return `## Assistant (${Locale.titlecase(msg.agent)} · ${msg.modelID}${duration ? ` · ${duration}` : ""})\n\n`
+  const { modelID } = ProviderRegistry.parse(msg.model)
+  return `## Assistant (${Locale.titlecase(msg.agent)} · ${modelID}${duration ? ` · ${duration}` : ""})\n\n`
 }
 
 export function formatPart(part: Part, options: TranscriptOptions): string {

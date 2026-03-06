@@ -11,17 +11,6 @@ import { Log } from "../util/log"
 export type ModelRef = string
 
 /**
- * Model reference object (legacy format) - DEPRECATED
- * Use ModelRef string instead
- *
- * @deprecated Use ModelRef string type instead
- */
-export interface LegacyModelRef {
-  providerID: string
-  modelID: string
-}
-
-/**
  * Provider Registry - Convenience layer for namespace-based model access
  *
  * Provides a simpler API using "provider:model" notation instead of separate provider/model params.
@@ -91,23 +80,6 @@ export namespace ProviderRegistry {
    */
   export function format(providerID: string, modelID: string): ModelRef {
     return `${providerID}:${modelID}`
-  }
-
-  /**
-   * Convert legacy model reference object to ModelRef string
-   * @deprecated Use ModelRef string directly instead
-   */
-  export function fromLegacy(legacy: LegacyModelRef): ModelRef {
-    return format(legacy.providerID, legacy.modelID)
-  }
-
-  /**
-   * Convert ModelRef string to legacy model reference object
-   * @deprecated Use ModelRef string directly instead
-   */
-  export function toLegacy(ref: ModelRef): LegacyModelRef {
-    const { providerID, modelID } = parse(ref)
-    return { providerID, modelID }
   }
 
   /**

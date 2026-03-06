@@ -8,7 +8,7 @@ import { bootstrap } from "../bootstrap"
 import { EOL } from "os"
 import { createIroncodeClient, type Message, type IroncodeClient, type ToolPart } from "@ironcode-ai/sdk/v2"
 import { Server } from "../../server/server"
-import { Provider } from "../../provider/provider"
+import { ProviderRegistry } from "../../provider/provider"
 import { Agent } from "../../agent/agent"
 import { PermissionNext } from "../../permission/next"
 import { Tool } from "../../tool/tool"
@@ -428,7 +428,8 @@ export const RunCommand = cmd({
             toggles.get("start") !== true
           ) {
             UI.empty()
-            UI.println(`> ${event.properties.info.agent} · ${event.properties.info.modelID}`)
+            const { modelID } = ProviderRegistry.parse(event.properties.info.model)
+            UI.println(`> ${event.properties.info.agent} · ${modelID}`)
             UI.empty()
             toggles.set("start", true)
           }
@@ -570,7 +571,7 @@ export const RunCommand = cmd({
           variant: args.variant,
         })
       } else {
-        const model = args.model ? Provider.parseModel(args.model) : undefined
+        const model = args.model
         await sdk.session.prompt({
           sessionID,
           agent,
