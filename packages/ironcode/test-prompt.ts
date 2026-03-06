@@ -7,7 +7,7 @@ await Instance.provide({
   fn: async () => {
     try {
       console.log("Creating session...")
-      const session = await Session.create({ agent: "general", title: "test" })
+      const session = await Session.create({ title: "test" })
       console.log("✅ Session:", session.id)
 
       console.log("\nSending prompt...")
