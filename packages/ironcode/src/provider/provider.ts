@@ -52,7 +52,7 @@ export namespace Provider {
   }
 
   function shouldUseCopilotResponsesApi(modelID: string): boolean {
-    return isGpt5OrLater(modelID) && !modelID.startsWith("gpt-5-mini")
+    return isGpt5OrLater(modelID)
   }
 
   const BUNDLED_PROVIDERS: Record<string, (options: any) => any> = {
