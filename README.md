@@ -141,16 +141,35 @@ ironcode auth login
 
 ### Key Commands
 
-| Command     | Description                          |
-| ----------- | ------------------------------------ |
-| `/git`      | Open Git source control panel        |
-| `/terminal` | Open built-in terminal               |
-| `/editor`   | Open file in `$EDITOR`               |
-| `/review`   | Open code changes panel              |
-| `/init`     | Create `AGENTS.md` for the project   |
-| `Tab`       | Switch between agents (build / plan) |
-| `Ctrl+X I`  | Git panel shortcut                   |
-| `Ctrl+X R`  | Code changes panel shortcut          |
+| Command     | Description                            |
+| ----------- | -------------------------------------- |
+| `/git`      | Open Git source control panel          |
+| `/terminal` | Open built-in terminal                 |
+| `/editor`   | Open file in `$EDITOR`                 |
+| `/review`   | Open code changes panel                |
+| `/init`     | Create `AGENTS.md` for the project     |
+| `Tab`       | Switch between agents (build / plan)   |
+| `Ctrl+T`    | Cycle model variants (low/medium/high) |
+| `Ctrl+X I`  | Git panel shortcut                     |
+| `Ctrl+X R`  | Code changes panel shortcut            |
+
+### Model Variants & Thinking
+
+IronCode supports **model variants** that control the quality/speed tradeoff:
+
+- **low** — Faster responses, lower cost, suitable for simple tasks
+- **medium** — Balanced performance and quality
+- **high** — Best quality, includes extended thinking/reasoning output (default)
+- **thinking** — Extended reasoning mode for complex problems
+
+Press **`Ctrl+T`** to cycle between available variants. The status bar shows the current variant with indicators:
+
+- `high 🧠` — High quality with thinking enabled
+- `thinking 🧠` — Thinking variant with extended reasoning
+- `medium` — Medium quality
+- `low` — Low cost, faster responses
+
+**Thinking mode** shows the model's internal reasoning process before generating the final response, helping with complex problem-solving and understanding the model's decision-making process.
 
 ---
 

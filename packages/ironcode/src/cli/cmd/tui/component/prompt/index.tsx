@@ -1057,19 +1057,19 @@ export function Prompt(props: PromptProps) {
                       <span style={{ fg: theme.warning, bold: true }}>
                         {(() => {
                           const variant = local.model.variant.current()
-                          // Show 🧠 for high/max variants (have thinking enabled)
-                          const hasThinking = variant === "high" || variant === "max"
-                          return hasThinking ? `${variant} 🧠` : variant
+                          const thinking = local.model.thinking.isEnabled()
+                          // Show thinking status with variant
+                          if (thinking) {
+                            // Don't append "(thinking)" if variant is already "thinking"
+                            if (variant === "thinking") return "thinking 🧠"
+                            if (variant === "high" || variant === "max") return `${variant} 🧠`
+                            return `${variant} (thinking)`
+                          }
+                          return variant
                         })()}
                       </span>
                     </text>
                   </Show>
-                  <text fg={theme.textMuted}>·</text>
-                  <text>
-                    <span style={{ fg: local.model.thinking.isEnabled() ? theme.text : theme.textMuted }}>
-                      {local.model.thinking.isEnabled() ? "thinking" : "no-thinking"}
-                    </span>
-                  </text>
                 </box>
               </Show>
             </box>
@@ -1191,9 +1191,6 @@ export function Prompt(props: PromptProps) {
                       {keybind.print("variant_cycle")} <span style={{ fg: theme.textMuted }}>variants</span>
                     </text>
                   </Show>
-                  <text fg={theme.text}>
-                    {keybind.print("toggle_thinking")} <span style={{ fg: theme.textMuted }}>thinking</span>
-                  </text>
                   <text fg={theme.text}>
                     {keybind.print("agent_cycle")} <span style={{ fg: theme.textMuted }}>agents</span>
                   </text>

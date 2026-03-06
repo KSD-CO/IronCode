@@ -180,6 +180,40 @@ Accounts are stored in `~/.local/share/ironcode/auth.json`:
 
 Virtual accounts are auto-discovered at startup — no extra configuration needed.
 
+## Model Variants & Thinking Mode
+
+### Variants
+
+IronCode supports different quality/speed variants for supported models:
+
+- **low** — Faster, lower cost, suitable for simple tasks
+- **medium** — Balanced performance and quality
+- **high** — Best quality with extended thinking (default)
+- **thinking** — Extended reasoning mode (provider-specific)
+
+Press **`Ctrl+T`** in the TUI to cycle between available variants for the current model.
+
+### Thinking Mode
+
+**Thinking mode** reveals the model's internal reasoning process before generating the final response:
+
+- Shows step-by-step reasoning and problem analysis
+- Helps with complex multi-step tasks and debugging
+- Provides transparency into the decision-making process
+
+**Status bar indicators:**
+
+- `high 🧠` — High quality variant with thinking enabled
+- `thinking 🧠` — Thinking variant (extended reasoning)
+- `medium` — Medium quality
+- `low` — Low cost variant
+
+**Implementation details:**
+
+- Default variant is `"high"` when not explicitly set
+- Variant availability depends on the provider (Anthropic, ZhipuAI, etc.)
+- Variant state is persisted per model in `~/.local/share/ironcode/state/model.json`
+
 ## Changelog
 
 ### Mar 2, 2026 — Fix TUI crash when MCP servers are configured
