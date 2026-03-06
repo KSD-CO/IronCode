@@ -1,4 +1,4 @@
-use rexile::ReXile;
+use regex::Regex;
 
 /// Build a regex pattern string from a wildcard pattern.
 /// Escapes special regex chars, converts `*` → `.*` and `?` → `.`
@@ -34,16 +34,18 @@ pub fn wildcard_match(s: &str, pattern: &str) -> bool {
 
         // Try exact match against base
         let exact = format!("^{base_pat}$");
-        if ReXile::new(&exact).map(|re| re.is_match(s)).unwrap_or(false) {
+        if Regex::new(&exact).map(|re| re.is_match(s)).unwrap_or(false) {
             return true;
         }
         // Try base followed by a space and anything
         let with_tail = format!("^{base_pat} .*$");
-        return ReXile::new(&with_tail).map(|re| re.is_match(s)).unwrap_or(false);
+        return Regex::new(&with_tail)
+            .map(|re| re.is_match(s))
+            .unwrap_or(false);
     }
 
     let regex = format!("^{}$", build_regex_pattern(pattern));
-    ReXile::new(&regex).map(|re| re.is_match(s)).unwrap_or(false)
+    Regex::new(&regex).map(|re| re.is_match(s)).unwrap_or(false)
 }
 
 #[cfg(test)]
@@ -83,7 +85,10 @@ mod tests {
 
     #[test]
     fn test_glob_path() {
-        assert!(wildcard_match("src/components/Button.tsx", "src/components/*"));
+        assert!(wildcard_match(
+            "src/components/Button.tsx",
+            "src/components/*"
+        ));
         assert!(!wildcard_match("src/util/foo.ts", "src/components/*"));
     }
 

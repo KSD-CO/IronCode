@@ -1,6 +1,6 @@
 use crate::types::{Metadata, Output};
 use ignore::WalkBuilder;
-use rexile::ReXile;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::{BufRead, BufReader};
@@ -30,7 +30,7 @@ fn grep(
     search_path: &str,
     include_glob: Option<&str>,
 ) -> Result<Output, Box<dyn std::error::Error>> {
-    let regex = ReXile::new(pattern)?;
+    let regex = Regex::new(pattern)?;
     let mut matches = Vec::with_capacity(128);
 
     let mut builder = WalkBuilder::new(search_path);
@@ -159,7 +159,11 @@ fn grep(
         }
 
         if m.line_text.len() > MAX_LINE_LENGTH {
-            output_lines.push(format!("  Line {}: {}...", m.line_num, &m.line_text[..MAX_LINE_LENGTH]));
+            output_lines.push(format!(
+                "  Line {}: {}...",
+                m.line_num,
+                &m.line_text[..MAX_LINE_LENGTH]
+            ));
         } else {
             output_lines.push(format!("  Line {}: {}", m.line_num, &m.line_text));
         }
