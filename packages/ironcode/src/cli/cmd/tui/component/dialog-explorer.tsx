@@ -250,7 +250,6 @@ export function DialogExplorer() {
     } else {
       // Just toggle preview, don't close dialog
       // User can close with ESC key
-      console.log("Selected file:", selected.path)
       // TODO: Insert file path into prompt or open in editor
     }
   }

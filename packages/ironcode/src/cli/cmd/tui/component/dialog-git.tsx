@@ -243,12 +243,10 @@ export function DialogGit() {
       setSuccessMessage(null)
 
       const result = gitPushFFI(cwd())
-      console.log("Push result:", result) // Debug log
 
       if (result.success) {
         const msg = result.message || "Everything up-to-date"
         setSuccessMessage(`✓ ${msg}`)
-        console.log("Success message set:", msg) // Debug log
         setTimeout(() => setSuccessMessage(null), 3000)
       } else if (result.error) {
         setError(result.error)
