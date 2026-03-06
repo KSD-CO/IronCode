@@ -1054,7 +1054,14 @@ export function Prompt(props: PromptProps) {
                   <Show when={showVariant()}>
                     <text fg={theme.textMuted}>·</text>
                     <text>
-                      <span style={{ fg: theme.warning, bold: true }}>{local.model.variant.current()}</span>
+                      <span style={{ fg: theme.warning, bold: true }}>
+                        {(() => {
+                          const variant = local.model.variant.current()
+                          // Show 🧠 for high/max variants (have thinking enabled)
+                          const hasThinking = variant === "high" || variant === "max"
+                          return hasThinking ? `${variant} 🧠` : variant
+                        })()}
+                      </span>
                     </text>
                   </Show>
                   <text fg={theme.textMuted}>·</text>
