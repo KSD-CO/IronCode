@@ -628,6 +628,8 @@ export namespace ProviderTransform {
       }
       if (input.model.api.id.includes("gemini-3")) {
         result["thinkingConfig"]["thinkingLevel"] = "high"
+      } else if (input.model.api.id.includes("gemini-2.5") || input.model.api.id.includes("2.5")) {
+        result["thinkingConfig"]["thinkingBudget"] = 16000
       }
     }
 
@@ -693,7 +695,7 @@ export namespace ProviderTransform {
       if (model.api.id.includes("gemini-3")) {
         return { thinkingConfig: { thinkingLevel: "minimal" } }
       }
-      return { thinkingConfig: { thinkingBudget: 0 } }
+      return { thinkingConfig: { thinkingBudget: 4000 } }
     }
     if (model.providerID === "openrouter") {
       if (model.api.id.includes("google")) {
