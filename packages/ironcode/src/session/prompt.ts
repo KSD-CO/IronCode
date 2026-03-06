@@ -160,7 +160,6 @@ export namespace SessionPrompt {
   export type PromptInput = z.infer<typeof PromptInput>
 
   export const prompt = fn(PromptInput, async (input) => {
-    await Bun.write("/tmp/ironcode-debug.log", "=== PROMPT CALLED ===\n")
     const session = await Session.get(input.sessionID)
     await SessionRevert.cleanup(session)
 
