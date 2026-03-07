@@ -49,20 +49,27 @@ export namespace ProviderRegistry {
   }
 
   /**
-   * Parse namespace format "providerID:modelID" into components
+   * Parse namespace format "providerID:modelID" or "providerID/modelID" into components
    *
    * @example
    * parse("anthropic:claude-sonnet-4.5") // { providerID: "anthropic", modelID: "claude-sonnet-4.5" }
+   * parse("github-copilot/gpt-5-mini") // { providerID: "github-copilot", modelID: "gpt-5-mini" }
    * parse("openrouter:anthropic/claude-3-opus") // { providerID: "openrouter", modelID: "anthropic/claude-3-opus" }
    */
   export function parse(id: ModelRef | string): { providerID: string; modelID: string } {
-    const colonIndex = id.indexOf(":")
-    if (colonIndex === -1) {
-      throw new Error(`Invalid provider registry ID format: "${id}". Expected "providerID:modelID"`)
+    // Prefer ":" separator, fallback to "/" if no ":" found
+    let separatorIndex = id.indexOf(":")
+    if (separatorIndex === -1) {
+      separatorIndex = id.indexOf("/")
+    }
+    if (separatorIndex === -1) {
+      throw new Error(
+        `Invalid provider registry ID format: "${id}". Expected "providerID:modelID" or "providerID/modelID"`,
+      )
     }
 
-    const providerID = id.slice(0, colonIndex)
-    const modelID = id.slice(colonIndex + 1)
+    const providerID = id.slice(0, separatorIndex)
+    const modelID = id.slice(separatorIndex + 1)
 
     if (!providerID || !modelID) {
       throw new Error(`Invalid provider registry ID format: "${id}". Both providerID and modelID must be non-empty`)
