@@ -1,5 +1,8 @@
 #!/usr/bin/env bun
+import { Script } from "@ironcode-ai/script"
 import { $ } from "bun"
 
-await $`bun run typecheck`
-await $`npm publish --access public`
+const dir = new URL("..", import.meta.url).pathname
+process.chdir(dir)
+
+await $`bun pm pack && npm publish *.tgz --tag ${Script.channel} --access public`
