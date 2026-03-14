@@ -71,5 +71,8 @@ await import(`../packages/plugin/script/publish.ts`)
 console.log("\n=== telegram ===\n")
 await import(`../packages/telegram/script/publish.ts`)
 
+console.log("\n=== discord ===\n")
+await import(`../packages/discord/script/publish.ts`)
+
 const dir = new URL("..", import.meta.url).pathname
 process.chdir(dir)
