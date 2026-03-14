@@ -94,6 +94,44 @@ You send a message
 
 Each chat (DM, group, or group thread) gets its own independent session. Use `/sessions` to switch between them.
 
+## Upload Support
+
+The bot supports multiple file types for code analysis and generation:
+
+### 📸 Images (Photos)
+
+- **Screenshots** — UI bugs, design mockups, error messages
+- **Diagrams** — Architecture diagrams, flowcharts, wireframes
+- **Code screenshots** — OCR extraction and conversion
+- Send as single image or multiple images as album
+
+### 📄 Documents
+
+- **Code files** — `.js`, `.ts`, `.py`, `.java`, etc.
+- **Text files** — `.txt`, `.md`, `.json`, `.xml`
+- **PDFs** — Technical docs, API specs
+- **Archives** — `.zip` files (extracted and analyzed)
+- Max file size: 20MB per file
+
+### 🎤 Voice Messages
+
+- Transcribed using Groq Whisper API
+- Requires Groq API key in config
+- Perfect for hands-free coding instructions
+
+**Usage:**
+
+1. Send a photo/file/voice message (optionally with caption)
+2. Bot downloads and processes it
+3. AI agent analyzes and responds based on content
+
+**Examples:**
+
+- Send screenshot of error → "Fix this bug"
+- Upload `.py` file → "Add type hints and docstrings"
+- Send multiple images → "Compare these UI designs"
+- Voice message → "Refactor the user auth module"
+
 ## Session Management
 
 - **Automatic**: Each chat automatically gets its own session on first message.

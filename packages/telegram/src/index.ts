@@ -3,8 +3,9 @@ import { Bot, InlineKeyboard } from "grammy"
 import { createIroncode } from "@ironcode-ai/sdk"
 import type { Session } from "@ironcode-ai/sdk"
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from "fs"
-import { join } from "path"
-import { homedir } from "os"
+import path from "path"
+import { homedir, tmpdir } from "os"
+import { pathToFileURL } from "url"
 import * as readline from "readline"
 
 // ── Config ────────────────────────────────────────────────────────────────────
@@ -16,8 +17,8 @@ type Config = {
 }
 
 function configPath() {
-  const xdg = process.env.XDG_CONFIG_HOME ?? join(homedir(), ".config")
-  return join(xdg, "ironcode", "telegram.json")
+  const xdg = process.env.XDG_CONFIG_HOME ?? path.join(homedir(), ".config")
+  return path.join(xdg, "ironcode", "telegram.json")
 }
 
 function loadConfig(): Config | null {
@@ -32,7 +33,7 @@ function loadConfig(): Config | null {
 
 function saveConfig(cfg: Config) {
   const p = configPath()
-  mkdirSync(join(p, ".."), { recursive: true })
+  mkdirSync(path.join(p, ".."), { recursive: true })
   writeFileSync(p, JSON.stringify(cfg, null, 2))
 }
 
@@ -145,6 +146,15 @@ const EDIT_INTERVAL_MS = 1200
 
 const sessions = new Map<string, SessionState>()
 
+// Media group handling (for multiple photos/files sent together)
+type MediaGroupState = {
+  messageIds: number[]
+  files: FilePart[]
+  caption: string
+  timer: Timer
+}
+const mediaGroups = new Map<string, MediaGroupState>()
+
 function getChatKey(chatId: number, threadId?: number) {
   return threadId ? `${chatId}-${threadId}` : `${chatId}`
 }
@@ -245,12 +255,17 @@ bot.command("start", async (ctx) => {
   await ctx.reply(
     "👋 *IronCode Bot*\n\n" +
       "Send a message to start coding with the AI agent.\n\n" +
-      "Commands:\n" +
+      "*Commands:*\n" +
       "/sessions — list sessions\n" +
       "/new — start a new session\n" +
       "/info — current session details\n" +
       "/init — create AGENTS.md for current project\n" +
-      "/diff — show code changes in this session",
+      "/diff — show code changes in this session\n\n" +
+      "*Upload support:*\n" +
+      "📸 Photos — screenshots, diagrams, UI mockups\n" +
+      "📄 Documents — code files, PDFs, text files\n" +
+      "🎤 Voice — transcribed via Groq Whisper\n" +
+      "📦 Multiple files — send as album (up to 20MB each)",
     { parse_mode: "Markdown" },
   )
 })
@@ -452,9 +467,61 @@ async function transcribeVoice(fileUrl: string, groqApiKey: string): Promise<str
   return data.text.trim()
 }
 
+// ── File download helper ──────────────────────────────────────────────────────
+
+type FilePart = {
+  type: "file"
+  url: string
+  filename: string
+  mime: string
+}
+
+const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20MB
+
+async function downloadTelegramFile(fileId: string, filename: string): Promise<{ url: string; mime: string }> {
+  const file = await bot.api.getFile(fileId)
+  const fileUrl = `https://api.telegram.org/file/bot${cfg!.token}/${file.file_path}`
+
+  // Check file size (Telegram Bot API limit is 20MB)
+  if (file.file_size && file.file_size > MAX_FILE_SIZE) {
+    throw new Error(`File too large: ${(file.file_size / 1024 / 1024).toFixed(2)}MB (max 20MB)`)
+  }
+
+  // Download file to temp directory
+  const response = await fetch(fileUrl)
+  if (!response.ok) throw new Error(`Failed to download file: ${response.status}`)
+
+  const blob = await response.blob()
+  const tmpPath = path.join(tmpdir(), `telegram-${Date.now()}-${filename}`)
+  await Bun.write(tmpPath, blob)
+
+  // Detect MIME type from extension
+  const ext = path.extname(filename).toLowerCase()
+  const mimeMap: Record<string, string> = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+    ".pdf": "application/pdf",
+    ".txt": "text/plain",
+    ".md": "text/markdown",
+    ".json": "application/json",
+    ".js": "text/javascript",
+    ".ts": "text/typescript",
+    ".py": "text/x-python",
+    ".zip": "application/zip",
+  }
+
+  return {
+    url: pathToFileURL(tmpPath).href,
+    mime: mimeMap[ext] || "application/octet-stream",
+  }
+}
+
 // ── Main message handler ──────────────────────────────────────────────────────
 
-async function handleMessage(ctx: any, chatId: number, threadId: number | undefined, text: string) {
+async function handleMessage(ctx: any, chatId: number, threadId: number | undefined, text: string, files?: FilePart[]) {
   const key = getChatKey(chatId, threadId)
   let state = sessions.get(key)
 
@@ -494,9 +561,16 @@ async function handleMessage(ctx: any, chatId: number, threadId: number | undefi
 
   const model = cfg!.model ? parseModel(cfg!.model) : undefined
 
+  // Build parts array: files first, then text
+  const parts: Array<{ type: "text"; text: string } | FilePart> = []
+  if (files && files.length > 0) {
+    parts.push(...files)
+  }
+  parts.push({ type: "text", text })
+
   const result = await client.session.promptAsync({
     path: { id: state.sessionId },
-    body: { parts: [{ type: "text", text }], model },
+    body: { parts, model },
   })
 
   clearInterval(typingInterval)
@@ -537,6 +611,170 @@ bot.on("message:voice", async (ctx) => {
     .catch(() => {})
 
   await handleMessage(ctx, ctx.chat.id, ctx.message.message_thread_id, text)
+})
+
+// ── Photo handler ─────────────────────────────────────────────────────────────
+
+bot.on("message:photo", async (ctx) => {
+  const photos = ctx.message.photo
+  const caption = ctx.message.caption || "Analyze this image"
+  const mediaGroupId = ctx.message.media_group_id
+
+  // Get the highest resolution photo
+  const photo = photos[photos.length - 1]
+
+  // Handle media groups (multiple photos sent together)
+  if (mediaGroupId) {
+    const key = `${ctx.chat.id}-${mediaGroupId}`
+    let group = mediaGroups.get(key)
+
+    if (!group) {
+      group = {
+        messageIds: [],
+        files: [],
+        caption: caption || "Analyze these images",
+        timer: setTimeout(async () => {
+          const g = mediaGroups.get(key)
+          if (!g) return
+          mediaGroups.delete(key)
+
+          const statusMsg = await ctx.reply(`📸 Processing ${g.files.length} images...`)
+          await handleMessage(ctx, ctx.chat.id, ctx.message.message_thread_id, g.caption, g.files)
+          await bot.api.deleteMessage(ctx.chat.id, statusMsg.message_id).catch(() => {})
+        }, 1000), // Wait 1s for all photos in group
+      }
+      mediaGroups.set(key, group)
+    }
+
+    try {
+      const { url, mime } = await downloadTelegramFile(photo.file_id, `image-${Date.now()}.jpg`)
+      group.files.push({ type: "file", url, filename: `image-${group.files.length + 1}.jpg`, mime })
+      group.messageIds.push(ctx.message.message_id)
+    } catch (err: any) {
+      await ctx.reply(`❌ ${err.message}`)
+    }
+    return
+  }
+
+  // Single photo
+  const statusMsg = await ctx.reply("📸 Processing image...")
+  try {
+    const { url, mime } = await downloadTelegramFile(photo.file_id, `image-${Date.now()}.jpg`)
+
+    await bot.api.editMessageText(ctx.chat.id, statusMsg.message_id, "📸 Image received, analyzing...").catch(() => {})
+
+    await handleMessage(ctx, ctx.chat.id, ctx.message.message_thread_id, caption, [
+      {
+        type: "file",
+        url,
+        filename: "image.jpg",
+        mime,
+      },
+    ])
+  } catch (err: any) {
+    await bot.api.editMessageText(ctx.chat.id, statusMsg.message_id, `❌ ${err.message}`).catch(() => {})
+  }
+})
+
+// ── Document handler ──────────────────────────────────────────────────────────
+
+bot.on("message:document", async (ctx) => {
+  const doc = ctx.message.document
+  const caption = ctx.message.caption || "Review this file"
+  const mediaGroupId = ctx.message.media_group_id
+
+  // File size validation
+  if (doc.file_size && doc.file_size > MAX_FILE_SIZE) {
+    await ctx.reply(`❌ File too large: ${(doc.file_size / 1024 / 1024).toFixed(2)}MB (max 20MB)`)
+    return
+  }
+
+  // Handle media groups (multiple files sent together)
+  if (mediaGroupId) {
+    const key = `${ctx.chat.id}-${mediaGroupId}`
+    let group = mediaGroups.get(key)
+
+    if (!group) {
+      group = {
+        messageIds: [],
+        files: [],
+        caption: caption || "Review these files",
+        timer: setTimeout(async () => {
+          const g = mediaGroups.get(key)
+          if (!g) return
+          mediaGroups.delete(key)
+
+          const statusMsg = await ctx.reply(`📄 Processing ${g.files.length} files...`)
+          await handleMessage(ctx, ctx.chat.id, ctx.message.message_thread_id, g.caption, g.files)
+          await bot.api.deleteMessage(ctx.chat.id, statusMsg.message_id).catch(() => {})
+        }, 1000), // Wait 1s for all files in group
+      }
+      mediaGroups.set(key, group)
+    }
+
+    try {
+      const { url, mime } = await downloadTelegramFile(doc.file_id, doc.file_name || "file")
+      group.files.push({ type: "file", url, filename: doc.file_name || `file-${group.files.length + 1}`, mime })
+      group.messageIds.push(ctx.message.message_id)
+    } catch (err: any) {
+      await ctx.reply(`❌ ${err.message}`)
+    }
+    return
+  }
+
+  // Single file
+  const statusMsg = await ctx.reply("📄 Processing file...")
+  try {
+    const { url, mime } = await downloadTelegramFile(doc.file_id, doc.file_name || "file")
+
+    await bot.api
+      .editMessageText(ctx.chat.id, statusMsg.message_id, `📄 File received: ${doc.file_name}`)
+      .catch(() => {})
+
+    await handleMessage(ctx, ctx.chat.id, ctx.message.message_thread_id, caption, [
+      {
+        type: "file",
+        url,
+        filename: doc.file_name || "document",
+        mime,
+      },
+    ])
+  } catch (err: any) {
+    await bot.api.editMessageText(ctx.chat.id, statusMsg.message_id, `❌ ${err.message}`).catch(() => {})
+  }
+})
+
+// ── Document handler ──────────────────────────────────────────────────────────
+
+bot.on("message:document", async (ctx) => {
+  const doc = ctx.message.document
+  const caption = ctx.message.caption || "Review this file"
+
+  // File size validation
+  if (doc.file_size && doc.file_size > MAX_FILE_SIZE) {
+    await ctx.reply(`❌ File too large: ${(doc.file_size / 1024 / 1024).toFixed(2)}MB (max 20MB)`)
+    return
+  }
+
+  const statusMsg = await ctx.reply("📄 Processing file...")
+  try {
+    const { url, mime } = await downloadTelegramFile(doc.file_id, doc.file_name || "file")
+
+    await bot.api
+      .editMessageText(ctx.chat.id, statusMsg.message_id, `📄 File received: ${doc.file_name}`)
+      .catch(() => {})
+
+    await handleMessage(ctx, ctx.chat.id, ctx.message.message_thread_id, caption, [
+      {
+        type: "file",
+        url,
+        filename: doc.file_name || "document",
+        mime,
+      },
+    ])
+  } catch (err: any) {
+    await bot.api.editMessageText(ctx.chat.id, statusMsg.message_id, `❌ ${err.message}`).catch(() => {})
+  }
 })
 
 await bot.start()

@@ -24,6 +24,26 @@
 
 ## What's New
 
+### v1.18.0 — Chat Integrations Upgrade
+
+**New Discord Bot & Enhanced Telegram:**
+
+- **Discord Bot** — Full-featured Discord integration with slash commands, rich embeds, and file upload support (up to 25MB)
+  - `/start`, `/new`, `/info`, `/sessions`, `/diff`, `/init` commands
+  - 📸 Image & document upload
+  - 🎤 Voice message transcription
+  - ✨ Real-time response streaming
+  - 👍 Reactions on completion
+- **Telegram Enhancement** — Added comprehensive file upload support
+  - 📸 Image upload (screenshots, diagrams, mockups)
+  - 📄 Document upload (code files, PDFs, up to 20MB)
+  - 📦 Media groups (multiple files at once)
+  - 🎤 Voice transcription via Groq Whisper
+- **Packages Available**:
+  - `@ironcode-ai/telegram` — Telegram bot integration
+  - `@ironcode-ai/discord` — Discord bot integration (NEW)
+  - `@ironcode-ai/slack` — Slack bot integration
+
 ### v1.17.6 — AI SDK v6 ModelRef Migration
 
 **Completed ModelRef migration as part of AI SDK v6 upgrade:**
@@ -74,8 +94,10 @@ IronCode is a **high-performance CLI AI coding agent** — a fork of [OpenCode](
 - 🎯 **Git Source Control** — Stage, commit, diff, push without leaving the TUI
 - 🔍 **Code Changes Panel** — Diff viewer with inline comments and hunk revert
 - 🔎 **Local Code Search** — BM25 + tree-sitter semantic search, offline, zero latency
-- 📱 **Telegram Integration** — Control IronCode remotely from your phone, including voice messages
-- 🎤 **Voice Input** — Send voice messages via Telegram; transcribed automatically via Groq Whisper
+- 💬 **Chat Integrations** — Control IronCode from Telegram, Discord, or Slack
+  - 📸 Image & file upload (screenshots, code files, PDFs)
+  - 🎤 Voice message transcription
+  - 📱 Code from anywhere, even mobile
 - 💻 **Built-in Terminal** — Fish-style autosuggest, tab completion, syntax highlighting
 - 📝 **External Editor** — Opens `$EDITOR`/nvim with auto-install if missing
 - 🏠 **100% Local** — No cloud services, works completely offline
@@ -173,9 +195,13 @@ Press **`Ctrl+T`** to cycle between available variants. The status bar shows the
 
 ---
 
-## Telegram Integration
+## Chat Integrations
 
-Control IronCode remotely via Telegram — send tasks from your phone, get live streaming output.
+Control IronCode from your favorite messaging app — send tasks from your phone, upload files, and get live streaming responses.
+
+### Telegram Bot
+
+Full-featured Telegram integration with file upload and voice transcription.
 
 ```bash
 # Install
@@ -183,37 +209,69 @@ bun install -g @ironcode-ai/telegram
 
 # Configure
 ironcode-telegram setup
-# Enter: Bot Token (from @BotFather), model, and optionally a Groq API key for voice support
 
-# Run from your project directory
+# Run
 cd your-project
 ironcode-telegram
 ```
 
-**Bot commands:**
+**Features:**
 
-| Command           | Description                                       |
-| ----------------- | ------------------------------------------------- |
-| `/new`            | Start a new session                               |
-| `/sessions`       | List sessions with inline switch buttons          |
-| `/info`           | Current session details and file change stats     |
-| `/init`           | Analyze project and create `AGENTS.md`            |
-| `/diff`           | Show all file changes in the current session      |
-| _(text message)_  | Send a prompt — streams the response live         |
-| _(voice message)_ | Transcribed via Groq Whisper and sent as a prompt |
+- 📸 Image upload (screenshots, diagrams, mockups)
+- 📄 Document upload (code files, PDFs, up to 20MB)
+- 📦 Media groups (multiple files at once)
+- 🎤 Voice transcription via Groq Whisper
+- ⚡ Real-time response streaming
+- 🔗 Session sharing with team
 
-### Voice Message Setup
+**Commands:** `/new`, `/sessions`, `/info`, `/init`, `/diff`
 
-To enable voice input, add a [Groq API key](https://console.groq.com) (free tier: 28,800 seconds/day) during setup:
+See [`packages/telegram/README.md`](./packages/telegram/README.md) for full documentation.
+
+### Discord Bot
+
+Modern Discord integration with slash commands and rich embeds.
 
 ```bash
-ironcode-telegram setup
-# Groq API Key (for voice transcription, optional): gsk_...
+# Install
+bun install -g @ironcode-ai/discord
+
+# Configure
+ironcode-discord setup
+
+# Run
+cd your-project
+ironcode-discord
 ```
 
-Once configured, send any voice message to the bot — it will transcribe the audio and process it as a text prompt automatically.
+**Features:**
 
-See [`packages/telegram/README.md`](./packages/telegram/README.md) for full setup docs including PM2/systemd server deployment.
+- ⚡ Slash commands (`/start`, `/new`, `/info`, `/diff`, `/init`)
+- 📸 Image & file upload (up to 25MB)
+- 🎤 Voice message transcription
+- ✨ Rich embeds for better UX
+- 👍 Reactions on completion
+- 🔗 Session per channel
+
+See [`packages/discord/README.md`](./packages/discord/README.md) for full documentation.
+
+### Slack Bot
+
+Slack integration with threaded conversations.
+
+```bash
+cd packages/slack
+bun dev
+```
+
+**Features:**
+
+- 💬 Threaded conversations
+- ⚡ Real-time tool notifications
+- 🔗 Session sharing
+- 🤖 Socket mode support
+
+See [`packages/slack/README.md`](./packages/slack/README.md) for setup instructions.
 
 ---
 

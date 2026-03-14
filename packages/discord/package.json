@@ -1,0 +1,25 @@
+{
+  "name": "@ironcode-ai/discord",
+  "version": "1.0.0",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "ironcode-discord": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "typecheck": "tsgo --noEmit"
+  },
+  "dependencies": {
+    "@ironcode-ai/sdk": "^1.15.4",
+    "discord.js": "^14.17.3"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@typescript/native-preview": "catalog:",
+    "typescript": "catalog:"
+  }
+}
