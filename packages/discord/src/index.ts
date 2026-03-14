@@ -248,10 +248,12 @@ async function editLive(state: SessionState, text: string) {
       } else if (part.type === "tool") {
         if (part.state?.status === "completed") {
           state.currentTool = undefined
-          const channel = await client.channels.fetch(state.channelId)
-          if (channel?.isTextBased()) {
-            await channel.send(`🔧 **${part.tool}** — ${part.state.title}`)
-          }
+          try {
+            const channel = await client.channels.fetch(state.channelId)
+            if (channel?.isTextBased() && "send" in channel) {
+              await (channel as any).send(`🔧 **${part.tool}** — ${part.state.title}`)
+            }
+          } catch {}
         } else if (state.currentTool !== part.tool) {
           state.currentTool = part.tool
           if (!state.liveText.trim() && state.liveMessageId) {
@@ -404,7 +406,7 @@ async function handleMessage(message: any, text: string, files?: FilePart[]) {
   state.lastEditMs = 0
   state.currentTool = undefined
 
-  const model = cfg.model ? parseModel(cfg.model) : undefined
+  const model = cfg?.model ? parseModel(cfg.model) : undefined
 
   // Build parts array: files first, then text
   const parts: Array<{ type: "text"; text: string } | FilePart> = []
