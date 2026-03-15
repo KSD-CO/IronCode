@@ -27,6 +27,10 @@ export namespace SessionCompaction {
     ),
   }
 
+  // Safety margin to trigger compaction before hitting exact limit.
+  // Accounts for new user messages and context added between overflow checks.
+  export const OVERFLOW_SAFETY_MARGIN = 0.95 // 95% of usable context triggers compaction
+
   export async function isOverflow(input: { tokens: MessageV2.Assistant["tokens"]; model: Provider.Model }) {
     const config = await Config.get()
     if (config.compaction?.auto === false) return false
@@ -35,7 +39,8 @@ export namespace SessionCompaction {
     const count = input.tokens.input + input.tokens.cache.read + input.tokens.output
     const output = Math.min(input.model.limit.output, SessionPrompt.OUTPUT_TOKEN_MAX) || SessionPrompt.OUTPUT_TOKEN_MAX
     const usable = input.model.limit.input || context - output
-    return count > usable
+    // Apply safety margin to trigger compaction before hitting exact limit
+    return count > usable * OVERFLOW_SAFETY_MARGIN
   }
 
   export const PRUNE_MINIMUM = 20_000

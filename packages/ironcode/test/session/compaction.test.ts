@@ -144,6 +144,34 @@ describe("session.compaction.isOverflow", () => {
       },
     })
   })
+
+  test("triggers compaction at 95% safety margin to prevent API token limit errors", async () => {
+    await using tmp = await tmpdir()
+    await Instance.provide({
+      directory: tmp.path,
+      fn: async () => {
+        // usable = 200k - 32k = 168k; 95% threshold = 159.6k
+        const model = createModel({ context: 200_000, output: 32_000 })
+        // 160k total > 159.6k threshold → should trigger compaction
+        const tokens = { input: 155_000, output: 5_000, reasoning: 0, cache: { read: 0, write: 0 } }
+        expect(await SessionCompaction.isOverflow({ tokens, model })).toBe(true)
+      },
+    })
+  })
+
+  test("does not trigger compaction when safely under margin", async () => {
+    await using tmp = await tmpdir()
+    await Instance.provide({
+      directory: tmp.path,
+      fn: async () => {
+        // usable = 200k - 32k = 168k; 95% threshold = 159.6k
+        const model = createModel({ context: 200_000, output: 32_000 })
+        // 150k total < 159.6k threshold → no compaction needed
+        const tokens = { input: 140_000, output: 10_000, reasoning: 0, cache: { read: 0, write: 0 } }
+        expect(await SessionCompaction.isOverflow({ tokens, model })).toBe(false)
+      },
+    })
+  })
 })
 
 describe("util.token.estimate", () => {
