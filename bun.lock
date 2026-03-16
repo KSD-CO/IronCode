@@ -22,7 +22,7 @@
     },
     "packages/discord": {
       "name": "@ironcode-ai/discord",
-      "version": "1.19.2",
+      "version": "1.20.0",
       "bin": {
         "ironcode-discord": "./src/index.ts",
       },
@@ -38,7 +38,7 @@
     },
     "packages/ironcode": {
       "name": "ironcode",
-      "version": "1.19.2",
+      "version": "1.20.0",
       "bin": {
         "ironcode": "./bin/ironcode",
       },
@@ -143,7 +143,7 @@
     },
     "packages/plugin": {
       "name": "@ironcode-ai/plugin",
-      "version": "1.19.2",
+      "version": "1.20.0",
       "dependencies": {
         "@ironcode-ai/sdk": "workspace:*",
         "zod": "catalog:",
@@ -163,7 +163,7 @@
     },
     "packages/sdk/js": {
       "name": "@ironcode-ai/sdk",
-      "version": "1.19.2",
+      "version": "1.20.0",
       "devDependencies": {
         "@hey-api/openapi-ts": "0.90.10",
         "@tsconfig/node22": "catalog:",
@@ -174,7 +174,7 @@
     },
     "packages/slack": {
       "name": "@ironcode-ai/slack",
-      "version": "1.19.2",
+      "version": "1.20.0",
       "dependencies": {
         "@ironcode-ai/sdk": "workspace:*",
         "@slack/bolt": "^3.17.1",
@@ -187,7 +187,7 @@
     },
     "packages/telegram": {
       "name": "@ironcode-ai/telegram",
-      "version": "1.19.2",
+      "version": "1.20.0",
       "bin": {
         "ironcode-telegram": "./src/index.ts",
       },
@@ -203,7 +203,7 @@
     },
     "packages/util": {
       "name": "@ironcode-ai/util",
-      "version": "1.19.2",
+      "version": "1.20.0",
       "dependencies": {
         "zod": "catalog:",
       },

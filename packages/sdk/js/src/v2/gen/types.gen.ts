@@ -2166,7 +2166,6 @@ export type Command = {
   agent?: string
   model?: string
   source?: "command" | "mcp" | "skill"
-  /** True if this command comes from an external skill (.claude/, .agents/) */
   external?: boolean
   template: string
   subtask?: boolean
@@ -4975,6 +4974,7 @@ export type AppSkillsResponses = {
     description: string
     location: string
     content: string
+    external?: boolean
   }>
 }
 
