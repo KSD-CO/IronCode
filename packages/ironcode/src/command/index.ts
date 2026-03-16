@@ -28,6 +28,8 @@ export namespace Command {
       agent: z.string().optional(),
       model: z.string().optional(),
       source: z.enum(["command", "mcp", "skill"]).optional(),
+      /** True if this command comes from an external skill (.claude/, .agents/) */
+      external: z.boolean().optional(),
       // workaround for zod not supporting async functions natively so we use getters
       // https://zod.dev/v4/changelog?id=zfunction
       template: z.promise(z.string()).or(z.string()),
@@ -130,6 +132,7 @@ export namespace Command {
         name: skill.name,
         description: skill.description,
         source: "skill",
+        external: skill.external || undefined,
         get template() {
           return skill.content
         },

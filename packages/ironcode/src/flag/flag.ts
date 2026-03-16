@@ -23,8 +23,12 @@ export namespace Flag {
     IRONCODE_DISABLE_CLAUDE_CODE || truthy("IRONCODE_DISABLE_CLAUDE_CODE_PROMPT")
   export const IRONCODE_DISABLE_CLAUDE_CODE_SKILLS =
     IRONCODE_DISABLE_CLAUDE_CODE || truthy("IRONCODE_DISABLE_CLAUDE_CODE_SKILLS")
+  // External skills (.claude/skills/, .agents/skills/) disabled by default.
+  // IronCode ships its own built-in skills — external ones often depend on
+  // tools (e.g. gstack browse) that aren't available in IronCode.
+  // Set IRONCODE_ENABLE_EXTERNAL_SKILLS=1 to opt in.
   export const IRONCODE_DISABLE_EXTERNAL_SKILLS =
-    IRONCODE_DISABLE_CLAUDE_CODE_SKILLS || truthy("IRONCODE_DISABLE_EXTERNAL_SKILLS")
+    IRONCODE_DISABLE_CLAUDE_CODE_SKILLS || !truthy("IRONCODE_ENABLE_EXTERNAL_SKILLS")
   export declare const IRONCODE_DISABLE_PROJECT_CONFIG: boolean
   export const IRONCODE_FAKE_VCS = process.env["IRONCODE_FAKE_VCS"]
   export declare const IRONCODE_CLIENT: string

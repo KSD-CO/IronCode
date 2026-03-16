@@ -22,67 +22,6 @@
 
 ---
 
-## What's New
-
-### v1.18.0 — Chat Integrations Upgrade
-
-**New Discord Bot & Enhanced Telegram:**
-
-- **Discord Bot** — Full-featured Discord integration with slash commands, rich embeds, and file upload support (up to 25MB)
-  - `/start`, `/new`, `/info`, `/sessions`, `/diff`, `/init` commands
-  - 📸 Image & document upload
-  - 🎤 Voice message transcription
-  - ✨ Real-time response streaming
-  - 👍 Reactions on completion
-- **Telegram Enhancement** — Added comprehensive file upload support
-  - 📸 Image upload (screenshots, diagrams, mockups)
-  - 📄 Document upload (code files, PDFs, up to 20MB)
-  - 📦 Media groups (multiple files at once)
-  - 🎤 Voice transcription via Groq Whisper
-- **Packages Available**:
-  - `@ironcode-ai/telegram` — Telegram bot integration
-  - `@ironcode-ai/discord` — Discord bot integration (NEW)
-  - `@ironcode-ai/slack` — Slack bot integration
-
-### v1.17.6 — AI SDK v6 ModelRef Migration
-
-**Completed ModelRef migration as part of AI SDK v6 upgrade:**
-
-- **Schema migration** — Migrated model references from object format `{ providerID: string, modelID: string }` to string-based `ModelRef` format (`"provider:model"`) throughout the codebase
-- **Parser/formatter utilities** — All code now uses `ProviderRegistry.parse(modelRef)` to extract components and `ProviderRegistry.format(providerID, modelID)` to create ModelRef strings
-- **Runtime compatibility** — Added `ensureModelRef()` helper to handle legacy object formats gracefully during transition
-- **Bug fixes** — Fixed `ProviderModelNotFoundError` with undefined values caused by incomplete migration; fixed `Provider.defaultModel()` to return strings consistently
-
-**Technical details:**
-
-- Updated schemas in `message-v2.ts`: User, Assistant, and SubtaskPart now use `model: z.string()` instead of separate modelID/providerID fields
-- Migrated 24 files including session handling, compaction, summary, task/plan tools, telegram bot, and SDK types
-- Zero breaking changes for end users
-
-### v1.17.5 — Voice Message Support
-
-- **Voice messages** — Send voice messages to the Telegram bot; audio is automatically transcribed via Groq Whisper and forwarded to the agent
-- **BM25 improvements** — Updated `STOP_WORDS` to retain method-prefix tokens (`get`/`set`/`is`/`has`/`new`) for more accurate code search
-
-### v1.17.3 — Rust Rule Engine Migration
-
-- **Permission Rule Engine** — `PermissionNext.evaluate()` and `disabled()` migrated to Rust; entire ruleset batched into a single FFI call instead of N JS roundtrips
-- **File Ignore Matching** — `FileIgnore.match()` migrated to Rust using `globset` compiled regex, faster than per-call `Bun.Glob` allocation
-- **Dead code removed** — `permission/arity.ts` (BashArity) removed, replaced by `extractPrefixFFI` (Rust)
-
-### v1.17.2 — Telegram Enhancement
-
-- **`/init` command** — Analyze a project and generate `AGENTS.md` directly from the Telegram bot
-- **Code diff streaming** — `/diff` shows all changed files in the current session
-- **Session management UI** — `/sessions` with inline switch buttons
-
-### v1.17.0 — AI SDK v6
-
-- Upgraded to AI SDK v6 with full support for new providers
-- Improved terminal UX
-
----
-
 ## What is IronCode?
 
 IronCode is a **high-performance CLI AI coding agent** — a fork of [OpenCode](https://github.com/anomalyco/opencode) that runs entirely on your machine. It rewrites performance-critical components in Rust for dramatically improved speed and memory efficiency.
@@ -95,27 +34,11 @@ IronCode is a **high-performance CLI AI coding agent** — a fork of [OpenCode](
 - 🔍 **Code Changes Panel** — Diff viewer with inline comments and hunk revert
 - 🔎 **Local Code Search** — BM25 + tree-sitter semantic search, offline, zero latency
 - 💬 **Chat Integrations** — Control IronCode from Telegram, Discord, or Slack
-  - 📸 Image & file upload (screenshots, code files, PDFs)
-  - 🎤 Voice message transcription
-  - 📱 Code from anywhere, even mobile
 - 💻 **Built-in Terminal** — Fish-style autosuggest, tab completion, syntax highlighting
 - 📝 **External Editor** — Opens `$EDITOR`/nvim with auto-install if missing
+- 🧩 **Built-in Skills** — Opinionated slash commands for product review, engineering, QA, and shipping
 - 🏠 **100% Local** — No cloud services, works completely offline
 - ⚡ **Blazing Fast** — Native Rust for all performance-critical operations
-
-### Performance (Native Rust Components)
-
-| Operation             | Speedup                            | Notes                                                      |
-| --------------------- | ---------------------------------- | ---------------------------------------------------------- |
-| PTY/Terminal          | **15x faster**                     | Zero-copy ring buffer                                      |
-| Edit Tool             | **2–6x faster**                    | 9 smart replacement strategies                             |
-| Bash Parser           | **50–100x faster**                 | Native tree-sitter vs WASM                                 |
-| Archive extraction    | **3–5x faster**                    | s-zip streaming reader                                     |
-| Grep search           | **90–99% less memory**             | Streams GB-sized files                                     |
-| File read             | **1.5x faster, 99.7% less memory** | 64KB buffer + pre-allocation                               |
-| Git operations        | **1.8x faster**                    | libgit2, no process spawning                               |
-| Permission evaluation | **N× fewer FFI calls**             | Entire ruleset in 1 native call vs N roundtrips            |
-| File ignore matching  | **Faster glob matching**           | Compiled `globset` regex vs per-call `Bun.Glob` allocation |
 
 ---
 
@@ -172,26 +95,100 @@ ironcode auth login
 | `/init`     | Create `AGENTS.md` for the project     |
 | `Tab`       | Switch between agents (build / plan)   |
 | `Ctrl+T`    | Cycle model variants (low/medium/high) |
-| `Ctrl+X I`  | Git panel shortcut                     |
-| `Ctrl+X R`  | Code changes panel shortcut            |
 
-### Model Variants & Thinking
+### Model Variants
 
-IronCode supports **model variants** that control the quality/speed tradeoff:
+Press **`Ctrl+T`** to cycle between variants:
 
-- **low** — Faster responses, lower cost, suitable for simple tasks
-- **medium** — Balanced performance and quality
-- **high** — Best quality, includes extended thinking/reasoning output (default)
-- **thinking** — Extended reasoning mode for complex problems
+| Variant | Description |
+|---------|-------------|
+| `low` | Faster responses, lower cost |
+| `medium` | Balanced performance and quality |
+| `high 🧠` | Best quality with thinking enabled (default) |
+| `thinking 🧠` | Extended reasoning for complex problems |
 
-Press **`Ctrl+T`** to cycle between available variants. The status bar shows the current variant with indicators:
+---
 
-- `high 🧠` — High quality with thinking enabled
-- `thinking 🧠` — Thinking variant with extended reasoning
-- `medium` — Medium quality
-- `low` — Low cost, faster responses
+## Skills
 
-**Thinking mode** shows the model's internal reasoning process before generating the final response, helping with complex problem-solving and understanding the model's decision-making process.
+IronCode ships with **built-in skill workflows** — opinionated slash commands that switch the agent into a specialist mode. Instead of one generic assistant, you get: founder, tech lead, paranoid reviewer, release engineer, QA tester.
+
+| Skill | Mode | What it does |
+|-------|------|-------------|
+| `/ceo-review` | Founder | Rethink the problem. Find the 10-star product hiding inside the request. |
+| `/eng-review` | Tech lead | Lock in architecture, data flow, failure modes, edge cases, and test matrix. |
+| `/code-review` | Staff engineer | Find bugs that pass CI but blow up in production. |
+| `/code-ship` | Release engineer | Format, typecheck, test, push, and open PR against `dev`. |
+| `/qa-browse` | QA engineer | Playwright browser automation — navigate, screenshot, test forms, check console. |
+
+### Workflow
+
+```
+/ceo-review  →  /eng-review  →  (code)  →  /code-review  →  /code-ship  →  /qa-browse
+  product        architecture     build      find bugs        land it        verify it
+```
+
+### Example
+
+```
+You:      I want to add voice message transcription.
+          /ceo-review
+
+IronCode: "Voice transcription" is not the feature. The real job is
+          letting users code from anywhere — even when they can't type.
+
+          A) SCOPE EXPANSION — voice commands, image upload, voice-to-diff
+          B) HOLD SCOPE — transcription only, production-ready
+          C) SCOPE REDUCTION — bare minimum Whisper API call
+
+You:      B
+
+You:      /eng-review
+IronCode: [Architecture diagram, data flow, failure modes, test matrix]
+
+You:      (implement the plan)
+You:      /code-review
+IronCode: Missing .catch() on Whisper API — unhandled rejection will crash the bot.
+
+You:      (fix it)
+You:      /code-ship
+IronCode: ✅ Format → typecheck → test → push → PR created
+
+You:      /qa-browse http://localhost:3000
+IronCode: [Screenshots, console check, form test] All pages load. Voice flow works.
+```
+
+### Custom Skills
+
+Create `.ironcode/skill/<name>/SKILL.md` with YAML frontmatter:
+
+```yaml
+---
+name: my-skill
+description: What this skill does and when to use it.
+---
+
+# Instructions for the agent
+
+Your prompt content here...
+```
+
+Skills are automatically discovered — no restart needed.
+
+### Built-in Skill Auto-Install
+
+Built-in skills are embedded in the IronCode binary. On first run, they are extracted to `~/.ironcode/skill/`. If you customize a built-in skill (remove the `.builtin` marker), your version is preserved across upgrades.
+
+---
+
+## Agents
+
+Switch between agents with `Tab`:
+
+| Agent | Access | Use for |
+|-------|--------|---------|
+| **build** | Full read/write | Development, implementation (default) |
+| **plan** | Read-only | Analysis, code exploration, planning |
 
 ---
 
@@ -199,94 +196,92 @@ Press **`Ctrl+T`** to cycle between available variants. The status bar shows the
 
 Control IronCode from your favorite messaging app — send tasks from your phone, upload files, and get live streaming responses.
 
-### Telegram Bot
-
-Full-featured Telegram integration with file upload and voice transcription.
+### Telegram
 
 ```bash
-# Install
 bun install -g @ironcode-ai/telegram
-
-# Configure
 ironcode-telegram setup
-
-# Run
-cd your-project
-ironcode-telegram
+cd your-project && ironcode-telegram
 ```
 
-**Features:**
+📸 Image upload · 📄 Document upload (20MB) · 🎤 Voice transcription · ⚡ Streaming · `/new` `/sessions` `/info` `/init` `/diff`
 
-- 📸 Image upload (screenshots, diagrams, mockups)
-- 📄 Document upload (code files, PDFs, up to 20MB)
-- 📦 Media groups (multiple files at once)
-- 🎤 Voice transcription via Groq Whisper
-- ⚡ Real-time response streaming
-- 🔗 Session sharing with team
+→ [`packages/telegram/README.md`](./packages/telegram/README.md)
 
-**Commands:** `/new`, `/sessions`, `/info`, `/init`, `/diff`
-
-See [`packages/telegram/README.md`](./packages/telegram/README.md) for full documentation.
-
-### Discord Bot
-
-Modern Discord integration with slash commands and rich embeds.
+### Discord
 
 ```bash
-# Install
 bun install -g @ironcode-ai/discord
-
-# Configure
 ironcode-discord setup
-
-# Run
-cd your-project
-ironcode-discord
+cd your-project && ironcode-discord
 ```
 
-**Features:**
+⚡ Slash commands · 📸 File upload (25MB) · 🎤 Voice transcription · ✨ Rich embeds · 👍 Reactions
 
-- ⚡ Slash commands (`/start`, `/new`, `/info`, `/diff`, `/init`)
-- 📸 Image & file upload (up to 25MB)
-- 🎤 Voice message transcription
-- ✨ Rich embeds for better UX
-- 👍 Reactions on completion
-- 🔗 Session per channel
+→ [`packages/discord/README.md`](./packages/discord/README.md)
 
-See [`packages/discord/README.md`](./packages/discord/README.md) for full documentation.
-
-### Slack Bot
-
-Slack integration with threaded conversations.
+### Slack
 
 ```bash
-cd packages/slack
-bun dev
+cd packages/slack && bun dev
 ```
 
-**Features:**
+💬 Threaded conversations · ⚡ Real-time tool notifications · 🤖 Socket mode
 
-- 💬 Threaded conversations
-- ⚡ Real-time tool notifications
-- 🔗 Session sharing
-- 🤖 Socket mode support
-
-See [`packages/slack/README.md`](./packages/slack/README.md) for setup instructions.
+→ [`packages/slack/README.md`](./packages/slack/README.md)
 
 ---
 
-## Agents
+## Performance
 
-Switch between agents with the `Tab` key:
+Native Rust components via FFI:
 
-- **build** — Full-access agent for development (default)
-- **plan** — Read-only agent for analysis and code exploration
+| Operation             | Speedup                            | Notes                                          |
+| --------------------- | ---------------------------------- | ---------------------------------------------- |
+| PTY/Terminal          | **15x faster**                     | Zero-copy ring buffer                          |
+| Edit Tool             | **2–6x faster**                    | 9 smart replacement strategies                 |
+| Bash Parser           | **50–100x faster**                 | Native tree-sitter vs WASM                     |
+| Archive extraction    | **3–5x faster**                    | s-zip streaming reader                         |
+| Grep search           | **90–99% less memory**             | Streams GB-sized files                         |
+| File read             | **1.5x faster, 99.7% less memory** | 64KB buffer + pre-allocation                  |
+| Git operations        | **1.8x faster**                    | libgit2, no process spawning                   |
+| Permission evaluation | **N× fewer FFI calls**             | Entire ruleset in 1 native call                |
+| File ignore matching  | **Faster glob matching**           | Compiled `globset` regex                       |
+
+---
+
+## Architecture
+
+```
+┌──────────────────────────────────────────────┐
+│                 IronCode CLI                  │
+│              TypeScript + Bun                 │
+├──────────────────────────────────────────────┤
+│  TUI  │  Agents  │  Skills  │  Integrations  │
+│       │ build/   │ ceo/eng/ │  Telegram/     │
+│       │ plan     │ review/  │  Discord/Slack │
+│       │          │ ship/qa  │                │
+├──────────────────────────────────────────────┤
+│           Native Performance Layer            │
+│                Rust via FFI                    │
+│  PTY · Edit · Grep · Git · Bash · BM25 ·     │
+│  Archive · Permission · Glob · Stats          │
+└──────────────────────────────────────────────┘
+```
+
+| Layer | Tech | Packages |
+|-------|------|----------|
+| CLI/TUI | TypeScript + Bun | `packages/ironcode` |
+| Native | Rust FFI | `packages/ironcode/native/tool` |
+| Telegram | grammy + SDK + Groq Whisper | `@ironcode-ai/telegram` |
+| Discord | discord.js + SDK | `@ironcode-ai/discord` |
+| Slack | Bolt + SDK | `@ironcode-ai/slack` |
 
 ---
 
 ## Development
 
-**Requirements:** Bun 1.3.8, Rust (stable), Git
+**Requirements:** Bun 1.3.8+, Rust (stable), Git
 
 ```bash
 git clone https://github.com/KSD-CO/IronCode.git
@@ -302,23 +297,64 @@ bun dev
 
 ---
 
-## Architecture
-
-- **CLI/TUI**: TypeScript + Bun
-- **Native Performance Layer**: Rust via FFI — PTY, edit, grep, glob, git, archive, bash parser, BM25 search, wildcard matching, RETE command prefix, permission rule engine, file ignore matching, system stats
-- **Telegram Bot**: `@ironcode-ai/telegram` — grammy + `@ironcode-ai/sdk` + Groq Whisper for voice transcription
-
----
-
 ## Contributing
 
 Contributions welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-Areas to help with: performance optimizations, bug fixes, documentation, new plugins, additional Rust components.
+Areas to help with: performance optimizations, bug fixes, documentation, new plugins, additional Rust components, new skills.
 
 ---
 
-## Acknowledgments
+## Changelog
 
-- **IronCode Team** — original open-source AI coding agent
-- All contributors to this fork
+<details>
+<summary><strong>v1.18.0</strong> — Chat Integrations Upgrade</summary>
+
+- **Discord Bot** — Full-featured Discord integration with slash commands, rich embeds, file upload (25MB)
+- **Telegram Enhancement** — Image upload, document upload, media groups, voice transcription via Groq Whisper
+- **Packages:** `@ironcode-ai/telegram`, `@ironcode-ai/discord`, `@ironcode-ai/slack`
+
+</details>
+
+<details>
+<summary><strong>v1.17.6</strong> — AI SDK v6 ModelRef Migration</summary>
+
+- Migrated model references from object format to string-based `ModelRef` format (`"provider:model"`)
+- Updated 24 files including session handling, compaction, summary, task/plan tools
+- Zero breaking changes for end users
+
+</details>
+
+<details>
+<summary><strong>v1.17.5</strong> — Voice Message Support</summary>
+
+- Voice messages in Telegram bot — auto-transcribed via Groq Whisper
+- BM25 improvements — retain method-prefix tokens for more accurate code search
+
+</details>
+
+<details>
+<summary><strong>v1.17.3</strong> — Rust Rule Engine Migration</summary>
+
+- Permission rule engine migrated to Rust — entire ruleset in 1 FFI call
+- File ignore matching migrated to Rust using `globset` compiled regex
+- Removed dead code (`permission/arity.ts`)
+
+</details>
+
+<details>
+<summary><strong>v1.17.2</strong> — Telegram Enhancement</summary>
+
+- `/init` command — generate `AGENTS.md` from Telegram
+- `/diff` — stream changed files
+- `/sessions` — inline switch buttons
+
+</details>
+
+<details>
+<summary><strong>v1.17.0</strong> — AI SDK v6</summary>
+
+- Upgraded to AI SDK v6 with full support for new providers
+- Improved terminal UX
+
+</details>

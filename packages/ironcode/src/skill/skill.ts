@@ -8,7 +8,6 @@ import { ConfigMarkdown } from "../config/markdown"
 import { Log } from "../util/log"
 import { Global } from "@/global"
 import { Filesystem } from "@/util/filesystem"
-import { Flag } from "@/flag/flag"
 import { Bus } from "@/bus"
 import { Session } from "@/session"
 import { Discovery } from "./discovery"
@@ -20,6 +19,8 @@ export namespace Skill {
     description: z.string(),
     location: z.string(),
     content: z.string(),
+    /** True if this skill was loaded from an external directory (.claude/, .agents/) */
+    external: z.boolean().optional(),
   })
   export type Info = z.infer<typeof Info>
 
@@ -50,10 +51,15 @@ export namespace Skill {
   const SKILL_GLOB = new Bun.Glob("**/SKILL.md")
 
   export const state = Instance.state(async () => {
+    // Extract builtin skills to ~/.ironcode/skill/ before scanning
+    // This is a no-op if skills are already up to date
+    const { extractBuiltinSkills } = await import("./builtin")
+    await extractBuiltinSkills()
+
     const skills: Record<string, Info> = {}
     const dirs = new Set<string>()
 
-    const addSkill = async (match: string) => {
+    const addSkill = async (match: string, external?: boolean) => {
       const md = await ConfigMarkdown.parse(match).catch((err) => {
         const message = ConfigMarkdown.FrontmatterError.isInstance(err)
           ? err.data.message
@@ -84,6 +90,7 @@ export namespace Skill {
         description: parsed.data.description,
         location: match,
         content: md.content,
+        external: external || undefined,
       }
     }
 
@@ -97,7 +104,7 @@ export namespace Skill {
           dot: true,
         }),
       )
-        .then((matches) => Promise.all(matches.map(addSkill)))
+        .then((matches) => Promise.all(matches.map((m) => addSkill(m, true))))
         .catch((error) => {
           log.error(`failed to scan ${scope} skills`, { dir: root, error })
         })
@@ -105,20 +112,20 @@ export namespace Skill {
 
     // Scan external skill directories (.claude/skills/, .agents/skills/, etc.)
     // Load global (home) first, then project-level (so project-level overwrites)
-    if (!Flag.IRONCODE_DISABLE_EXTERNAL_SKILLS) {
-      for (const dir of EXTERNAL_DIRS) {
-        const root = path.join(Global.Path.home, dir)
-        if (!(await Filesystem.isDir(root))) continue
-        await scanExternal(root, "global")
-      }
+    // External skills are always loaded but marked as external=true.
+    // They appear in the skill dialog but not in autocomplete.
+    for (const dir of EXTERNAL_DIRS) {
+      const root = path.join(Global.Path.home, dir)
+      if (!(await Filesystem.isDir(root))) continue
+      await scanExternal(root, "global")
+    }
 
-      for await (const root of Filesystem.up({
-        targets: EXTERNAL_DIRS,
-        start: Instance.directory,
-        stop: Instance.worktree,
-      })) {
-        await scanExternal(root, "project")
-      }
+    for await (const root of Filesystem.up({
+      targets: EXTERNAL_DIRS,
+      start: Instance.directory,
+      stop: Instance.worktree,
+    })) {
+      await scanExternal(root, "project")
     }
 
     // Scan .ironcode/skill/ directories

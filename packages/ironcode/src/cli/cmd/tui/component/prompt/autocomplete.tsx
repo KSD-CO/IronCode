@@ -356,11 +356,13 @@ export function Autocomplete(props: {
     const results: AutocompleteOption[] = [...command.slashes()]
 
     for (const serverCommand of sync.data.command) {
-      if (serverCommand.source === "skill") continue
+      // Hide external skills (.claude/, .agents/) from autocomplete — they are
+      // still accessible via the skill dialog and can be invoked by name.
+      if (serverCommand.external) continue
       const label = serverCommand.source === "mcp" ? ":mcp" : ""
       results.push({
         display: "/" + serverCommand.name + label,
-        description: serverCommand.description,
+        description: serverCommand.description?.replace(/\s+/g, " ").trim(),
         onSelect: () => {
           const newText = "/" + serverCommand.name + " "
           const cursor = props.input().logicalCursor
@@ -634,6 +636,7 @@ export function Autocomplete(props: {
             <box
               paddingLeft={1}
               paddingRight={1}
+              height={1}
               backgroundColor={index === store.selected ? theme.primary : undefined}
               flexDirection="row"
               onMouseMove={() => {

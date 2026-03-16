@@ -25,6 +25,10 @@ await Bun.write(
 )
 console.log("Generated models-snapshot.ts")
 
+// Generate builtin skills snapshot from .ironcode/skill/ directory
+await import("./gen-builtin-skills")
+console.log("Generated builtin-skills-snapshot.ts")
+
 const singleFlag = process.argv.includes("--single")
 const baselineFlag = process.argv.includes("--baseline")
 const skipInstall = process.argv.includes("--skip-install")
