@@ -36,7 +36,7 @@ IronCode is a **high-performance CLI AI coding agent** — a fork of [OpenCode](
 - 💬 **Chat Integrations** — Control IronCode from Telegram, Discord, or Slack
 - 💻 **Built-in Terminal** — Fish-style autosuggest, tab completion, syntax highlighting
 - 📝 **External Editor** — Opens `$EDITOR`/nvim with auto-install if missing
-- 🧩 **Built-in Skills** — Opinionated slash commands for product review, engineering, QA, and shipping
+- 🧩 **Built-in Skills** — 9 opinionated slash commands: plan review, code review, QA, ship, retro, and more
 - 🏠 **100% Local** — No cloud services, works completely offline
 - ⚡ **Blazing Fast** — Native Rust for all performance-critical operations
 
@@ -111,21 +111,25 @@ Press **`Ctrl+T`** to cycle between variants:
 
 ## Skills
 
-IronCode ships with **built-in skill workflows** — opinionated slash commands that switch the agent into a specialist mode. Instead of one generic assistant, you get: founder, tech lead, paranoid reviewer, release engineer, QA tester.
+IronCode ships with **9 built-in skill workflows** — opinionated slash commands that switch the agent into a specialist mode. Instead of one generic assistant, you get: founder, tech lead, paranoid reviewer, release engineer, QA tester, technical writer, and engineering manager.
 
 | Skill | Mode | What it does |
 |-------|------|-------------|
-| `/ceo-review` | Founder | Rethink the problem. Find the 10-star product hiding inside the request. |
+| `/ceo-review` | Founder / CEO | Rethink the problem. Find the 10-star product hiding inside the request. Three modes: Scope Expansion, Hold Scope, Scope Reduction. |
 | `/eng-review` | Tech lead | Lock in architecture, data flow, failure modes, edge cases, and test matrix. |
-| `/code-review` | Staff engineer | Find bugs that pass CI but blow up in production. |
-| `/code-ship` | Release engineer | Format, typecheck, test, push, and open PR against `dev`. |
-| `/qa-browse` | QA engineer | Playwright browser automation — navigate, screenshot, test forms, check console. |
+| `/code-review` | Staff engineer | Find bugs that pass CI but blow up in production. Two-pass: critical + informational. |
+| `/code-ship` | Release engineer | Merge, test, typecheck, review, changelog, bisectable commits, push, and PR — one command. |
+| `/browse` | QA engineer | Headless Chromium via Playwright. Navigate, click, fill forms, screenshot, assert states, test responsive layouts. |
+| `/qa` | QA + fix engineer | Test app, find bugs, fix them with atomic commits, re-verify. Four modes: diff-aware, full, quick, regression. |
+| `/qa-only` | QA reporter | Report-only QA. Same methodology as `/qa` but never fixes anything. Pure bug report with health score. |
+| `/document-release` | Technical writer | Post-ship doc update. Cross-references diff against README, ARCHITECTURE, CONTRIBUTING, CHANGELOG. |
+| `/retro` | Engineering manager | Team-aware weekly retro: commit analysis, session detection, per-person praise and growth areas. |
 
 ### Workflow
 
 ```
-/ceo-review  →  /eng-review  →  (code)  →  /code-review  →  /code-ship  →  /qa-browse
-  product        architecture     build      find bugs        land it        verify it
+/ceo-review  →  /eng-review  →  (code)  →  /code-review  →  /code-ship  →  /qa  →  /document-release  →  /retro
+  product        architecture     build      find bugs        land it       verify     update docs         reflect
 ```
 
 ### Example
@@ -154,8 +158,18 @@ You:      (fix it)
 You:      /code-ship
 IronCode: ✅ Format → typecheck → test → push → PR created
 
-You:      /qa-browse http://localhost:3000
+You:      /qa http://localhost:3000
 IronCode: [Screenshots, console check, form test] All pages load. Voice flow works.
+          Health score: 92/100. 1 medium issue found and fixed.
+
+You:      /document-release
+IronCode: README.md: added voice transcription to features table.
+          CHANGELOG.md: polished voice. All docs up to date.
+
+You:      /retro
+IronCode: Week of Mar 10: 23 commits, 1.8k LOC, 42% tests, peak: 10pm
+          Your biggest ship: voice transcription pipeline.
+          Streak: 12 consecutive days.
 ```
 
 ### Custom Skills

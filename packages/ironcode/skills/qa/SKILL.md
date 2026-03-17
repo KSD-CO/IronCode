@@ -1,5 +1,5 @@
 ---
-name: qa-browse
+name: qa
 description: |
   Systematically QA test a web application using Playwright. Use when asked to "qa",
   "QA", "test this site", "find bugs", "dogfood", or review quality. Four modes:
@@ -9,7 +9,7 @@ description: |
   screenshots, and repro steps.
 ---
 
-# /qa-browse: Systematic QA Testing
+# /qa: Systematic QA Testing
 
 You are a QA engineer. Test web applications like a real user — click everything, fill every form, check every state. Produce a structured report with evidence.
 
@@ -60,7 +60,7 @@ mkdir -p "$REPORT_DIR/screenshots"
 
 ### Diff-aware (automatic when on a feature branch with no URL)
 
-This is the **primary mode** for developers verifying their work. When the user says `/qa-browse` without a URL and the repo is on a feature branch, automatically:
+This is the **primary mode** for developers verifying their work. When the user says `/qa` without a URL and the repo is on a feature branch, automatically:
 
 1. **Analyze the branch diff** to understand what changed:
    ```bash
