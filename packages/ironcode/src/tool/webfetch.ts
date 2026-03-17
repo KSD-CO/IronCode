@@ -3,6 +3,7 @@ import { Tool } from "./tool"
 import TurndownService from "turndown"
 import DESCRIPTION from "./webfetch.txt"
 import { abortAfterAny } from "../util/abort"
+import { PromptInjectionBlocker } from "./prompt-injection-blocker"
 
 const MAX_RESPONSE_SIZE = 5 * 1024 * 1024 // 5MB
 const DEFAULT_TIMEOUT = 30 * 1000 // 30 seconds
@@ -89,6 +90,12 @@ export const WebFetchTool = Tool.define("webfetch", {
 
     const content = new TextDecoder().decode(arrayBuffer)
     const contentType = response.headers.get("content-type") || ""
+
+    // Check for prompt injection in the fetched content
+    const injectionCheck = PromptInjectionBlocker.detectInjection(content)
+    if (injectionCheck.isBlocked) {
+      throw new Error(`Content blocked: prompt injection detected - ${injectionCheck.reason}`)
+    }
 
     const title = `${params.url} (${contentType})`
 
