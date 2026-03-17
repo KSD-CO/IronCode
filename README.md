@@ -36,9 +36,23 @@ IronCode is a **high-performance CLI AI coding agent** — a fork of [OpenCode](
 - 💬 **Chat Integrations** — Control IronCode from Telegram, Discord, or Slack
 - 💻 **Built-in Terminal** — Fish-style autosuggest, tab completion, syntax highlighting
 - 📝 **External Editor** — Opens `$EDITOR`/nvim with auto-install if missing
-- 🧩 **Built-in Skills** — 10 opinionated slash commands: plan review, code review, QA (web + API), ship, retro, and more
+- 🧩 **Built-in Skills** — 13 opinionated slash commands: plan review, code review, QA (web + API), ship, retro, and more
+- 🛡️ **Security** — Prompt injection detection blocks malicious websites from manipulating the AI
 - 🏠 **100% Local** — No cloud services, works completely offline
 - ⚡ **Blazing Fast** — Native Rust for all performance-critical operations
+
+---
+
+## Security
+
+IronCode includes built-in protection against prompt injection attacks when fetching external web content:
+
+- **Prompt Injection Detection** — Automatically scans fetched website content for malicious prompts attempting to manipulate the AI
+- **Pattern Recognition** — Detects common attack vectors including instruction manipulation, role changes, context escapes, and delimiter-based attacks
+- **Safe Blocking** — Blocks suspicious content with clear error messages while allowing legitimate websites through
+- **Zero False Positives** — Carefully tuned to avoid blocking normal web content about security topics
+
+When the WebFetch tool encounters a website with potential prompt injection content, it will block the request and show an error like: `Content blocked: prompt injection detected - instruction manipulation`
 
 ---
 
@@ -100,12 +114,12 @@ ironcode auth login
 
 Press **`Ctrl+T`** to cycle between variants:
 
-| Variant | Description |
-|---------|-------------|
-| `low` | Faster responses, lower cost |
-| `medium` | Balanced performance and quality |
-| `high 🧠` | Best quality with thinking enabled (default) |
-| `thinking 🧠` | Extended reasoning for complex problems |
+| Variant       | Description                                  |
+| ------------- | -------------------------------------------- |
+| `low`         | Faster responses, lower cost                 |
+| `medium`      | Balanced performance and quality             |
+| `high 🧠`     | Best quality with thinking enabled (default) |
+| `thinking 🧠` | Extended reasoning for complex problems      |
 
 ---
 
@@ -113,77 +127,84 @@ Press **`Ctrl+T`** to cycle between variants:
 
 IronCode ships with **13 built-in skill workflows** — opinionated slash commands that switch the agent into a specialist mode. Instead of one generic assistant, you get: founder, tech lead, TDD coach, debugger, paranoid reviewer, release engineer, QA tester, technical writer, and engineering manager.
 
-| Skill | Mode | What it does |
-|-------|------|-------------|
-| `/ceo-review` | Founder / CEO | Rethink the problem. Find the 10-star product hiding inside the request. Three modes: Scope Expansion, Hold Scope, Scope Reduction. |
-| `/eng-review` | Tech lead | Lock in architecture, data flow, failure modes, edge cases, and test matrix. |
-| `/tdd` | Developer | RED-GREEN-REFACTOR: write a failing test, minimal code to pass, refactor. No production code without a failing test first. |
-| `/debug` | Debugger | Systematic 4-phase debugging: root cause investigation, pattern analysis, hypothesis testing, implementation. 3-fix rule escalates architectural problems. |
-| `/code-review` | Staff engineer | Find bugs that pass CI but blow up in production. Two-pass: critical + informational. |
-| `/verify` | Gatekeeper | Run the command, read the output, then claim the result. Evidence before assertions — no "should work now." |
-| `/code-ship` | Release engineer | Merge, test, typecheck, review, changelog, bisectable commits, push, and PR — one command. |
-| `/browse` | QA engineer | Headless Chromium via Playwright. Navigate, click, fill forms, screenshot, assert states, test responsive layouts. |
-| `/qa` | QA + fix engineer | Test web app, find bugs, fix with atomic commits, re-verify. Four modes: diff-aware, full, quick, regression. |
-| `/qa-only` | QA reporter | Report-only QA. Same methodology as `/qa` but never fixes anything. Pure bug report with health score. |
-| `/qa-api` | API tester | REST & GraphQL API testing. Auto-discovers routes, tests every endpoint with valid/invalid/edge-case payloads, auth, schema validation. |
-| `/document-release` | Technical writer | Post-ship doc update. Cross-references diff against README, ARCHITECTURE, CONTRIBUTING, CHANGELOG. |
-| `/retro` | Engineering manager | Team-aware weekly retro: commit analysis, session detection, per-person praise and growth areas. |
+| Skill               | Mode                | What it does                                                                                                                                               |
+| ------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/ceo-review`       | Founder / CEO       | Rethink the problem. Find the 10-star product hiding inside the request. Three modes: Scope Expansion, Hold Scope, Scope Reduction.                        |
+| `/eng-review`       | Tech lead           | Lock in architecture, data flow, failure modes, edge cases, and test matrix.                                                                               |
+| `/tdd`              | Developer           | RED-GREEN-REFACTOR: write a failing test, minimal code to pass, refactor. No production code without a failing test first.                                 |
+| `/debug`            | Debugger            | Systematic 4-phase debugging: root cause investigation, pattern analysis, hypothesis testing, implementation. 3-fix rule escalates architectural problems. |
+| `/code-review`      | Staff engineer      | Find bugs that pass CI but blow up in production. Two-pass: critical + informational.                                                                      |
+| `/verify`           | Gatekeeper          | Run the command, read the output, then claim the result. Evidence before assertions — no "should work now."                                                |
+| `/code-ship`        | Release engineer    | Merge, test, typecheck, review, changelog, bisectable commits, push, and PR — one command.                                                                 |
+| `/browse`           | QA engineer         | Headless Chromium via Playwright. Navigate, click, fill forms, screenshot, assert states, test responsive layouts.                                         |
+| `/qa`               | QA + fix engineer   | Test web app, find bugs, fix with atomic commits, re-verify. Four modes: diff-aware, full, quick, regression.                                              |
+| `/qa-only`          | QA reporter         | Report-only QA. Same methodology as `/qa` but never fixes anything. Pure bug report with health score.                                                     |
+| `/qa-api`           | API tester          | REST & GraphQL API testing. Auto-discovers routes, tests every endpoint with valid/invalid/edge-case payloads, auth, schema validation.                    |
+| `/document-release` | Technical writer    | Post-ship doc update. Cross-references diff against README, ARCHITECTURE, CONTRIBUTING, CHANGELOG.                                                         |
+| `/retro`            | Engineering manager | Team-aware weekly retro: commit analysis, session detection, per-person praise and growth areas.                                                           |
 
 ### Workflow
 
-```
+````
 /ceo-review → /eng-review → /tdd → /debug (when stuck) → /code-review → /verify → /code-ship → /qa → /document-release → /retro
  product      architecture   build   fix it right         find bugs      prove it   land it      verify   update docs       reflect
 ```### Example
 
-```
-You:      I want to add voice message transcription.
-          /ceo-review
+````
+
+You: I want to add voice message transcription.
+/ceo-review
 
 IronCode: "Voice transcription" is not the feature. The real job is
-          letting users code from anywhere — even when they can't type.
+letting users code from anywhere — even when they can't type.
 
           A) SCOPE EXPANSION — voice commands, image upload, voice-to-diff
           B) HOLD SCOPE — transcription only, production-ready
           C) SCOPE REDUCTION — bare minimum Whisper API call
 
-You:      B
+You: B
 
-You:      /eng-review
+You: /eng-review
 IronCode: [Architecture diagram, data flow, failure modes, test matrix]
 
-You:      /tdd
+You: /tdd
 IronCode: RED: Writing test for Whisper API transcription...
-          test("transcribes voice message to text") → FAIL ✓
-          GREEN: Implementing minimal WhisperService.transcribe()...
-          34/34 tests pass. Committed.
+test("transcribes voice message to text") → FAIL ✓
+GREEN: Implementing minimal WhisperService.transcribe()...
+34/34 tests pass. Committed.
 
-You:      /debug
+You: /debug
 IronCode: Phase 1: Reading error — "ECONNRESET on Whisper API"
-          Phase 2: Working example found — image upload uses retry
-          Phase 3: Hypothesis — no retry on transient network errors
-          Phase 4: Test written, fix applied, verified. ✅
+Phase 2: Working example found — image upload uses retry
+Phase 3: Hypothesis — no retry on transient network errors
+Phase 4: Test written, fix applied, verified. ✅
 
-You:      /code-review
+You: /code-review
 IronCode: Missing .catch() on Whisper API — unhandled rejection will crash the bot.
 
-You:      (fix it)
-You:      /code-ship
+You: (fix it)
+You: /verify
+IronCode: $ bun test → 34/34 pass, exit 0
+$ bun check → 0 errors
+All verified. Ready to ship.
+
+You: /code-ship
 IronCode: ✅ Format → typecheck → test → push → PR created
 
-You:      /qa http://localhost:3000
+You: /qa http://localhost:3000
 IronCode: [Screenshots, console check, form test] All pages load. Voice flow works.
-          Health score: 92/100. 1 medium issue found and fixed.
+Health score: 92/100. 1 medium issue found and fixed.
 
-You:      /document-release
+You: /document-release
 IronCode: README.md: added voice transcription to features table.
-          CHANGELOG.md: polished voice. All docs up to date.
+CHANGELOG.md: polished voice. All docs up to date.
 
-You:      /retro
+You: /retro
 IronCode: Week of Mar 10: 23 commits, 1.8k LOC, 42% tests, peak: 10pm
-          Your biggest ship: voice transcription pipeline.
-          Streak: 12 consecutive days.
-```
+Your biggest ship: voice transcription pipeline.
+Streak: 12 consecutive days.
+
+````
 
 ### Custom Skills
 
@@ -198,7 +219,7 @@ description: What this skill does and when to use it.
 # Instructions for the agent
 
 Your prompt content here...
-```
+````
 
 Skills are automatically discovered — no restart needed.
 
@@ -212,10 +233,10 @@ Built-in skills are embedded in the IronCode binary. On first run, they are extr
 
 Switch between agents with `Tab`:
 
-| Agent | Access | Use for |
-|-------|--------|---------|
+| Agent     | Access          | Use for                               |
+| --------- | --------------- | ------------------------------------- |
 | **build** | Full read/write | Development, implementation (default) |
-| **plan** | Read-only | Analysis, code exploration, planning |
+| **plan**  | Read-only       | Analysis, code exploration, planning  |
 
 ---
 
@@ -263,17 +284,17 @@ cd packages/slack && bun dev
 
 Native Rust components via FFI:
 
-| Operation             | Speedup                            | Notes                                          |
-| --------------------- | ---------------------------------- | ---------------------------------------------- |
-| PTY/Terminal          | **15x faster**                     | Zero-copy ring buffer                          |
-| Edit Tool             | **2–6x faster**                    | 9 smart replacement strategies                 |
-| Bash Parser           | **50–100x faster**                 | Native tree-sitter vs WASM                     |
-| Archive extraction    | **3–5x faster**                    | s-zip streaming reader                         |
-| Grep search           | **90–99% less memory**             | Streams GB-sized files                         |
-| File read             | **1.5x faster, 99.7% less memory** | 64KB buffer + pre-allocation                  |
-| Git operations        | **1.8x faster**                    | libgit2, no process spawning                   |
-| Permission evaluation | **N× fewer FFI calls**             | Entire ruleset in 1 native call                |
-| File ignore matching  | **Faster glob matching**           | Compiled `globset` regex                       |
+| Operation             | Speedup                            | Notes                           |
+| --------------------- | ---------------------------------- | ------------------------------- |
+| PTY/Terminal          | **15x faster**                     | Zero-copy ring buffer           |
+| Edit Tool             | **2–6x faster**                    | 9 smart replacement strategies  |
+| Bash Parser           | **50–100x faster**                 | Native tree-sitter vs WASM      |
+| Archive extraction    | **3–5x faster**                    | s-zip streaming reader          |
+| Grep search           | **90–99% less memory**             | Streams GB-sized files          |
+| File read             | **1.5x faster, 99.7% less memory** | 64KB buffer + pre-allocation    |
+| Git operations        | **1.8x faster**                    | libgit2, no process spawning    |
+| Permission evaluation | **N× fewer FFI calls**             | Entire ruleset in 1 native call |
+| File ignore matching  | **Faster glob matching**           | Compiled `globset` regex        |
 
 ---
 
@@ -296,13 +317,13 @@ Native Rust components via FFI:
 └──────────────────────────────────────────────┘
 ```
 
-| Layer | Tech | Packages |
-|-------|------|----------|
-| CLI/TUI | TypeScript + Bun | `packages/ironcode` |
-| Native | Rust FFI | `packages/ironcode/native/tool` |
-| Telegram | grammy + SDK + Groq Whisper | `@ironcode-ai/telegram` |
-| Discord | discord.js + SDK | `@ironcode-ai/discord` |
-| Slack | Bolt + SDK | `@ironcode-ai/slack` |
+| Layer    | Tech                        | Packages                        |
+| -------- | --------------------------- | ------------------------------- |
+| CLI/TUI  | TypeScript + Bun            | `packages/ironcode`             |
+| Native   | Rust FFI                    | `packages/ironcode/native/tool` |
+| Telegram | grammy + SDK + Groq Whisper | `@ironcode-ai/telegram`         |
+| Discord  | discord.js + SDK            | `@ironcode-ai/discord`          |
+| Slack    | Bolt + SDK                  | `@ironcode-ai/slack`            |
 
 ---
 
