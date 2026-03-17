@@ -111,13 +111,16 @@ Press **`Ctrl+T`** to cycle between variants:
 
 ## Skills
 
-IronCode ships with **10 built-in skill workflows** — opinionated slash commands that switch the agent into a specialist mode. Instead of one generic assistant, you get: founder, tech lead, paranoid reviewer, release engineer, QA tester, technical writer, and engineering manager.
+IronCode ships with **13 built-in skill workflows** — opinionated slash commands that switch the agent into a specialist mode. Instead of one generic assistant, you get: founder, tech lead, TDD coach, debugger, paranoid reviewer, release engineer, QA tester, technical writer, and engineering manager.
 
 | Skill | Mode | What it does |
 |-------|------|-------------|
 | `/ceo-review` | Founder / CEO | Rethink the problem. Find the 10-star product hiding inside the request. Three modes: Scope Expansion, Hold Scope, Scope Reduction. |
 | `/eng-review` | Tech lead | Lock in architecture, data flow, failure modes, edge cases, and test matrix. |
+| `/tdd` | Developer | RED-GREEN-REFACTOR: write a failing test, minimal code to pass, refactor. No production code without a failing test first. |
+| `/debug` | Debugger | Systematic 4-phase debugging: root cause investigation, pattern analysis, hypothesis testing, implementation. 3-fix rule escalates architectural problems. |
 | `/code-review` | Staff engineer | Find bugs that pass CI but blow up in production. Two-pass: critical + informational. |
+| `/verify` | Gatekeeper | Run the command, read the output, then claim the result. Evidence before assertions — no "should work now." |
 | `/code-ship` | Release engineer | Merge, test, typecheck, review, changelog, bisectable commits, push, and PR — one command. |
 | `/browse` | QA engineer | Headless Chromium via Playwright. Navigate, click, fill forms, screenshot, assert states, test responsive layouts. |
 | `/qa` | QA + fix engineer | Test web app, find bugs, fix with atomic commits, re-verify. Four modes: diff-aware, full, quick, regression. |
@@ -129,11 +132,9 @@ IronCode ships with **10 built-in skill workflows** — opinionated slash comman
 ### Workflow
 
 ```
-/ceo-review  →  /eng-review  →  (code)  →  /code-review  →  /code-ship  →  /qa  →  /document-release  →  /retro
-  product        architecture     build      find bugs        land it       verify     update docs         reflect
-```
-
-### Example
+/ceo-review → /eng-review → /tdd → /debug (when stuck) → /code-review → /verify → /code-ship → /qa → /document-release → /retro
+ product      architecture   build   fix it right         find bugs      prove it   land it      verify   update docs       reflect
+```### Example
 
 ```
 You:      I want to add voice message transcription.
@@ -151,7 +152,18 @@ You:      B
 You:      /eng-review
 IronCode: [Architecture diagram, data flow, failure modes, test matrix]
 
-You:      (implement the plan)
+You:      /tdd
+IronCode: RED: Writing test for Whisper API transcription...
+          test("transcribes voice message to text") → FAIL ✓
+          GREEN: Implementing minimal WhisperService.transcribe()...
+          34/34 tests pass. Committed.
+
+You:      /debug
+IronCode: Phase 1: Reading error — "ECONNRESET on Whisper API"
+          Phase 2: Working example found — image upload uses retry
+          Phase 3: Hypothesis — no retry on transient network errors
+          Phase 4: Test written, fix applied, verified. ✅
+
 You:      /code-review
 IronCode: Missing .catch() on Whisper API — unhandled rejection will crash the bot.
 
