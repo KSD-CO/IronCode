@@ -70,11 +70,11 @@ jobs:
           # PRs with activity today (updated today)
           gh pr list --repo ${{ github.repository }} --state open --search \"updated:${TODAY}\" --json number,title,author,labels,createdAt,updatedAt,reviewDecision,isDraft,additions,deletions --limit 100
 
-          STEP 2: Gather direct commits to dev branch
-          Run these commands to get commits directly to dev branch today (not via PRs):
+          STEP 2: Gather direct commits to main branch
+          Run these commands to get commits directly to main branch today (not via PRs):
 
-          # Get commits to dev branch today with file stats
-          git log origin/dev --since=\"${TODAY} 00:00:00\" --until=\"${TODAY} 23:59:59\" --pretty=format:\"%H|%an|%s\" --numstat
+          # Get commits to main branch today with file stats
+          git log origin/main --since=\"${TODAY} 00:00:00\" --until=\"${TODAY} 23:59:59\" --pretty=format:\"%H|%an|%s\" --numstat
 
           # For each commit, you can get more details if needed:
           # git show <commit-hash> --stat --oneline
@@ -111,8 +111,8 @@ jobs:
           - Small PRs (< 50 lines) that are approved or nearly approved
           - PRs that just need a final review
 
-          **Direct Commits to Dev:**
-          - Commits pushed directly to dev branch today (not via PR)
+          **Direct Commits to main:**
+          - Commits pushed directly to main branch today (not via PR)
           - Show commit message and key files changed
           - Group by author if multiple commits
 
@@ -136,7 +136,7 @@ jobs:
           **Quick Wins**
           [Small PRs ready to merge]
 
-          **Direct Commits to Dev**
+          **Direct Commits to main**
           [Commits pushed directly, not via PR - show author, message, key files]
 
           **Releases Today**
