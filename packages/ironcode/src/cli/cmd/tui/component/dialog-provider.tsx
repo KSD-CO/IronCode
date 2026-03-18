@@ -76,6 +76,9 @@ export function createDialogProviderOptions() {
     if (method.type === "api") {
       dialog.replace(() => <ApiMethod providerID={targetProviderID} title={method.label} />)
     }
+    if (method.type === "url") {
+      dialog.replace(() => <UrlMethod providerID={targetProviderID} title={method.label} />)
+    }
   }
 
   const options = createMemo(() => {
@@ -346,6 +349,35 @@ function CodeMethod(props: CodeMethodProps) {
           </Show>
         </box>
       )}
+    />
+  )
+}
+
+interface UrlMethodProps {
+  providerID: string
+  title: string
+}
+function UrlMethod(props: UrlMethodProps) {
+  const dialog = useDialog()
+  const sdk = useSDK()
+  const sync = useSync()
+
+  return (
+    <DialogPrompt
+      title={props.title}
+      placeholder="http://localhost:11434"
+      onConfirm={async (value) => {
+        await sdk.client.auth.set({
+          providerID: props.providerID,
+          auth: {
+            type: "api",
+            key: value || "http://localhost:11434",
+          },
+        })
+        await sdk.client.instance.dispose()
+        await sync.bootstrap()
+        dialog.replace(() => <DialogModel providerID={props.providerID} />)
+      }}
     />
   )
 }

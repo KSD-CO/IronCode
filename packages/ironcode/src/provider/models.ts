@@ -99,8 +99,13 @@ export namespace ModelsDev {
   })
 
   export async function get() {
-    const result = await Data()
-    return result as Record<string, Provider>
+    const result = (await Data()) as Record<string, Provider>
+    // Inject "ollama" (local, self-hosted) so it appears in "Add provider" before the user connects.
+    // Models are empty here — they get populated by the CUSTOM_LOADER after connecting.
+    // NOTE: "ollama-cloud" is a separate cloud provider from models.dev — do NOT confuse with this local entry.
+    if (!result["ollama"])
+      result["ollama"] = { id: "ollama", name: "Ollama (Local)", env: [], api: "http://localhost:11434/v1", models: {} }
+    return result
   }
 
   export async function refresh() {

@@ -20,7 +20,7 @@ export namespace ProviderAuth {
 
   export const Method = z
     .object({
-      type: z.union([z.literal("oauth"), z.literal("api")]),
+      type: z.union([z.literal("oauth"), z.literal("api"), z.literal("url")]),
       label: z.string(),
     })
     .meta({
@@ -28,9 +28,16 @@ export namespace ProviderAuth {
     })
   export type Method = z.infer<typeof Method>
 
+  // Built-in auth methods for providers that don't use plugins.
+  // NOTE: "ollama" = Ollama Local (self-hosted, no API key, just a URL).
+  //       "ollama-cloud" = separate cloud provider from models.dev (requires OLLAMA_API_KEY) — NOT listed here.
+  const BUILTIN_METHODS: Record<string, Method[]> = {
+    ollama: [{ type: "url", label: "Ollama Local URL" }],
+  }
+
   export async function methods() {
     const s = await state().then((x) => x.methods)
-    return mapValues(s, (x) =>
+    const pluginMethods = mapValues(s, (x) =>
       x.methods.map(
         (y): Method => ({
           type: y.type,
@@ -38,6 +45,7 @@ export namespace ProviderAuth {
         }),
       ),
     )
+    return { ...BUILTIN_METHODS, ...pluginMethods }
   }
 
   export const Authorization = z

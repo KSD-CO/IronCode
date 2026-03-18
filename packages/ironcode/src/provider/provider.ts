@@ -528,6 +528,61 @@ export namespace Provider {
         },
       }
     },
+    // "ollama" = Ollama Local (self-hosted). Auth = URL stored as api.key.
+    // "ollama-cloud" is a completely separate cloud provider — handled by models.dev, NOT this loader.
+    ollama: async (input) => {
+      const auth = await Auth.get("ollama")
+      if (!auth) return { autoload: false }
+
+      // Resolve base URL: auth key stores the user-provided URL (e.g. http://localhost:11434)
+      const baseURL = auth.type === "api" && auth.key?.startsWith("http") ? auth.key : "http://localhost:11434"
+      const apiBase = baseURL.replace(/\/?$/, "") + "/v1"
+      const tagsURL = baseURL + "/api/tags"
+
+      try {
+        const res = await fetch(tagsURL, { signal: AbortSignal.timeout(3000) })
+        if (res.ok) {
+          const json = (await res.json()) as {
+            models: Array<{ name: string; details?: { family?: string } }>
+          }
+          const discovered = json.models ?? []
+          if (discovered.length > 0) {
+            // Replace placeholder models with actual installed models.
+            // toolcall defaults to false — /api/show is skipped to avoid blocking startup.
+            for (const key of Object.keys(input.models)) delete input.models[key]
+            for (const m of discovered) {
+              input.models[m.name] = {
+                id: m.name,
+                providerID: "ollama",
+                name: m.name,
+                family: m.details?.family,
+                api: { id: m.name, url: apiBase, npm: "@ai-sdk/openai-compatible" },
+                status: "active",
+                headers: {},
+                options: {},
+                cost: { input: 0, output: 0, cache: { read: 0, write: 0 } },
+                limit: { context: 131072, output: 8192 },
+                capabilities: {
+                  temperature: true,
+                  reasoning: false,
+                  attachment: false,
+                  toolcall: false,
+                  input: { text: true, audio: false, image: false, video: false, pdf: false },
+                  output: { text: true, audio: false, image: false, video: false, pdf: false },
+                  interleaved: false,
+                },
+                release_date: "",
+                variants: {},
+              }
+            }
+          }
+        }
+      } catch {
+        // Ollama unreachable — keep whatever models are in the database
+      }
+
+      return { autoload: true, options: { apiKey: "ollama", baseURL: apiBase } }
+    },
   }
 
   export const Model = z
@@ -964,6 +1019,8 @@ export namespace Provider {
         const opts = result.options ?? {}
         const patch: Partial<Info> = providers[providerID] ? { options: opts } : { source: "custom", options: opts }
         mergeProvider(providerID, patch)
+        // Sync models from database in case the CUSTOM_LOADER modified them in-place
+        if (providers[providerID]) providers[providerID].models = { ...data.models }
       }
     }
 

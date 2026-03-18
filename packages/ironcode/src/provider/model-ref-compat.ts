@@ -32,11 +32,18 @@ export const ModelRefSchema = z
 export function ensureModelRef(val: ModelRef | { providerID: string; modelID: string } | string): ModelRef {
   if (typeof val === "string") {
     // Handle slash-separated format from CLI/config: "provider/model" → "provider:model"
-    if (val.includes("/") && !val.includes(":")) {
+    // Also handles "provider/model:tag" (e.g. Ollama "ollama/phi:latest") where slash
+    // is the provider separator and the colon belongs to the model ID.
+    if (val.includes("/")) {
       const slashIndex = val.indexOf("/")
-      const providerID = val.slice(0, slashIndex)
-      const modelID = val.slice(slashIndex + 1)
-      return ProviderRegistry.format(providerID, modelID)
+      const colonIndex = val.indexOf(":")
+      // Only treat slash as provider separator when colon doesn't appear before it
+      // (e.g. "openrouter:anthropic/claude-3" has colon before slash → already canonical)
+      if (colonIndex === -1 || colonIndex > slashIndex) {
+        const providerID = val.slice(0, slashIndex)
+        const modelID = val.slice(slashIndex + 1)
+        return ProviderRegistry.format(providerID, modelID)
+      }
     }
     return val as ModelRef
   }

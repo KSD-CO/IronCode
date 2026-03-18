@@ -1775,19 +1775,19 @@ NOTE: At any point in time through this workflow you should feel free to ask the
 
     let taskModelRef: string
     if (command.model) {
-      taskModelRef = command.model
+      taskModelRef = ensureModelRef(command.model)
     } else if (command.agent) {
       const cmdAgent = await Agent.get(command.agent)
       if (cmdAgent?.model) {
         // agent.model might be in legacy object format at runtime
         taskModelRef = ensureModelRef(cmdAgent.model as string)
       } else if (input.model) {
-        taskModelRef = input.model
+        taskModelRef = ensureModelRef(input.model)
       } else {
         taskModelRef = await lastModel(input.sessionID)
       }
     } else if (input.model) {
-      taskModelRef = input.model
+      taskModelRef = ensureModelRef(input.model)
     } else {
       taskModelRef = await lastModel(input.sessionID)
     }
