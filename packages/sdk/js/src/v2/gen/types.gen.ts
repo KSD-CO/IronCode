@@ -2060,7 +2060,7 @@ export type SubtaskPartInput = {
 }
 
 export type ProviderAuthMethod = {
-  type: "oauth" | "api"
+  type: "oauth" | "api" | "url"
   label: string
 }
 
