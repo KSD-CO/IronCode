@@ -69,8 +69,10 @@ case "$TARGET" in
     export BUILD_MODE=debug
     export IRONCODE_PROJECT_ROOT="$REPO_ROOT"
     build_rust_if_needed
-    echo "🚀 Starting dev"
+    echo "⚙️  Generating builtin skills snapshot..."
     cd "$IRONCODE_DIR"
+    bun run script/gen-builtin-skills.ts
+    echo "🚀 Starting dev"
     exec bun run --conditions=browser src/index.ts
     ;;
   web)
