@@ -206,6 +206,34 @@ Streak: 12 consecutive days.
 
 ````
 
+### Skills requiring Playwright MCP
+
+The `/browse`, `/qa`, `/qa-only`, and `/qa-browse` skills control a real browser via [Playwright MCP](https://github.com/microsoft/playwright-mcp). Set it up once before using them.
+
+**1. Add to your ironcode config** (`~/.ironcode/config.json` for global, or `ironcode.json` in your project):
+
+```json
+{
+  "mcp": {
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "@playwright/mcp@latest"]
+    }
+  }
+}
+```
+
+**2. Restart IronCode**, then verify:
+
+```bash
+ironcode mcp list
+# playwright  connected
+```
+
+> `npx` auto-downloads `@playwright/mcp` on first run. Chromium is bundled — no separate `playwright install` needed.
+
+---
+
 ### Custom Skills
 
 Create `.ironcode/skill/<name>/SKILL.md` with YAML frontmatter:
