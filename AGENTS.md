@@ -1,129 +1,192 @@
 # IronCode Agent Guidelines
 
-This repository is a Bun-based monorepo containing TypeScript web/CLI packages and native Rust components. This document tells agentic coding assistants how to build, test, lint, and make safe, minimal edits here. Keep changes focused: prefer small, well-documented patches and follow the repo conventions.
+Bun + TypeScript monorepo with a CLI/TUI, Hono HTTP server, SolidJS web frontend, and native Rust FFI tools. Default branch is `dev`. Package manager: `bun@1.3.11`.
 
-Key pointers (quick)
+## Project layout
 
-- Use Bun for JS/TS work and Cargo for Rust crates; default branch is `dev`.
-- Run package-level commands with `bun --cwd packages/<pkg> ...` from the repo root.
-- Regenerate SDKs after changing server routes: run `./script/generate.ts` and update `packages/sdk`.
-- Format using `./script/format.ts` before committing.
+| Path                                                      | Description                                                                           |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `packages/ironcode`                                       | Core CLI, TUI (SolidJS + OpenTUI), Hono server, AI tools, session management          |
+| `packages/ironcode/native/tool`                           | Rust crate (`ironcode-tool`) — grep, glob, edit, read, VCS, fuzzy match, etc. via FFI |
+| `packages/sdk/js`                                         | Auto-generated TypeScript SDK from OpenAPI spec                                       |
+| `packages/plugin`                                         | Public plugin API (`Plugin`, `ToolDefinition`, `Hooks`)                               |
+| `packages/util`                                           | Shared utilities (`NamedError`, typed error factory)                                  |
+| `packages/script`                                         | Internal build/release scripts                                                        |
+| `packages/slack`, `packages/telegram`, `packages/discord` | Chat bot integrations                                                                 |
 
-Project layout
+## Build / lint / test commands
 
-- Monorepo root: packages under `packages/*` and `packages/sdk/js`.
-- Core CLI & server: `packages/ironcode/src` (server routes: `packages/ironcode/src/server/routes/session.ts`).
-- Web frontend: `packages/app`.
-- Native (Rust) tools: `packages/ironcode/native/tool`.
+```bash
+# Install
+bun install
 
-Build / lint / test (use these exact commands)
+# Dev servers
+bun --cwd packages/ironcode dev              # CLI/TUI
+bun --cwd packages/app run dev:web            # Web frontend
 
-- Install dependencies (repo root):
-  - `bun install`
-- Development servers / quick runs:
-  - Core CLI/TUI: `bun --cwd packages/ironcode dev`
-  - Web dev server: `bun --cwd packages/app run dev:web`
-  - Desktop (Tauri) dev: `bun --cwd packages/ironcode run dev:desktop`
-- Build / production:
-  - Build a JS/TS package: `bun --cwd packages/<package> run build`
-  - Web production build: `bun --cwd packages/app run build`
-- Lint / format:
-  - Format workspace (Prettier): `./script/format.ts`
-  - Follow `.prettierrc` in the repo root (see formatting rules below)
-- Tests / typecheck:
-  - Run all tests in a package (from package dir): `bun test`
-  - Run package tests from repo root: `bun --cwd packages/<package> test`
-  - Run a single test file quickly: `bun --cwd packages/<package> test path/to/file.test.ts`
-  - Run tests by name filter: `bun --cwd packages/<package> test --filter "partial test name"`
-  - Typecheck entire workspace: `bun run typecheck` or `bun typecheck`
-- Native (Rust):
-  - Run crate tests/benches: `cargo test` / `cargo bench` (run with workdir set to crate directory)
+# Build
+bun --cwd packages/<pkg> run build
 
-Cursor / Copilot rules
+# Typecheck (runs turbo across all packages — most use tsgo, not tsc)
+bun run typecheck
 
-- Current scan: there are no `.cursor/rules/`, `.cursorrules`, or `.github/copilot-instructions.md` files in this repo. If maintainers add any of those, agents MUST incorporate their exact contents and prioritize them over this document.
+# Format (Prettier — semi:false, printWidth:120, config is inline in root package.json)
+./script/format.ts
 
-Editing and Git safety rules for agents
+# Regenerate SDK after changing server routes
+./script/generate.ts
+```
 
-- Make minimal, targeted edits. Prefer `apply_patch` for single-file changes.
-- Never run destructive git commands (e.g., `git reset --hard`) or force-push to shared branches without explicit user approval.
-- Branch from `dev` and open PRs against `dev` for feature work.
-- Do not commit automatically unless the user explicitly asks. If asked to commit, stage only intended files and write a 1–2 sentence message explaining why.
+### Running tests
 
-Code style & conventions (for agents and contributors)
+Tests use Bun's built-in test runner. **Never run tests from the repo root** — the root `test` script deliberately exits 1.
 
-- General
-  - Functions and modules should have single responsibility.
-  - Prefer small, pure helpers for domain logic; push side-effects to IO/boundary layers.
-  - Use `const` by default; use `let` only for deliberate mutability.
-  - Avoid `any`. Prefer inferred types, `unknown` validated with Zod, explicit interfaces, or generics.
+```bash
+# All tests in a package
+bun --cwd packages/ironcode test
 
-- Imports
-  - Use relative imports for local modules (e.g., `import { x } from "../x"`).
-  - Prefer named exports/imports for local code; reserve default exports for modules that naturally expose a single primary value.
-  - Use ESM consistently (`type: "module"` in root `package.json`).
+# Single test file
+bun --cwd packages/ironcode test test/tool/grep.test.ts
 
-- Naming
-  - Variables & functions: camelCase (e.g., `getUserById`).
-  - Types, interfaces, classes, enums: PascalCase (e.g., `UserProfile`).
-  - Constants: UPPER_SNAKE only for true runtime constants.
-  - DB column names (Drizzle): snake_case.
+# Filter by name substring
+bun --cwd packages/ironcode test --filter "basic search"
 
-- Files & tests
-  - Keep one main responsibility per file when it improves discoverability and testability.
-  - Tests live under package `test/` directories. Unit tests use `*.test.ts`, integration/e2e can use `*.spec.ts`.
+# Rust crate tests/benchmarks (run from crate directory)
+cargo test      # workdir: packages/ironcode/native/tool
+cargo bench
+```
 
-- Formatting & linting specifics
-  - Prettier root: `semi: false`, `printWidth: 120`.
-  - Editor conventions: LF line endings, UTF-8 encoding, 2-space indent.
-  - Aim for readable lines in editors (~80 cols); CI allows up to 120.
-  - Run `./script/format.ts` before committing changes that touch formatting.
+Test files live in `packages/ironcode/test/` organized by domain (tool/, session/, provider/, util/, config/, server/, etc.). All tests use `*.test.ts` — no `.spec.ts` convention.
 
-- Types & runtime validation
-  - Validate external inputs at the boundary with Zod (HTTP payloads, CLI args, config files).
-  - Prefer TypeScript discriminated unions and interfaces for internal models.
-  - Convert `unknown` to typed shapes as early as possible.
+### Pre-push hook (Husky)
 
-- Error handling
-  - Avoid throwing for predictable control flow. Use Result-like return values for internal APIs when appropriate.
-  - Catch and canonicalize external/IO errors at boundaries; convert to typed error shapes before returning.
-  - Use `try`/`catch` at IO boundaries; prefer `.catch()` with contextual logging for promise chains when inline handling fits.
+The pre-push hook validates the Bun version matches `packageManager` in root `package.json`, then runs `bun typecheck`. No pre-commit hook.
 
-- Logging & observability
-  - Use structured logging helpers when available (e.g., `Log.create({ service: "name" })`).
-  - Include keys (IDs, route, user, trace) in log lines for diagnosability.
+## Code style & conventions
 
-Testing guidance (practical notes)
+### Namespace pattern (dominant architecture)
 
-- Use Bun's test runner for JS/TS packages.
-- To run a single test file quickly from the repo root:
-  - `bun --cwd packages/<pkg> test path/to/file.test.ts`
-- To run tests by name substring:
-  - `bun --cwd packages/<pkg> test --filter "name substring"`
-- When changing behavior, run the package test suite and re-run failing tests locally before committing.
+Namespaces own their domain — types and runtime functions coexist:
 
-Repository maintenance (agent checklist)
+```ts
+export namespace Session {
+  const log = Log.create({ service: "session" })
 
-1. Confirm Bun is available: `bun --version` and verify package context: `bun --cwd packages/ironcode --version`.
-2. Run focused tests: `bun --cwd packages/<pkg> test --filter "test name"` or run a single file.
-3. Run `./script/format.ts` to apply consistent Prettier formatting.
-4. If server routes changed: run `./script/generate.ts` and update `packages/sdk`.
+  export const Info = z.object({ id: z.string(), title: z.string() })
+  export type Info = z.output<typeof Info>
 
-Where to look (quick file references)
+  export const create = fn(CreateInput, async (input) => { ... })
+}
+```
 
-- Core CLI & server code: `packages/ironcode/src`.
-- Server routes example: `packages/ironcode/src/server/routes/session.ts`.
-- Web frontend: `packages/app`.
-- Native tooling / Rust: `packages/ironcode/native/tool`.
-- SDK generation & formatting scripts: `script/generate.ts`, `script/format.ts`.
+Key namespaces: `Session`, `Config`, `Tool`, `Bus`, `BusEvent`, `Storage`, `Server`, `Agent`, `Log`, `Instance`.
 
-If you need to ask maintainers
+### Imports
 
-- Ask one focused question when blocked by secrets/credentials or destructive choices. Provide a recommended default and explain what changes based on the response.
+- Relative imports for local modules: `import { Log } from "../util/log"`
+- Path aliases in `packages/ironcode`: `@/*` → `./src/*`, `@tui/*` → `./src/cli/cmd/tui/*`
+- Named imports only for local code; default imports for third-party when appropriate (`import z from "zod"`)
+- ESM throughout (`"type": "module"`)
 
-Notes
+### Naming
 
-- This file complements `packages/ironcode/AGENTS.md` — see that file for package-specific notes (tools, tests, and examples).
-- Keep changes minimal and well-documented. When in doubt, run package tests and formatting before committing.
+- Variables & functions: `camelCase`
+- Types, interfaces, namespaces, enums: `PascalCase`
+- Constants: `UPPER_SNAKE` only for true runtime constants
+- DB columns (Drizzle): `snake_case`
 
-File location: `AGENTS.md`
+### Formatting
+
+- Prettier: `semi: false`, `printWidth: 120` (configured in root `package.json`, no `.prettierrc` file)
+- 2-space indent, LF line endings, UTF-8
+- No ESLint, Biome, or editorconfig — Prettier is the only formatter
+- Run `./script/format.ts` before committing
+
+### Types & validation
+
+- Zod at every boundary: HTTP payloads, CLI args, config, tool inputs
+- Dual-declaration pattern: `export const Info = z.object({...})` + `export type Info = z.output<typeof Info>`
+- `fn()` helper wraps functions with Zod input validation
+- `z.discriminatedUnion()` for union types; `.safeParse()` for non-throwing validation
+- Avoid `any` — prefer `unknown` validated through Zod, explicit interfaces, or generics
+- Use `const` by default; `let` only for deliberate mutability
+
+### Error handling
+
+- `NamedError.create("NotFoundError", z.object({...}))` from `@ironcode-ai/util/error` for typed errors
+- `NamedError.Unknown` as generic catch-all
+- Avoid throwing for control flow — use Result-like return values for internal APIs
+- `try`/`catch` at IO boundaries; `.catch(() => {})` for fire-and-forget
+- Convert external errors to typed shapes at boundaries before returning
+
+### Logging & events
+
+- `const log = Log.create({ service: "name" })` at namespace scope
+- `log.info(...)`, `log.error(...)`, `log.debug(...)` with structured context objects
+- `using _ = log.time(id)` for timing with `Symbol.dispose`
+- `BusEvent.define("session.created", z.object({...}))` for typed events
+- `Bus.publish(event, data)` / `Bus.subscribe(event, callback)`
+- Suppress logs in tests: `Log.init({ print: false })`
+
+### State & dependency injection
+
+- `Instance.state(async () => { ... })` for lazy per-instance state
+- `Instance.provide({ directory, fn })` to isolate tests with project context
+
+## Testing patterns
+
+```ts
+import { describe, expect, test } from "bun:test"
+import { Instance } from "../../src/project/instance"
+import { tmpdir } from "../fixture/fixture"
+
+// Minimal tool context for testing
+const ctx = {
+  sessionID: "test",
+  messageID: "",
+  callID: "",
+  agent: "build",
+  abort: AbortSignal.any([]),
+  messages: [],
+  metadata: () => {},
+  ask: async () => {},
+}
+
+describe("tool.grep", () => {
+  test("basic search", async () => {
+    await Instance.provide({
+      directory: projectRoot,
+      fn: async () => {
+        const grep = await GrepTool.init()
+        const result = await grep.execute({ pattern: "export", path: "..." }, ctx)
+        expect(result.metadata.matches).toBeGreaterThan(0)
+      },
+    })
+  })
+})
+
+// Temporary directory with git init + auto-cleanup
+test("isolated environment", async () => {
+  await using tmp = await tmpdir({ git: true })
+  // tmp.path is an isolated temp directory
+})
+```
+
+## Rust native tools
+
+The `ironcode-tool` crate (`packages/ironcode/native/tool`) builds as a `cdylib` for FFI from Bun. Modules: `grep`, `glob`, `edit`, `read`, `bm25`, `codesearch`, `fuzzy`, `vcs`, `shell`, `file_list`, `file_ignore`, `watcher`, `permission`, `terminal`, `indexer`, `archive`, `lock`, `stats`, `ls`. Functions are exported as `extern "C"` taking C strings and returning JSON-serialized results. Includes tree-sitter grammars for ~15 languages.
+
+## Cursor / Copilot rules
+
+No `.cursor/rules/`, `.cursorrules`, or `.github/copilot-instructions.md` files exist in this repo. If maintainers add any, agents MUST incorporate their contents and prioritize them over this document.
+
+## Git & editing safety
+
+- Make minimal, targeted edits. Stage only intended files.
+- Branch from `dev` and open PRs against `dev`.
+- Never force-push or run destructive git commands without explicit approval.
+- Do not commit unless the user explicitly asks. Write a 1–2 sentence message explaining why.
+
+## See also
+
+- `packages/ironcode/AGENTS.md` — package-specific notes on tools, architecture, and SDK generation.

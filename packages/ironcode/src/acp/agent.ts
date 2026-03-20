@@ -677,6 +677,11 @@ export namespace ACP {
       }
     }
 
+    async unstable_closeSession(params: { sessionId: string }): Promise<{ _meta?: Record<string, unknown> | null }> {
+      await this.sdk.session.delete({ sessionID: params.sessionId }, { throwOnError: true })
+      return {}
+    }
+
     async unstable_forkSession(params: ForkSessionRequest): Promise<ForkSessionResponse> {
       const directory = params.cwd
       const mcpServers = params.mcpServers ?? []
