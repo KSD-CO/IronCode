@@ -237,8 +237,8 @@ export class Config extends HeyApiClient {
    * Update global IronCode configuration settings and preferences.
    */
   public update<ThrowOnError extends boolean = false>(
-    parameters?: {
-      config?: Config3
+    parameters: {
+      config: Config3
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -327,7 +327,7 @@ export class Auth extends HeyApiClient {
   public set<ThrowOnError extends boolean = false>(
     parameters: {
       providerID: string
-      auth?: Auth3
+      auth: Auth3
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -669,9 +669,9 @@ export class Config2 extends HeyApiClient {
    * Update IronCode configuration settings and preferences.
    */
   public update<ThrowOnError extends boolean = false>(
-    parameters?: {
+    parameters: {
       directory?: string
-      config?: Config3
+      config: Config3
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -778,9 +778,9 @@ export class Worktree extends HeyApiClient {
    * Remove a git worktree and delete its branch.
    */
   public remove<ThrowOnError extends boolean = false>(
-    parameters?: {
+    parameters: {
       directory?: string
-      worktreeRemoveInput?: WorktreeRemoveInput
+      worktreeRemoveInput: WorktreeRemoveInput
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -832,9 +832,9 @@ export class Worktree extends HeyApiClient {
    * Create a new git worktree for the current project and run any configured startup scripts.
    */
   public create<ThrowOnError extends boolean = false>(
-    parameters?: {
+    parameters: {
       directory?: string
-      worktreeCreateInput?: WorktreeCreateInput
+      worktreeCreateInput: WorktreeCreateInput
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -867,9 +867,9 @@ export class Worktree extends HeyApiClient {
    * Reset a worktree branch to the primary default branch.
    */
   public reset<ThrowOnError extends boolean = false>(
-    parameters?: {
+    parameters: {
       directory?: string
-      worktreeResetInput?: WorktreeResetInput
+      worktreeResetInput: WorktreeResetInput
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -1818,7 +1818,7 @@ export class Part extends HeyApiClient {
       messageID: string
       partID: string
       directory?: string
-      part?: Part2
+      part: Part2
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -2624,9 +2624,9 @@ export class Control extends HeyApiClient {
    * Submit a response to the TUI request queue to complete a pending request.
    */
   public response<ThrowOnError extends boolean = false>(
-    parameters?: {
+    parameters: {
       directory?: string
-      body?: unknown
+      body: unknown
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -2886,9 +2886,9 @@ export class Tui extends HeyApiClient {
    * Publish a TUI event
    */
   public publish<ThrowOnError extends boolean = false>(
-    parameters?: {
+    parameters: {
       directory?: string
-      body?: EventTuiPromptAppend | EventTuiCommandExecute | EventTuiToastShow | EventTuiSessionSelect
+      body: EventTuiPromptAppend | EventTuiCommandExecute | EventTuiToastShow | EventTuiSessionSelect
     },
     options?: Options<never, ThrowOnError>,
   ) {
