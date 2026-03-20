@@ -3,15 +3,22 @@
   "version": "1.20.5",
   "type": "module",
   "license": "MIT",
+  "bin": {
+    "ironcode-slack": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
   "scripts": {
     "dev": "bun run src/index.ts",
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
     "@ironcode-ai/sdk": "workspace:*",
-    "@slack/bolt": "^3.17.1"
+    "@slack/bolt": "^4.6.0"
   },
   "devDependencies": {
+    "@types/bun": "catalog:",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "@typescript/native-preview": "catalog:"
