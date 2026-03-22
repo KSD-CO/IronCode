@@ -1,6 +1,6 @@
 {
   "name": "@ironcode-ai/telegram",
-  "version": "1.20.6",
+  "version": "1.20.7",
   "type": "module",
   "license": "MIT",
   "bin": {
