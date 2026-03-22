@@ -15,6 +15,7 @@ import { Installation } from "@/installation"
 import { useKV } from "../context/kv"
 import { useCommandDialog } from "../component/dialog-command"
 import { getSystemStatsFFI, type SystemStats } from "@/tool/ffi"
+import { useTerminalDimensions } from "@opentui/solid"
 
 // TODO: what is the best way to do this?
 let once = false
@@ -110,15 +111,20 @@ export function Home() {
     }
   })
   const directory = useDirectory()
-
   const keybind = useKeybind()
+  const dimensions = useTerminalDimensions()
+  const mobile = createMemo(() => dimensions().width < 60)
 
   return (
     <>
       <box flexGrow={1} justifyContent="center" alignItems="center" paddingLeft={2} paddingRight={2} gap={1}>
-        <box height={3} />
-        <Logo />
-        <box width="100%" maxWidth={75} zIndex={1000} paddingTop={1}>
+        <Show when={!mobile()}>
+          <box height={3} />
+        </Show>
+        <Show when={!mobile()}>
+          <Logo />
+        </Show>
+        <box width="100%" maxWidth={75} zIndex={1000} paddingTop={mobile() ? 0 : 1}>
           <Prompt
             ref={(r) => {
               prompt = r
@@ -127,8 +133,8 @@ export function Home() {
             hint={Hint}
           />
         </box>
-        <box height={3} width="100%" maxWidth={75} alignItems="center" paddingTop={2}>
-          <Show when={showTips()}>
+        <box height={mobile() ? 1 : 3} width="100%" maxWidth={75} alignItems="center" paddingTop={mobile() ? 0 : 2}>
+          <Show when={showTips() && !mobile()}>
             <Tips />
           </Show>
         </box>
@@ -149,44 +155,48 @@ export function Home() {
               </Switch>
               {connectedMcpCount()} MCP
             </text>
-            <text fg={theme.textMuted}>/status</text>
+            <Show when={!mobile()}>
+              <text fg={theme.textMuted}>/status</text>
+            </Show>
           </Show>
         </box>
         <box flexGrow={1} />
-        <box flexShrink={0} gap={2} flexDirection="row">
-          <box flexDirection="row" gap={1} flexShrink={0}>
-            {(() => {
-              const cpu = stats().cpu_usage
-              const cpuColor = cpu > 80 ? theme.error : cpu > 60 ? theme.warning : theme.success
-              const filled = Math.max(0, Math.min(5, Math.round(cpu / 20)))
-              return (
-                <text wrapMode="none">
-                  <span style={{ fg: cpuColor }}>CPU {cpu.toFixed(0)}%</span>{" "}
-                  <span style={{ fg: cpuColor }}>{"█".repeat(filled)}</span>
-                  <span style={{ fg: theme.borderSubtle }}>{"░".repeat(5 - filled)}</span>
-                </text>
-              )
-            })()}
-            <text fg={theme.textMuted} wrapMode="none">
-              &#x2502;
-            </text>
-            {(() => {
-              const used = stats().memory_used_mb
-              const total = stats().memory_total_mb || 1
-              const memPct = total > 0 ? (used / total) * 100 : 0
-              const memColor = memPct > 80 ? theme.error : memPct > 60 ? theme.warning : theme.success
-              const filled = Math.max(0, Math.min(5, Math.round((used / total) * 5)))
-              return (
-                <text wrapMode="none">
-                  <span style={{ fg: memColor }}>Mem {(used / 1024).toFixed(1)}G</span>{" "}
-                  <span style={{ fg: memColor }}>{"█".repeat(filled)}</span>
-                  <span style={{ fg: theme.borderSubtle }}>{"░".repeat(5 - filled)}</span>
-                </text>
-              )
-            })()}
+        <Show when={!mobile()}>
+          <box flexShrink={0} gap={2} flexDirection="row">
+            <box flexDirection="row" gap={1} flexShrink={0}>
+              {(() => {
+                const cpu = stats().cpu_usage
+                const cpuColor = cpu > 80 ? theme.error : cpu > 60 ? theme.warning : theme.success
+                const filled = Math.max(0, Math.min(5, Math.round(cpu / 20)))
+                return (
+                  <text wrapMode="none">
+                    <span style={{ fg: cpuColor }}>CPU {cpu.toFixed(0)}%</span>{" "}
+                    <span style={{ fg: cpuColor }}>{"█".repeat(filled)}</span>
+                    <span style={{ fg: theme.borderSubtle }}>{"░".repeat(5 - filled)}</span>
+                  </text>
+                )
+              })()}
+              <text fg={theme.textMuted} wrapMode="none">
+                &#x2502;
+              </text>
+              {(() => {
+                const used = stats().memory_used_mb
+                const total = stats().memory_total_mb || 1
+                const memPct = total > 0 ? (used / total) * 100 : 0
+                const memColor = memPct > 80 ? theme.error : memPct > 60 ? theme.warning : theme.success
+                const filled = Math.max(0, Math.min(5, Math.round((used / total) * 5)))
+                return (
+                  <text wrapMode="none">
+                    <span style={{ fg: memColor }}>Mem {(used / 1024).toFixed(1)}G</span>{" "}
+                    <span style={{ fg: memColor }}>{"█".repeat(filled)}</span>
+                    <span style={{ fg: theme.borderSubtle }}>{"░".repeat(5 - filled)}</span>
+                  </text>
+                )
+              })()}
+            </box>
+            <text fg={theme.textMuted}>{Installation.VERSION}</text>
           </box>
-          <text fg={theme.textMuted}>{Installation.VERSION}</text>
-        </box>
+        </Show>
       </box>
     </>
   )

@@ -1,5 +1,6 @@
 import { BoxRenderable, TextareaRenderable, MouseEvent, PasteEvent, t, dim, fg } from "@opentui/core"
 import { createEffect, createMemo, type JSX, onMount, createSignal, onCleanup, Show, Switch, Match } from "solid-js"
+import { useTerminalDimensions } from "@opentui/solid"
 import "opentui-spinner/solid"
 import { useLocal } from "@tui/context/local"
 import { useTheme } from "@tui/context/theme"
@@ -76,6 +77,8 @@ export function Prompt(props: PromptProps) {
   const renderer = useRenderer()
   const { theme, syntax } = useTheme()
   const kv = useKV()
+  const dimensions = useTerminalDimensions()
+  const mobile = createMemo(() => dimensions().width < 60)
 
   function promptModelWarning() {
     toast.show({
@@ -1050,7 +1053,9 @@ export function Prompt(props: PromptProps) {
                   <text flexShrink={0} fg={keybind.leader ? theme.textMuted : theme.text}>
                     {local.model.parsed().model}
                   </text>
-                  <text fg={theme.textMuted}>{local.model.parsed().provider}</text>
+                  <Show when={!mobile()}>
+                    <text fg={theme.textMuted}>{local.model.parsed().provider}</text>
+                  </Show>
                   <Show when={showVariant()}>
                     <text fg={theme.textMuted}>·</text>
                     <text>
@@ -1174,7 +1179,7 @@ export function Prompt(props: PromptProps) {
                   })()}
                 </box>
               </box>
-              <text fg={store.interrupt > 0 ? theme.primary : theme.text}>
+              <text fg={store.interrupt > 0 ? theme.primary : theme.text} wrapMode="none" flexShrink={0}>
                 esc{" "}
                 <span style={{ fg: store.interrupt > 0 ? theme.primary : theme.textMuted }}>
                   {store.interrupt > 0 ? "again to interrupt" : "interrupt"}
@@ -1182,7 +1187,7 @@ export function Prompt(props: PromptProps) {
               </text>
             </box>
           </Show>
-          <Show when={status().type !== "retry"}>
+          <Show when={status().type !== "retry" && !mobile()}>
             <box gap={2} flexDirection="row">
               <Switch>
                 <Match when={store.mode === "normal"}>

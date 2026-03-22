@@ -5,6 +5,7 @@ import { useDirectory } from "../../context/directory"
 import { useConnected } from "../../component/dialog-model"
 import { createStore } from "solid-js/store"
 import { useRoute } from "../../context/route"
+import { useTerminalDimensions } from "@opentui/solid"
 
 export function Footer() {
   const { theme } = useTheme()
@@ -19,6 +20,8 @@ export function Footer() {
   })
   const directory = useDirectory()
   const connected = useConnected()
+  const dimensions = useTerminalDimensions()
+  const mobile = createMemo(() => dimensions().width < 60)
 
   const [store, setStore] = createStore({
     welcome: false,
@@ -49,9 +52,20 @@ export function Footer() {
     })
   })
 
+  const displayDir = createMemo(() => {
+    const dir = directory()
+    if (!mobile()) return dir
+    // On mobile: keep only last path segment + branch/status suffix
+    const colonIdx = dir.indexOf(":")
+    const pathPart = colonIdx >= 0 ? dir.slice(0, colonIdx) : dir
+    const suffix = colonIdx >= 0 ? dir.slice(colonIdx) : ""
+    const lastSegment = pathPart.split("/").filter(Boolean).pop() ?? pathPart
+    return lastSegment + suffix
+  })
+
   return (
     <box flexDirection="row" justifyContent="space-between" gap={1} flexShrink={0}>
-      <text fg={theme.textMuted}>{directory()}</text>
+      <text fg={theme.textMuted}>{displayDir()}</text>
       <box gap={2} flexDirection="row" flexShrink={0}>
         <Switch>
           <Match when={store.welcome}>
@@ -83,7 +97,9 @@ export function Footer() {
                 {mcp()} MCP
               </text>
             </Show>
-            <text fg={theme.textMuted}>/status</text>
+            <Show when={!mobile()}>
+              <text fg={theme.textMuted}>/status</text>
+            </Show>
           </Match>
         </Switch>
       </box>

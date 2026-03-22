@@ -109,6 +109,7 @@ export function Header() {
   const [hover, setHover] = createSignal<"parent" | "prev" | "next" | null>(null)
   const dimensions = useTerminalDimensions()
   const narrow = createMemo(() => dimensions().width < 80)
+  const mobile = createMemo(() => dimensions().width < 60)
 
   const cpuColor = createMemo(() => {
     const cpu = stats().cpu_usage
@@ -144,32 +145,34 @@ export function Header() {
                 </text>
                 <box flexDirection="row" gap={2} flexShrink={0}>
                   <ContextInfo context={context} cost={cost} />
-                  <box flexDirection="row" gap={1} flexShrink={0}>
-                    <text fg={cpuColor()} wrapMode="none">
-                      CPU {stats().cpu_usage.toFixed(0)}%
-                    </text>
-                    <MiniBar
-                      value={stats().cpu_usage}
-                      max={100}
-                      width={5}
-                      color={cpuColor()}
-                      bgColor={theme.borderSubtle}
-                    />
-                    <text fg={theme.textMuted} wrapMode="none">
-                      &#x2502;
-                    </text>
-                    <text fg={memColor()} wrapMode="none">
-                      Mem {(stats().memory_used_mb / 1024).toFixed(1)}G
-                    </text>
-                    <MiniBar
-                      value={stats().memory_used_mb}
-                      max={stats().memory_total_mb || 1}
-                      width={5}
-                      color={memColor()}
-                      bgColor={theme.borderSubtle}
-                    />
-                  </box>
-                  <text fg={theme.textMuted}>v{Installation.VERSION}</text>
+                  <Show when={!mobile()}>
+                    <box flexDirection="row" gap={1} flexShrink={0}>
+                      <text fg={cpuColor()} wrapMode="none">
+                        CPU {stats().cpu_usage.toFixed(0)}%
+                      </text>
+                      <MiniBar
+                        value={stats().cpu_usage}
+                        max={100}
+                        width={5}
+                        color={cpuColor()}
+                        bgColor={theme.borderSubtle}
+                      />
+                      <text fg={theme.textMuted} wrapMode="none">
+                        &#x2502;
+                      </text>
+                      <text fg={memColor()} wrapMode="none">
+                        Mem {(stats().memory_used_mb / 1024).toFixed(1)}G
+                      </text>
+                      <MiniBar
+                        value={stats().memory_used_mb}
+                        max={stats().memory_total_mb || 1}
+                        width={5}
+                        color={memColor()}
+                        bgColor={theme.borderSubtle}
+                      />
+                    </box>
+                    <text fg={theme.textMuted}>v{Installation.VERSION}</text>
+                  </Show>
                 </box>
               </box>
               <box flexDirection="row" gap={2}>
@@ -214,32 +217,34 @@ export function Header() {
               <Title session={session} />
               <box flexDirection="row" gap={2} flexShrink={0}>
                 <ContextInfo context={context} cost={cost} />
-                <box flexDirection="row" gap={1} flexShrink={0}>
-                  <text fg={cpuColor()} wrapMode="none">
-                    CPU {stats().cpu_usage.toFixed(0)}%
-                  </text>
-                  <MiniBar
-                    value={stats().cpu_usage}
-                    max={100}
-                    width={5}
-                    color={cpuColor()}
-                    bgColor={theme.borderSubtle}
-                  />
-                  <text fg={theme.textMuted} wrapMode="none">
-                    &#x2502;
-                  </text>
-                  <text fg={memColor()} wrapMode="none">
-                    Mem {(stats().memory_used_mb / 1024).toFixed(1)}G
-                  </text>
-                  <MiniBar
-                    value={stats().memory_used_mb}
-                    max={stats().memory_total_mb || 1}
-                    width={5}
-                    color={memColor()}
-                    bgColor={theme.borderSubtle}
-                  />
-                </box>
-                <text fg={theme.textMuted}>v{Installation.VERSION}</text>
+                <Show when={!mobile()}>
+                  <box flexDirection="row" gap={1} flexShrink={0}>
+                    <text fg={cpuColor()} wrapMode="none">
+                      CPU {stats().cpu_usage.toFixed(0)}%
+                    </text>
+                    <MiniBar
+                      value={stats().cpu_usage}
+                      max={100}
+                      width={5}
+                      color={cpuColor()}
+                      bgColor={theme.borderSubtle}
+                    />
+                    <text fg={theme.textMuted} wrapMode="none">
+                      &#x2502;
+                    </text>
+                    <text fg={memColor()} wrapMode="none">
+                      Mem {(stats().memory_used_mb / 1024).toFixed(1)}G
+                    </text>
+                    <MiniBar
+                      value={stats().memory_used_mb}
+                      max={stats().memory_total_mb || 1}
+                      width={5}
+                      color={memColor()}
+                      bgColor={theme.borderSubtle}
+                    />
+                  </box>
+                  <text fg={theme.textMuted}>v{Installation.VERSION}</text>
+                </Show>
               </box>
             </box>
           </Match>
