@@ -157,6 +157,7 @@ export function Session() {
   const [animationsEnabled, setAnimationsEnabled] = kv.signal("animations_enabled", true)
 
   const wide = createMemo(() => dimensions().width > 120)
+  const mobile = createMemo(() => dimensions().width < 60)
   const sidebarVisible = createMemo(() => {
     if (session()?.parentID) return false
     if (sidebarOpen()) return true
@@ -1024,7 +1025,7 @@ export function Session() {
       }}
     >
       <box flexDirection="row">
-        <box flexGrow={1} paddingBottom={1} paddingTop={1} paddingLeft={2} paddingRight={2} gap={1}>
+        <box flexGrow={1} paddingBottom={1} paddingTop={1} paddingLeft={mobile() ? 1 : 2} paddingRight={mobile() ? 1 : 2} gap={1}>
           <Show when={session()}>
             <Show when={!sidebarVisible() || !wide()}>
               <Header />

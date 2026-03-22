@@ -299,8 +299,8 @@ export function Sidebar(props: { sessionID: string; overlay?: boolean }) {
               flexDirection="row"
               gap={1}
             >
-              <text flexShrink={0} fg={theme.text}>
-                ⬖
+              <text flexShrink={0} fg={theme.primary}>
+                &#x25C8;
               </text>
               <box flexGrow={1} gap={1}>
                 <box flexDirection="row" justifyContent="space-between">
@@ -308,7 +308,7 @@ export function Sidebar(props: { sessionID: string; overlay?: boolean }) {
                     <b>Getting started</b>
                   </text>
                   <text fg={theme.textMuted} onMouseDown={() => kv.set("dismissed_getting_started", true)}>
-                    ✕
+                    &#x2715;
                   </text>
                 </box>
                 <text fg={theme.textMuted}>IronCode includes free models so you can start immediately.</text>
@@ -317,7 +317,7 @@ export function Sidebar(props: { sessionID: string; overlay?: boolean }) {
                 </text>
                 <box flexDirection="row" gap={1} justifyContent="space-between">
                   <text fg={theme.text}>Connect provider</text>
-                  <text fg={theme.textMuted}>/connect</text>
+                  <text fg={theme.primary}>/connect</text>
                 </box>
               </box>
             </box>
@@ -327,7 +327,7 @@ export function Sidebar(props: { sessionID: string; overlay?: boolean }) {
             <span style={{ fg: theme.text }}>{directory().split("/").at(-1)}</span>
           </text>
           <text fg={theme.textMuted}>
-            <span style={{ fg: theme.success }}>•</span> <b>Iron</b>
+            <span style={{ fg: theme.success }}>&#x25CF;</span> <b>Iron</b>
             <span style={{ fg: theme.text }}>
               <b>Code</b>
             </span>{" "}

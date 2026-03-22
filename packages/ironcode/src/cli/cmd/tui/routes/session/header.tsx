@@ -15,8 +15,9 @@ import { ProviderRegistry } from "@/provider/provider"
 const Title = (props: { session: Accessor<Session> }) => {
   const { theme } = useTheme()
   return (
-    <text fg={theme.text}>
-      <span style={{ bold: true }}>#</span> <span style={{ bold: true }}>{props.session().title}</span>
+    <text fg={theme.text} wrapMode="none">
+      <span style={{ fg: theme.primary, bold: true }}>#</span>{" "}
+      <span style={{ bold: true }}>{props.session().title}</span>
     </text>
   )
 }
@@ -26,9 +27,20 @@ const ContextInfo = (props: { context: Accessor<string | undefined>; cost: Acces
   return (
     <Show when={props.context()}>
       <text fg={theme.textMuted} wrapMode="none" flexShrink={0}>
-        {props.context()} ({props.cost()})
+        <span style={{ fg: theme.info }}>&#x25C8;</span> {props.context()}{" "}
+        <span style={{ fg: theme.textMuted }}>({props.cost()})</span>
       </text>
     </Show>
+  )
+}
+
+function MiniBar(props: { value: number; max: number; width: number; color: any; bgColor: any }) {
+  const filled = () => Math.max(0, Math.min(props.width, Math.round((props.value / props.max) * props.width)))
+  return (
+    <text>
+      <span style={{ fg: props.color }}>{"█".repeat(filled())}</span>
+      <span style={{ fg: props.bgColor }}>{"░".repeat(props.width - filled())}</span>
+    </text>
   )
 }
 
@@ -97,14 +109,19 @@ export function Header() {
   const [hover, setHover] = createSignal<"parent" | "prev" | "next" | null>(null)
   const dimensions = useTerminalDimensions()
   const narrow = createMemo(() => dimensions().width < 80)
+  const mobile = createMemo(() => dimensions().width < 60)
 
-  // Guard repeat() inputs — ensure a finite integer between 0 and 5
-  const safeBarCount = (value: number) => {
-    const n = Number(value)
-    if (!Number.isFinite(n)) return 0
-    const rounded = Math.round(n)
-    return Math.max(0, Math.min(5, rounded))
-  }
+  const cpuColor = createMemo(() => {
+    const cpu = stats().cpu_usage
+    return cpu > 80 ? theme.error : cpu > 60 ? theme.warning : theme.success
+  })
+
+  const memColor = createMemo(() => {
+    const used = stats().memory_used_mb
+    const total = stats().memory_total_mb || 1
+    const pct = (used / total) * 100
+    return pct > 80 ? theme.error : pct > 60 ? theme.warning : theme.success
+  })
 
   return (
     <box flexShrink={0}>
@@ -115,7 +132,7 @@ export function Header() {
         paddingRight={1}
         {...SplitBorder}
         border={["left"]}
-        borderColor={theme.border}
+        borderColor={theme.primary}
         flexShrink={0}
         backgroundColor={theme.backgroundPanel}
       >
@@ -124,37 +141,38 @@ export function Header() {
             <box flexDirection="column" gap={1}>
               <box flexDirection={narrow() ? "column" : "row"} justifyContent="space-between" gap={narrow() ? 1 : 0}>
                 <text fg={theme.text}>
-                  <b>Subagent session</b>
+                  <span style={{ fg: theme.secondary }}>&#x25C7;</span> <b>Subagent session</b>
                 </text>
-                <box flexDirection="row" gap={1} flexShrink={0}>
+                <box flexDirection="row" gap={2} flexShrink={0}>
                   <ContextInfo context={context} cost={cost} />
-                  <text fg={theme.textMuted}>
-                    {(() => {
-                      const cpu = stats().cpu_usage
-                      const cpuColor = cpu > 80 ? theme.error : cpu > 60 ? theme.warning : theme.success
-                      const bars = Math.max(0, Math.min(5, Math.round(cpu / 20)))
-                      const barStr = "▓".repeat(bars) + "░".repeat(5 - bars)
-                      return (
-                        <span style={{ fg: cpuColor }}>
-                          CPU {stats().cpu_usage.toFixed(2)}% {barStr}
-                        </span>
-                      )
-                    })()}{" "}
-                    {(() => {
-                      const used = stats().memory_used_mb
-                      const total = stats().memory_total_mb || 1
-                      const memPct = total > 0 ? (used / total) * 100 : 0
-                      const memColor = memPct > 80 ? theme.error : memPct > 60 ? theme.warning : theme.success
-                      const bars = Math.max(0, Math.min(5, Math.round((used / total) * 5)))
-                      const barStr = "▓".repeat(bars) + "░".repeat(5 - bars)
-                      return (
-                        <span style={{ fg: memColor }}>
-                          Mem {(used / 1024).toFixed(2)}/{(total / 1024).toFixed(2)}G {barStr}
-                        </span>
-                      )
-                    })()}
-                  </text>
-                  <text fg={theme.textMuted}>v{Installation.VERSION}</text>
+                  <Show when={!mobile()}>
+                    <box flexDirection="row" gap={1} flexShrink={0}>
+                      <text fg={cpuColor()} wrapMode="none">
+                        CPU {stats().cpu_usage.toFixed(0)}%
+                      </text>
+                      <MiniBar
+                        value={stats().cpu_usage}
+                        max={100}
+                        width={5}
+                        color={cpuColor()}
+                        bgColor={theme.borderSubtle}
+                      />
+                      <text fg={theme.textMuted} wrapMode="none">
+                        &#x2502;
+                      </text>
+                      <text fg={memColor()} wrapMode="none">
+                        Mem {(stats().memory_used_mb / 1024).toFixed(1)}G
+                      </text>
+                      <MiniBar
+                        value={stats().memory_used_mb}
+                        max={stats().memory_total_mb || 1}
+                        width={5}
+                        color={memColor()}
+                        bgColor={theme.borderSubtle}
+                      />
+                    </box>
+                    <text fg={theme.textMuted}>v{Installation.VERSION}</text>
+                  </Show>
                 </box>
               </box>
               <box flexDirection="row" gap={2}>
@@ -165,7 +183,8 @@ export function Header() {
                   backgroundColor={hover() === "parent" ? theme.backgroundElement : theme.backgroundPanel}
                 >
                   <text fg={theme.text}>
-                    Parent <span style={{ fg: theme.textMuted }}>{keybind.print("session_parent")}</span>
+                    <span style={{ fg: theme.primary }}>&#x25B2;</span> Parent{" "}
+                    <span style={{ fg: theme.textMuted }}>{keybind.print("session_parent")}</span>
                   </text>
                 </box>
                 <box
@@ -175,7 +194,8 @@ export function Header() {
                   backgroundColor={hover() === "prev" ? theme.backgroundElement : theme.backgroundPanel}
                 >
                   <text fg={theme.text}>
-                    Prev <span style={{ fg: theme.textMuted }}>{keybind.print("session_child_cycle_reverse")}</span>
+                    <span style={{ fg: theme.primary }}>&#x25C0;</span> Prev{" "}
+                    <span style={{ fg: theme.textMuted }}>{keybind.print("session_child_cycle_reverse")}</span>
                   </text>
                 </box>
                 <box
@@ -185,7 +205,8 @@ export function Header() {
                   backgroundColor={hover() === "next" ? theme.backgroundElement : theme.backgroundPanel}
                 >
                   <text fg={theme.text}>
-                    Next <span style={{ fg: theme.textMuted }}>{keybind.print("session_child_cycle")}</span>
+                    Next <span style={{ fg: theme.primary }}>&#x25B6;</span>{" "}
+                    <span style={{ fg: theme.textMuted }}>{keybind.print("session_child_cycle")}</span>
                   </text>
                 </box>
               </box>
@@ -194,23 +215,36 @@ export function Header() {
           <Match when={true}>
             <box flexDirection={narrow() ? "column" : "row"} justifyContent="space-between" gap={1}>
               <Title session={session} />
-              <box flexDirection="row" gap={1} flexShrink={0}>
+              <box flexDirection="row" gap={2} flexShrink={0}>
                 <ContextInfo context={context} cost={cost} />
-                <text fg={theme.textMuted}>
-                  CPU {stats().cpu_usage.toFixed(2)}%{" "}
-                  {(() => {
-                    const bars = safeBarCount(stats().cpu_usage / 20)
-                    return "▓".repeat(bars) + "░".repeat(5 - bars)
-                  })()}{" "}
-                  Mem {(stats().memory_used_mb / 1024).toFixed(2)}/{(stats().memory_total_mb / 1024).toFixed(2)}G{" "}
-                  {(() => {
-                    const ratio =
-                      stats().memory_total_mb > 0 ? (stats().memory_used_mb / stats().memory_total_mb) * 5 : 0
-                    const bars = safeBarCount(ratio)
-                    return "▓".repeat(bars) + "░".repeat(5 - bars)
-                  })()}
-                </text>
-                <text fg={theme.textMuted}>v{Installation.VERSION}</text>
+                <Show when={!mobile()}>
+                  <box flexDirection="row" gap={1} flexShrink={0}>
+                    <text fg={cpuColor()} wrapMode="none">
+                      CPU {stats().cpu_usage.toFixed(0)}%
+                    </text>
+                    <MiniBar
+                      value={stats().cpu_usage}
+                      max={100}
+                      width={5}
+                      color={cpuColor()}
+                      bgColor={theme.borderSubtle}
+                    />
+                    <text fg={theme.textMuted} wrapMode="none">
+                      &#x2502;
+                    </text>
+                    <text fg={memColor()} wrapMode="none">
+                      Mem {(stats().memory_used_mb / 1024).toFixed(1)}G
+                    </text>
+                    <MiniBar
+                      value={stats().memory_used_mb}
+                      max={stats().memory_total_mb || 1}
+                      width={5}
+                      color={memColor()}
+                      bgColor={theme.borderSubtle}
+                    />
+                  </box>
+                  <text fg={theme.textMuted}>v{Installation.VERSION}</text>
+                </Show>
               </box>
             </box>
           </Match>

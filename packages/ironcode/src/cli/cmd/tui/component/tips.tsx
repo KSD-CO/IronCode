@@ -36,8 +36,8 @@ export function Tips() {
 
   return (
     <box flexDirection="row" maxWidth="100%">
-      <text flexShrink={0} style={{ fg: theme.warning }}>
-        ● Tip{" "}
+      <text flexShrink={0} style={{ fg: theme.info }}>
+        &#x25C8; Tip{" "}
       </text>
       <text flexShrink={1}>
         <For each={parts}>

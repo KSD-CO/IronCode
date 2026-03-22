@@ -29,6 +29,7 @@ IronCode is a **high-performance CLI AI coding agent** — a fork of [OpenCode](
 ### Key Features
 
 - ⌨️ **CLI-First** — Powerful terminal UI optimized for keyboard-driven workflows
+- 📱 **Narrow Terminal Support** — Responsive TUI adapts to small screens (SSH via Termius, tmux panes, 60-col terminals)
 - 🔀 **Multi-Account Round-Robin** — Connect multiple API keys per provider for automatic load balancing
 - 🎯 **Git Source Control** — Stage, commit, diff, push without leaving the TUI
 - 🔍 **Code Changes Panel** — Diff viewer with inline comments and hunk revert
@@ -382,6 +383,29 @@ Areas to help with: performance optimizations, bug fixes, documentation, new plu
 ---
 
 ## Changelog
+
+<details>
+<summary><strong>v1.20.5</strong> — Narrow Terminal / Mobile SSH Support</summary>
+
+Responsive TUI that adapts when terminal width drops below 60 columns — usable over SSH from mobile clients (Termius, Blink Shell, JuiceSSH).
+
+**Home screen**
+- Logo hidden on narrow terminals to save vertical space
+- CPU/Memory stats bar and tips hidden — only prompt is shown
+
+**Session header**
+- CPU/Memory bars and version number hidden — only session title and token context/cost shown
+
+**Session footer**
+- Directory path truncated to last folder name + branch (e.g. `ironcode:feature/my-branch ~4`)
+- `/status` hint hidden
+
+**Prompt area**
+- Keyboard hint bar (`variants`, `agents`, `commands`, `changes`) hidden
+- `esc interrupt` text fixed to never wrap (`wrapMode="none"`)
+- Provider name hidden from model info row — only agent + model name + variant shown
+
+</details>
 
 <details>
 <summary><strong>v1.18.0</strong> — Chat Integrations Upgrade</summary>

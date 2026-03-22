@@ -5,6 +5,7 @@ import { useDirectory } from "../../context/directory"
 import { useConnected } from "../../component/dialog-model"
 import { createStore } from "solid-js/store"
 import { useRoute } from "../../context/route"
+import { useTerminalDimensions } from "@opentui/solid"
 
 export function Footer() {
   const { theme } = useTheme()
@@ -19,6 +20,8 @@ export function Footer() {
   })
   const directory = useDirectory()
   const connected = useConnected()
+  const dimensions = useTerminalDimensions()
+  const mobile = createMemo(() => dimensions().width < 60)
 
   const [store, setStore] = createStore({
     welcome: false,
@@ -49,40 +52,54 @@ export function Footer() {
     })
   })
 
+  const displayDir = createMemo(() => {
+    const dir = directory()
+    if (!mobile()) return dir
+    // On mobile: keep only last path segment + branch/status suffix
+    const colonIdx = dir.indexOf(":")
+    const pathPart = colonIdx >= 0 ? dir.slice(0, colonIdx) : dir
+    const suffix = colonIdx >= 0 ? dir.slice(colonIdx) : ""
+    const lastSegment = pathPart.split("/").filter(Boolean).pop() ?? pathPart
+    return lastSegment + suffix
+  })
+
   return (
     <box flexDirection="row" justifyContent="space-between" gap={1} flexShrink={0}>
-      <text fg={theme.textMuted}>{directory()}</text>
+      <text fg={theme.textMuted}>{displayDir()}</text>
       <box gap={2} flexDirection="row" flexShrink={0}>
         <Switch>
           <Match when={store.welcome}>
             <text fg={theme.text}>
-              Get started <span style={{ fg: theme.textMuted }}>/connect</span>
+              Get started <span style={{ fg: theme.primary }}>/connect</span>
             </text>
           </Match>
           <Match when={connected()}>
             <Show when={permissions().length > 0}>
               <text fg={theme.warning}>
-                <span style={{ fg: theme.warning }}>△</span> {permissions().length} Permission
+                <span style={{ fg: theme.warning }}>&#x25B2;</span> {permissions().length} Permission
                 {permissions().length > 1 ? "s" : ""}
               </text>
             </Show>
             <text fg={theme.text}>
-              <span style={{ fg: lsp().length > 0 ? theme.success : theme.textMuted }}>•</span> {lsp().length} LSP
+              <span style={{ fg: lsp().length > 0 ? theme.success : theme.textMuted }}>&#x25CF;</span> {lsp().length}{" "}
+              LSP
             </text>
             <Show when={mcp()}>
               <text fg={theme.text}>
                 <Switch>
                   <Match when={mcpError()}>
-                    <span style={{ fg: theme.error }}>⊙ </span>
+                    <span style={{ fg: theme.error }}>&#x25CF; </span>
                   </Match>
                   <Match when={true}>
-                    <span style={{ fg: theme.success }}>⊙ </span>
+                    <span style={{ fg: theme.success }}>&#x25CF; </span>
                   </Match>
                 </Switch>
                 {mcp()} MCP
               </text>
             </Show>
-            <text fg={theme.textMuted}>/status</text>
+            <Show when={!mobile()}>
+              <text fg={theme.textMuted}>/status</text>
+            </Show>
           </Match>
         </Switch>
       </box>
