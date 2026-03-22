@@ -83,11 +83,11 @@ export function Home() {
         <text fg={theme.text}>
           <Switch>
             <Match when={mcpError()}>
-              <span style={{ fg: theme.error }}>•</span> mcp errors{" "}
+              <span style={{ fg: theme.error }}>&#x25CF;</span> mcp errors{" "}
               <span style={{ fg: theme.textMuted }}>ctrl+x s</span>
             </Match>
             <Match when={true}>
-              <span style={{ fg: theme.success }}>•</span>{" "}
+              <span style={{ fg: theme.success }}>&#x25CF;</span>{" "}
               {Locale.pluralize(connectedMcpCount(), "{} mcp server", "{} mcp servers")}
             </Match>
           </Switch>
@@ -141,10 +141,10 @@ export function Home() {
             <text fg={theme.text}>
               <Switch>
                 <Match when={mcpError()}>
-                  <span style={{ fg: theme.error }}>⊙ </span>
+                  <span style={{ fg: theme.error }}>&#x25CF; </span>
                 </Match>
                 <Match when={true}>
-                  <span style={{ fg: connectedMcpCount() > 0 ? theme.success : theme.textMuted }}>⊙ </span>
+                  <span style={{ fg: connectedMcpCount() > 0 ? theme.success : theme.textMuted }}>&#x25CF; </span>
                 </Match>
               </Switch>
               {connectedMcpCount()} MCP
@@ -154,32 +154,37 @@ export function Home() {
         </box>
         <box flexGrow={1} />
         <box flexShrink={0} gap={2} flexDirection="row">
-          <text fg={theme.textMuted}>
+          <box flexDirection="row" gap={1} flexShrink={0}>
             {(() => {
               const cpu = stats().cpu_usage
               const cpuColor = cpu > 80 ? theme.error : cpu > 60 ? theme.warning : theme.success
-              const bars = Math.max(0, Math.min(5, Math.round(cpu / 20)))
-              const barStr = "▓".repeat(bars) + "░".repeat(5 - bars)
+              const filled = Math.max(0, Math.min(5, Math.round(cpu / 20)))
               return (
-                <span style={{ fg: cpuColor }}>
-                  CPU {stats().cpu_usage.toFixed(2)}% {barStr}
-                </span>
+                <text wrapMode="none">
+                  <span style={{ fg: cpuColor }}>CPU {cpu.toFixed(0)}%</span>{" "}
+                  <span style={{ fg: cpuColor }}>{"█".repeat(filled)}</span>
+                  <span style={{ fg: theme.borderSubtle }}>{"░".repeat(5 - filled)}</span>
+                </text>
               )
-            })()}{" "}
+            })()}
+            <text fg={theme.textMuted} wrapMode="none">
+              &#x2502;
+            </text>
             {(() => {
               const used = stats().memory_used_mb
               const total = stats().memory_total_mb || 1
               const memPct = total > 0 ? (used / total) * 100 : 0
               const memColor = memPct > 80 ? theme.error : memPct > 60 ? theme.warning : theme.success
-              const bars = Math.max(0, Math.min(5, Math.round((used / total) * 5)))
-              const barStr = "▓".repeat(bars) + "░".repeat(5 - bars)
+              const filled = Math.max(0, Math.min(5, Math.round((used / total) * 5)))
               return (
-                <span style={{ fg: memColor }}>
-                  Mem {(used / 1024).toFixed(2)}/{(total / 1024).toFixed(2)}G {barStr}
-                </span>
+                <text wrapMode="none">
+                  <span style={{ fg: memColor }}>Mem {(used / 1024).toFixed(1)}G</span>{" "}
+                  <span style={{ fg: memColor }}>{"█".repeat(filled)}</span>
+                  <span style={{ fg: theme.borderSubtle }}>{"░".repeat(5 - filled)}</span>
+                </text>
               )
             })()}
-          </text>
+          </box>
           <text fg={theme.textMuted}>{Installation.VERSION}</text>
         </box>
       </box>

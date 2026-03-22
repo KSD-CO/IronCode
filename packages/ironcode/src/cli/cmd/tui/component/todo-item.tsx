@@ -8,21 +8,47 @@ export interface TodoItemProps {
 export function TodoItem(props: TodoItemProps) {
   const { theme } = useTheme()
 
+  const icon = () => {
+    switch (props.status) {
+      case "completed":
+        return "\u2713"
+      case "in_progress":
+        return "\u25B6"
+      case "cancelled":
+        return "\u2717"
+      default:
+        return "\u25CB"
+    }
+  }
+
+  const color = () => {
+    switch (props.status) {
+      case "completed":
+        return theme.success
+      case "in_progress":
+        return theme.warning
+      case "cancelled":
+        return theme.error
+      default:
+        return theme.textMuted
+    }
+  }
+
   return (
-    <box flexDirection="row" gap={0}>
+    <box flexDirection="row" gap={1}>
       <text
         flexShrink={0}
         style={{
-          fg: props.status === "in_progress" ? theme.warning : theme.textMuted,
+          fg: color(),
         }}
       >
-        [{props.status === "completed" ? "✓" : props.status === "in_progress" ? "•" : " "}]{" "}
+        {icon()}
       </text>
       <text
         flexGrow={1}
         wrapMode="word"
         style={{
-          fg: props.status === "in_progress" ? theme.warning : theme.textMuted,
+          fg: props.status === "in_progress" ? theme.text : theme.textMuted,
         }}
       >
         {props.content}
