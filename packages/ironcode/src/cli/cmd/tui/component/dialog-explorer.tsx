@@ -8,6 +8,8 @@ import { join, dirname, extname, basename } from "path"
 import { homedir } from "os"
 import { highlightLine, getLanguageFromExtension, type Theme as SyntaxTheme } from "../util/syntax-highlight"
 import { useSync } from "../context/sync"
+import { useSDK } from "@tui/context/sdk"
+import { TuiEvent } from "../event"
 
 interface FileNode {
   name: string
@@ -21,6 +23,7 @@ interface FileNode {
 
 export function DialogExplorer() {
   const dialog = useDialog()
+  const sdk = useSDK()
   const { theme } = useTheme()
   const dimensions = useTerminalDimensions()
   const sync = useSync()
@@ -248,9 +251,11 @@ export function DialogExplorer() {
     if (selected.isDirectory) {
       toggleExpand(selected)
     } else {
-      // Just toggle preview, don't close dialog
-      // User can close with ESC key
-      // TODO: Insert file path into prompt or open in editor
+      sdk.event.emit(TuiEvent.PromptAppend.type, {
+        type: TuiEvent.PromptAppend.type,
+        properties: { text: selected.path },
+      } as any)
+      dialog.clear()
     }
   }
 

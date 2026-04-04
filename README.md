@@ -39,6 +39,7 @@ IronCode is a **high-performance CLI AI coding agent** — a fork of [OpenCode](
 - 📝 **External Editor** — Opens `$EDITOR`/nvim with auto-install if missing
 - 🧩 **Built-in Skills** — 13 opinionated slash commands: plan review, code review, QA (web + API), ship, retro, and more
 - 🛡️ **Security** — Prompt injection detection blocks malicious websites from manipulating the AI
+- 🔄 **Auto-Compact on Overflow** — When context limit is hit, automatically compacts conversation and retries
 - 🏠 **100% Local** — No cloud services, works completely offline
 - ⚡ **Blazing Fast** — Native Rust for all performance-critical operations
 
@@ -383,6 +384,23 @@ Areas to help with: performance optimizations, bug fixes, documentation, new plu
 ---
 
 ## Changelog
+
+<details>
+<summary><strong>v1.20.6</strong> — Auto-Compact Overflow + UI Fixes</summary>
+
+**Auto-compact on context overflow**
+- When model returns a token limit error (e.g. `"prompt token count of 128195 exceeds the limit of 128000"`), IronCode now automatically triggers compaction to summarize the conversation, then retries the request — instead of showing an error
+- Covers Gemini, OpenAI, and generic `context length exceeded` error messages
+
+**File Explorer — insert to prompt**
+- Selecting a file in the file explorer (`/explorer`) now inserts its path directly into the prompt and closes the dialog
+- Previously, selecting a file only toggled the preview panel with no action
+
+**Fix data: URI file attachments**
+- Files attached as `data:` URIs (screenshots, voice messages, documents sent via Telegram/Discord) no longer fail with `AI_DownloadError: URL scheme must be http or https`
+- The `data:` prefix is stripped before passing to the AI SDK
+
+</details>
 
 <details>
 <summary><strong>v1.20.5</strong> — Narrow Terminal / Mobile SSH Support</summary>

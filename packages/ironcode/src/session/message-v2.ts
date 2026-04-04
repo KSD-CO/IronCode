@@ -505,13 +505,24 @@ export namespace MessageV2 {
               text: part.text,
             })
           // text/plain and directory files are converted into text parts, ignore them
-          if (part.type === "file" && part.mime !== "text/plain" && part.mime !== "application/x-directory")
+          if (part.type === "file" && part.mime !== "text/plain" && part.mime !== "application/x-directory") {
+            // For data: URIs, extract the base64 content directly to avoid
+            // AI SDK trying to download the data: URL (which fails with
+            // AI_DownloadError: URL scheme must be http or https)
+            let fileUrl = part.url
+            if (fileUrl.startsWith("data:")) {
+              const commaIndex = fileUrl.indexOf(",")
+              if (commaIndex !== -1) {
+                fileUrl = fileUrl.slice(commaIndex + 1)
+              }
+            }
             userMessage.parts.push({
               type: "file",
-              url: part.url,
+              url: fileUrl,
               mediaType: part.mime,
               filename: part.filename,
             })
+          }
 
           if (part.type === "compaction") {
             userMessage.parts.push({
@@ -643,9 +654,18 @@ export namespace MessageV2 {
               ],
             }
             for (const attachment of media) {
+              // Strip data: URI prefix to pass raw base64, avoiding
+              // AI SDK download validation error on data: scheme
+              let attachmentUrl = attachment.url
+              if (attachmentUrl.startsWith("data:")) {
+                const commaIndex = attachmentUrl.indexOf(",")
+                if (commaIndex !== -1) {
+                  attachmentUrl = attachmentUrl.slice(commaIndex + 1)
+                }
+              }
               userMessage.parts.push({
                 type: "file",
-                url: attachment.url,
+                url: attachmentUrl,
                 mediaType: attachment.mime,
               })
             }
