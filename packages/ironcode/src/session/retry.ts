@@ -58,6 +58,19 @@ export namespace SessionRetry {
     return Math.min(RETRY_INITIAL_DELAY * Math.pow(RETRY_BACKOFF_FACTOR, attempt - 1), RETRY_MAX_DELAY_NO_HEADERS)
   }
 
+  export function isContextOverflow(error: ReturnType<NamedError["toObject"]>): boolean {
+    if (!MessageV2.APIError.isInstance(error)) return false
+    const msg = error.data.message
+    return (
+      // Gemini: "prompt token count of 128195 exceeds the limit of 128000"
+      /prompt token count of \d+ exceeds the limit of \d+/i.test(msg) ||
+      // OpenAI: "This model's maximum context length is X tokens"
+      /maximum context length is \d+ tokens/i.test(msg) ||
+      // Generic
+      /context length exceeded/i.test(msg)
+    )
+  }
+
   export function retryable(error: ReturnType<NamedError["toObject"]>) {
     if (MessageV2.APIError.isInstance(error)) {
       if (!error.data.isRetryable) return undefined
