@@ -55,10 +55,16 @@ jobs:
         include:
           - os: ubuntu-latest
             platform: linux
+            arch: x64
           - os: macos-latest
             platform: darwin
+            arch: arm64
+          - os: macos-13
+            platform: darwin
+            arch: x64
           - os: windows-latest
             platform: win32
+            arch: x64
     runs-on: ${{ matrix.os }}
     if: github.repository == 'KSD-CO/IronCode'
     steps:
@@ -92,7 +98,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ironcode-cli-${{ matrix.platform }}
+          name: ironcode-cli-${{ matrix.platform }}-${{ matrix.arch }}
           path: packages/ironcode/dist
 
       - name: Upload Rust library (Linux only)
