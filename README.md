@@ -127,7 +127,7 @@ Press **`Ctrl+T`** to cycle between variants:
 
 ## Skills
 
-IronCode ships with **13 built-in skill workflows** — opinionated slash commands that switch the agent into a specialist mode. Instead of one generic assistant, you get: founder, tech lead, TDD coach, debugger, paranoid reviewer, release engineer, QA tester, technical writer, and engineering manager.
+IronCode ships with **15 built-in skill workflows** — opinionated slash commands that switch the agent into a specialist mode. Instead of one generic assistant, you get: founder, tech lead, TDD coach, debugger, paranoid reviewer, release engineer, QA tester, security auditor, technical writer, and engineering manager.
 
 | Skill               | Mode                | What it does                                                                                                                                               |
 | ------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -136,6 +136,8 @@ IronCode ships with **13 built-in skill workflows** — opinionated slash comman
 | `/tdd`              | Developer           | RED-GREEN-REFACTOR: write a failing test, minimal code to pass, refactor. No production code without a failing test first.                                 |
 | `/debug`            | Debugger            | Systematic 4-phase debugging: root cause investigation, pattern analysis, hypothesis testing, implementation. 3-fix rule escalates architectural problems. |
 | `/code-review`      | Staff engineer      | Find bugs that pass CI but blow up in production. Two-pass: critical + informational.                                                                      |
+| `/security-review`  | Security engineer   | Scan the current branch diff for OWASP Top 10 vulnerabilities before shipping. Two-pass: critical + informational. Integrates Semgrep MCP when available.  |
+| `/web-scan`         | Penetration tester  | Actively probe a live URL for misconfigs, exposed files, SSL issues, CORS, and info disclosure. Uses curl; optionally integrates Nikto and Nuclei.         |
 | `/verify`           | Gatekeeper          | Run the command, read the output, then claim the result. Evidence before assertions — no "should work now."                                                |
 | `/code-ship`        | Release engineer    | Merge, test, typecheck, review, changelog, bisectable commits, push, and PR — one command.                                                                 |
 | `/browse`           | QA engineer         | Headless Chromium via Playwright. Navigate, click, fill forms, screenshot, assert states, test responsive layouts.                                         |
@@ -207,6 +209,82 @@ Your biggest ship: voice transcription pipeline.
 Streak: 12 consecutive days.
 
 ````
+
+### Security Skills
+
+`/security-review` and `/web-scan` work out of the box with no extra setup. Install optional tools below for deeper scanning.
+
+#### Optional: Semgrep MCP (static analysis for `/security-review`)
+
+[Semgrep](https://semgrep.dev) adds pattern-based static analysis on top of the built-in OWASP checklist — detecting injection, hardcoded secrets, insecure APIs, and supply chain issues across 30+ languages.
+
+**1. Add to your ironcode config** (`~/.config/ironcode/ironcode.json` for global, or `ironcode.json` in your project):
+
+```json
+{
+  "mcp": {
+    "semgrep": {
+      "type": "local",
+      "command": ["npx", "@modular-intelligence/semgrep"]
+    }
+  }
+}
+```
+
+Optional — add `SEMGREP_APP_TOKEN` to unlock Pro rules (free at semgrep.dev):
+
+```json
+{
+  "mcp": {
+    "semgrep": {
+      "type": "local",
+      "command": ["npx", "@modular-intelligence/semgrep"],
+      "environment": {
+        "SEMGREP_APP_TOKEN": "your-token-here"
+      }
+    }
+  }
+}
+```
+
+**2. Install Semgrep CLI** (required by the MCP server):
+
+```bash
+# macOS
+brew install semgrep
+
+# pip
+pip install semgrep
+```
+
+**3. Restart IronCode**, then verify:
+
+```bash
+ironcode mcp list
+# semgrep  connected
+```
+
+When connected, `/security-review` runs three scans automatically — SAST (diff-aware), secrets detection, and supply chain — then merges all findings into the report under `[SEMGREP]`.
+
+> `npx` auto-downloads `@modular-intelligence/semgrep` on first run. The Semgrep CLI must be installed separately (step 2 above).
+
+#### Optional: Nikto + Nuclei (active scanning for `/web-scan`)
+
+`/web-scan` uses `curl` by default. Install Nikto and/or Nuclei for deeper active scanning:
+
+```bash
+# macOS
+brew install nikto
+brew install nuclei && nuclei -update-templates
+
+# Ubuntu / Debian
+sudo apt install nikto
+go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+```
+
+When installed, `/web-scan` detects them automatically and appends their findings to the report.
+
+---
 
 ### Skills requiring Playwright MCP
 

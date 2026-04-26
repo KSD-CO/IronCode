@@ -49,27 +49,33 @@ function detectPlatformAndArch() {
 
 function findBinary() {
   const { platform, arch } = detectPlatformAndArch()
-  // const packageName = `ironcode-${platform}-${arch}`
-  let packageName = `ironcode-${platform}-${arch}`
-  if (arch === "x64") {
-    packageName += "-modern"
-  }
   const binaryName = platform === "windows" ? "ironcode.exe" : "ironcode"
 
-  try {
-    // Use require.resolve to find the package
-    const packageJsonPath = require.resolve(`${packageName}/package.json`)
-    const packageDir = path.dirname(packageJsonPath)
-    const binaryPath = path.join(packageDir, "bin", binaryName)
-
-    if (!fs.existsSync(binaryPath)) {
-      throw new Error(`Binary not found at ${binaryPath}`)
-    }
-
-    return { binaryPath, binaryName }
-  } catch (error) {
-    throw new Error(`Could not find package ${packageName}: ${error.message}`)
+  // Build candidate package names in preference order
+  const candidates = []
+  if (arch === "x64") {
+    candidates.push(`ironcode-${platform}-${arch}-modern`)
   }
+  candidates.push(`ironcode-${platform}-${arch}`)
+  // Fallback: on darwin-x64 try arm64 (runs via Rosetta 2)
+  if (platform === "darwin" && arch === "x64") {
+    candidates.push("ironcode-darwin-arm64")
+  }
+
+  for (const packageName of candidates) {
+    try {
+      const packageJsonPath = require.resolve(`${packageName}/package.json`)
+      const packageDir = path.dirname(packageJsonPath)
+      const binaryPath = path.join(packageDir, "bin", binaryName)
+      if (fs.existsSync(binaryPath)) {
+        return { binaryPath, binaryName }
+      }
+    } catch (_) {
+      // not installed, try next candidate
+    }
+  }
+
+  throw new Error(`Could not find a suitable ironcode binary package for ${platform}-${arch}`)
 }
 
 function prepareBinDirectory(binaryName) {

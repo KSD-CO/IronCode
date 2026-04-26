@@ -73,15 +73,6 @@ const allTargets: {
     arch: "arm64",
   },
   {
-    os: "darwin",
-    arch: "x64",
-  },
-  {
-    os: "darwin",
-    arch: "x64",
-    avx2: false,
-  },
-  {
     os: "win32",
     arch: "x64",
   },
