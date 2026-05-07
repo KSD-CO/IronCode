@@ -37,7 +37,7 @@ IronCode is a **high-performance CLI AI coding agent** — a fork of [OpenCode](
 - 💬 **Chat Integrations** — Control IronCode from Telegram, Discord, or Slack
 - 💻 **Built-in Terminal** — Fish-style autosuggest, tab completion, syntax highlighting
 - 📝 **External Editor** — Opens `$EDITOR`/nvim with auto-install if missing
-- 🧩 **Built-in Skills** — 13 opinionated slash commands: plan review, code review, QA (web + API), ship, retro, and more
+- 🧩 **Built-in Skills** — 21 opinionated slash commands: plan review, code review, QA (web + API), ship, retro, caveman token compression, and more
 - 🛡️ **Security** — Prompt injection detection blocks malicious websites from manipulating the AI
 - 🔄 **Auto-Compact on Overflow** — When context limit is hit, automatically compacts conversation and retries
 - 🏠 **100% Local** — No cloud services, works completely offline
@@ -127,7 +127,7 @@ Press **`Ctrl+T`** to cycle between variants:
 
 ## Skills
 
-IronCode ships with **15 built-in skill workflows** — opinionated slash commands that switch the agent into a specialist mode. Instead of one generic assistant, you get: founder, tech lead, TDD coach, debugger, paranoid reviewer, release engineer, QA tester, security auditor, technical writer, and engineering manager.
+IronCode ships with **21 built-in skill workflows** — opinionated slash commands that switch the agent into a specialist mode. Instead of one generic assistant, you get: founder, tech lead, TDD coach, debugger, paranoid reviewer, release engineer, QA tester, security auditor, technical writer, engineering manager, and a token-compression mode that cuts AI response costs by ~75%.
 
 | Skill               | Mode                | What it does                                                                                                                                               |
 | ------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -146,6 +146,44 @@ IronCode ships with **15 built-in skill workflows** — opinionated slash comman
 | `/qa-api`           | API tester          | REST & GraphQL API testing. Auto-discovers routes, tests every endpoint with valid/invalid/edge-case payloads, auth, schema validation.                    |
 | `/document-release` | Technical writer    | Post-ship doc update. Cross-references diff against README, ARCHITECTURE, CONTRIBUTING, CHANGELOG.                                                         |
 | `/retro`            | Engineering manager | Team-aware weekly retro: commit analysis, session detection, per-person praise and growth areas.                                                           |
+
+### Caveman: Token Compression
+
+Six skills that cut AI response tokens by ~65–75% — useful when you want fast, terse answers or need to stretch a long session's context budget.
+
+| Skill | Trigger | What it does |
+| --- | --- | --- |
+| `/caveman` | `/caveman [lite\|full\|ultra\|wenyan-*]` | Activate compressed response mode. Persists until "stop caveman". |
+| `/caveman-commit` | `/caveman-commit` | Generate terse commit messages. Conventional Commits format, ≤50 char subject. |
+| `/caveman-review` | `/caveman-review` | One-line-per-finding PR review: `L42: 🔴 bug: user null. Add guard.` |
+| `/caveman:compress` | `/caveman:compress <file>` | Compress a `.md`/`.txt` file to caveman prose. Saves ~46% input tokens. Backs up original first. |
+| `/caveman-help` | `/caveman-help` | Reference card for all modes and commands. |
+| `/cavecrew` | `/cavecrew` | Decision guide for spawning compressed subagents — keeps main context ~60% smaller per delegation. |
+
+**Intensity levels** (for `/caveman`):
+
+| Level | Style |
+| --- | --- |
+| `lite` | No filler/hedging. Full sentences. Professional but tight. |
+| `full` | Drop articles, fragments OK, short synonyms. Default. |
+| `ultra` | Abbreviate prose (DB/auth/req/res), arrows for causality (X → Y). |
+| `wenyan-lite` | Semi-classical Chinese register. |
+| `wenyan-full` | Full 文言文. 80–90% character reduction. |
+| `wenyan-ultra` | Maximum classical compression. |
+
+**Configure default mode** in `~/.config/ironcode/ironcode.json`:
+
+```json
+{
+  "caveman": { "defaultMode": "ultra" }
+}
+```
+
+Or via env var: `export CAVEMAN_DEFAULT_MODE=ultra`
+
+> Caveman automatically reverts to normal for security warnings and irreversible-action confirmations, then re-activates after.
+
+---
 
 ### Workflow
 
