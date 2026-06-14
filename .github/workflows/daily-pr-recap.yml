@@ -1,8 +1,8 @@
 name: daily-report
 
 on:
-  schedule:
-    - cron: "0 22 * * *"
+  #schedule:
+  #  - cron: "0 22 * * *"
   workflow_dispatch: # Allow manual trigger for testing
 
 jobs:
