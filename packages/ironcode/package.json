@@ -18,7 +18,7 @@
     "./*": "./src/*.ts"
   },
   "devDependencies": {
-    "@babel/core": "7.29.0",
+    "@babel/core": "7.29.6",
     "@octokit/webhooks-types": "7.6.1",
     "@ironcode-ai/script": "workspace:*",
     "@parcel/watcher-darwin-arm64": "2.5.6",
