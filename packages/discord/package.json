@@ -1,6 +1,6 @@
 {
   "name": "@ironcode-ai/discord",
-  "version": "1.20.11",
+  "version": "1.20.12",
   "type": "module",
   "license": "MIT",
   "bin": {
